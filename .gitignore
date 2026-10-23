@@ -21,3 +21,6 @@ ocr_models/
 # legacy and reference material (not part of the new repo; REFERENCES contains personal data)
 old/
 REFERENCES/
+
+# editor settings
+.vscode/
