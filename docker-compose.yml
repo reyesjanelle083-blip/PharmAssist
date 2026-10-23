@@ -1,0 +1,28 @@
+# PharmAssist local stack.
+# Step 1B: MySQL only. The app services (gateway, identity, inventory,
+# reservation, integration) are added in Step 1C.
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pharmassist-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      IDENTITY_DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?set IDENTITY_DB_PASSWORD in .env}
+      INVENTORY_DB_PASSWORD: ${INVENTORY_DB_PASSWORD:?set INVENTORY_DB_PASSWORD in .env}
+      RESERVATION_DB_PASSWORD: ${RESERVATION_DB_PASSWORD:?set RESERVATION_DB_PASSWORD in .env}
+      INTEGRATION_DB_PASSWORD: ${INTEGRATION_DB_PASSWORD:?set INTEGRATION_DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mysql_data:
