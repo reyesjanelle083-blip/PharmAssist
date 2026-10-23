@@ -1,0 +1,23 @@
+# secrets / env
+.env
+.env.*
+!.env.example
+*credentials*.json
+*service-account*.json
+
+# dependencies
+vendor/
+node_modules/
+
+# user data / private files
+uploads/
+storage/app/private/
+
+# logs, models, archives
+*.log
+ocr_models/
+*.zip
+
+# legacy and reference material (not part of the new repo; REFERENCES contains personal data)
+old/
+REFERENCES/
