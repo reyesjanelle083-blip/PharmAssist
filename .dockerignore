@@ -1,0 +1,20 @@
+# secrets / env (keep only the example)
+**/.env
+**/.env.*
+!**/.env.example
+
+# dependencies (installed inside the image)
+**/vendor
+**/node_modules
+
+# user data, logs, models, archives
+**/uploads
+**/storage/logs
+*.log
+*.zip
+ocr_models/
+
+# not needed in any build context
+.git
+old/
+REFERENCES/

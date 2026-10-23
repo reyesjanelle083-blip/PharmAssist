@@ -1,6 +1,20 @@
-# PharmAssist local stack.
-# Step 1B: MySQL only. The app services (gateway, identity, inventory,
-# reservation, integration) are added in Step 1C.
+# PharmAssist local stack: MySQL + gateway + four Laravel services + React dev client.
+# Usage: see docs/RUNNING.md
+x-laravel-env: &laravel-env
+  APP_ENV: ${APP_ENV:-local}
+  APP_DEBUG: ${APP_DEBUG:-false}
+  APP_KEY: ${APP_KEY:?set APP_KEY in .env}
+  INTERNAL_SERVICE_KEY: ${INTERNAL_SERVICE_KEY:?set INTERNAL_SERVICE_KEY in .env}
+  SESSION_DRIVER: file
+  CACHE_STORE: file
+  QUEUE_CONNECTION: sync
+
+x-service-base: &service-base
+  restart: unless-stopped
+  depends_on:
+    mysql:
+      condition: service_healthy
+
 services:
   mysql:
     image: mysql:8.0
@@ -23,6 +37,147 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+  identity-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        APP_PATH: services/identity-service
+    environment:
+      <<: *laravel-env
+      SERVICE_NAME: identity-service
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: identity_db
+      DB_USERNAME: identity_user
+      DB_PASSWORD: ${IDENTITY_DB_PASSWORD:?set IDENTITY_DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:8001:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"X-Internal-Key: $$INTERNAL_SERVICE_KEY\" http://127.0.0.1:8000/internal/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  inventory-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        APP_PATH: services/inventory-service
+    environment:
+      <<: *laravel-env
+      SERVICE_NAME: inventory-service
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: inventory_db
+      DB_USERNAME: inventory_user
+      DB_PASSWORD: ${INVENTORY_DB_PASSWORD:?set INVENTORY_DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:8002:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"X-Internal-Key: $$INTERNAL_SERVICE_KEY\" http://127.0.0.1:8000/internal/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  reservation-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        APP_PATH: services/reservation-service
+    environment:
+      <<: *laravel-env
+      SERVICE_NAME: reservation-service
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: reservation_db
+      DB_USERNAME: reservation_user
+      DB_PASSWORD: ${RESERVATION_DB_PASSWORD:?set RESERVATION_DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:8003:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"X-Internal-Key: $$INTERNAL_SERVICE_KEY\" http://127.0.0.1:8000/internal/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  integration-service:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        APP_PATH: services/integration-service
+    environment:
+      <<: *laravel-env
+      SERVICE_NAME: integration-service
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: integration_db
+      DB_USERNAME: integration_user
+      DB_PASSWORD: ${INTEGRATION_DB_PASSWORD:?set INTEGRATION_DB_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:8004:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -H \"X-Internal-Key: $$INTERNAL_SERVICE_KEY\" http://127.0.0.1:8000/internal/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  gateway:
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        APP_PATH: gateway
+    environment:
+      <<: *laravel-env
+      SERVICE_NAME: gateway
+      IDENTITY_URL: http://identity-service:8000
+      INVENTORY_URL: http://inventory-service:8000
+      RESERVATION_URL: http://reservation-service:8000
+      INTEGRATION_URL: http://integration-service:8000
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      identity-service:
+        condition: service_healthy
+      inventory-service:
+        condition: service_healthy
+      reservation-service:
+        condition: service_healthy
+      integration-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8000/internal/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Local development only (Vite dev server).
+  client:
+    build:
+      context: ./client
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000/api/v1
+    ports:
+      - "127.0.0.1:5173:5173"
 
 volumes:
   mysql_data:
