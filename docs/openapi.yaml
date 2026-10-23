@@ -1,0 +1,1709 @@
+openapi: 3.0.3
+info:
+  title: PharmAssist API
+  version: 1.0.0
+  description: |
+    Contract for the PharmAssist SIA system (Tier 0 scope). Written from docs/PROJECT_PLAN.md
+    sections 5, 8, 9 and 12, with the overrides in CLAUDE.md (no SOAP / Rx verification service;
+    prescription OCR is Tier 0; XML inventory feed is Tier 0; OSRM distance provider).
+
+    ## How the system is exposed
+    * **Public API**: the gateway at `/api/v1`. React talks only to this.
+    * **Internal API**: `/internal/v1/*` on each service. Not public; every call carries
+      `X-Internal-Key` (see `internalKey`). Only the endpoints that have a special contract are listed
+      under the `internal` tag.
+    * **Routing convention**: for every public path tagged with `x-service`, the gateway verifies the JWT and
+      role, then forwards the request to `<service>/internal/v1/<same path>` adding the headers
+      `X-Internal-Key`, `X-Request-Id`, `X-User-Id`, `X-User-Role`, `X-User-Branch`.
+      Services re-check role and branch ownership (defense in depth).
+
+    ## Response envelope (every response, success or error)
+    `{ status, service, request_id, data, error, warnings }`. On success `error` is null; on error `data`
+    is null and `error` is `{ code, message, details }`. `request_id` equals the `X-Request-Id` header.
+
+    ## Conventions
+    Lowercase plural nouns, JSON, ISO-8601 UTC timestamps, money as decimal strings.
+    Pagination: `page`, `per_page` (max 100); list responses return `data.items` and `data.meta`.
+    `POST /reservations` requires the `Idempotency-Key` header.
+
+    ## Scope of this version
+    Included: auth, account approval, catalog/branches, branch inventory, XML/JSON inventory feed,
+    availability mashup (stock + OSRM distance), reservations (with stock holds), prescription upload + OCR,
+    notifications, health.
+    Not yet in the contract (Tier 1/2): reports, stock-alerts, openFDA counseling, staff management,
+    messaging, medicine-package scan.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Gateway (local)
+tags:
+  - name: auth
+  - name: users
+  - name: catalog
+  - name: inventory
+  - name: availability
+  - name: reservations
+  - name: ocr
+  - name: notifications
+  - name: system
+  - name: internal
+    description: Service-to-service endpoints (not exposed publicly).
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register a customer account (status starts as pending)
+      x-service: identity-service
+      security: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [email, password, first_name, last_name, contact_no, id_photo]
+              properties:
+                email: { type: string, format: email, maxLength: 255 }
+                password: { type: string, format: password, minLength: 8, description: At least one letter and one digit. }
+                first_name: { type: string, maxLength: 100 }
+                last_name: { type: string, maxLength: 100 }
+                contact_no: { type: string, pattern: '^[0-9+\- ]{7,20}$' }
+                id_photo: { type: string, format: binary, description: 'JPG or PNG, max 2 MB. Stored privately and deleted after the CEO decision.' }
+      responses:
+        '201':
+          description: Account created. A verification code is emailed.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/User' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/verify-email:
+    post:
+      tags: [auth]
+      summary: Confirm the emailed 6-digit code
+      x-service: identity-service
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, code]
+              properties:
+                email: { type: string, format: email }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        '200': { $ref: '#/components/responses/OkNoData' }
+        '410':
+          description: Code expired or already used (`CODE_EXPIRED`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Log in and receive a JWT
+      description: |
+        Returns a generic 401 `INVALID_CREDENTIALS` for unknown email or wrong password (no user enumeration).
+        403 `EMAIL_NOT_VERIFIED` / `ACCOUNT_PENDING` / `ACCOUNT_REJECTED` for unverified, unapproved or rejected accounts.
+        423 `ACCOUNT_LOCKED` after repeated failures.
+      x-service: identity-service
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200':
+          description: Authenticated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          access_token: { type: string }
+                          token_type: { type: string, example: Bearer }
+                          expires_in: { type: integer, description: Seconds., example: 3600 }
+                          user: { $ref: '#/components/schemas/User' }
+        '401':
+          description: Invalid credentials (`INVALID_CREDENTIALS`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '423':
+          description: Account temporarily locked (`ACCOUNT_LOCKED`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Invalidate the current token
+      x-service: identity-service
+      responses:
+        '200': { $ref: '#/components/responses/OkNoData' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Current user
+      x-service: identity-service
+      responses:
+        '200':
+          description: The authenticated user.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/forgot-password:
+    post:
+      tags: [auth]
+      summary: Send a password reset link (always 202, no enumeration)
+      x-service: identity-service
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { $ref: '#/components/responses/OkNoData' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/reset-password:
+    post:
+      tags: [auth]
+      summary: Set a new password using the emailed token
+      x-service: identity-service
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string }
+                password: { type: string, format: password, minLength: 8 }
+      responses:
+        '200': { $ref: '#/components/responses/OkNoData' }
+        '410':
+          description: Token expired or used (`TOKEN_EXPIRED`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /users/pending:
+    get:
+      tags: [users]
+      summary: Accounts waiting for ID approval
+      x-service: identity-service
+      x-roles: [ceo]
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Pending accounts.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items: { type: array, items: { $ref: '#/components/schemas/User' } }
+                          meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /users/{id}/verification:
+    patch:
+      tags: [users]
+      summary: Approve or reject a customer account
+      description: Deletes the stored ID image and writes `id_verification_log`. A rejection requires `reason`.
+      x-service: identity-service
+      x-roles: [ceo]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [approved, rejected] }
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Updated user.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /medicines:
+    get:
+      tags: [catalog]
+      summary: Search the medicine catalog (fuzzy on generic and brand name)
+      x-service: inventory-service
+      security: []
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: prescription_required
+          in: query
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Matching medicines.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items: { type: array, items: { $ref: '#/components/schemas/Medicine' } }
+                          meta: { $ref: '#/components/schemas/PageMeta' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /medicines/{id}:
+    get:
+      tags: [catalog]
+      summary: Medicine detail
+      x-service: inventory-service
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: The medicine.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Medicine' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /branches:
+    get:
+      tags: [catalog]
+      summary: List branches
+      x-service: inventory-service
+      security: []
+      responses:
+        '200':
+          description: Branches.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items: { type: array, items: { $ref: '#/components/schemas/Branch' } }
+    post:
+      tags: [catalog]
+      summary: Create a branch
+      x-service: inventory-service
+      x-roles: [ceo]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BranchInput' }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Branch' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /branches/{id}:
+    get:
+      tags: [catalog]
+      summary: Branch detail
+      x-service: inventory-service
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: The branch.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Branch' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [catalog]
+      summary: Update or deactivate a branch
+      x-service: inventory-service
+      x-roles: [ceo]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BranchInput' }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Branch' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /branches/{id}/inventory:
+    get:
+      tags: [inventory]
+      summary: Stock of one branch
+      description: Staff may only read their own branch; the CEO may read any.
+      x-service: inventory-service
+      x-roles: [pharmacy_technician, pharmacy_assistant, branch_manager, ceo]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: status
+          in: query
+          schema: { type: string, enum: [available, low_stock, out_of_stock] }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Inventory rows.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items: { type: array, items: { $ref: '#/components/schemas/InventoryItem' } }
+                          meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /branches/{id}/inventory/{medicineId}:
+    put:
+      tags: [inventory]
+      summary: Create or update one branch stock row
+      description: |
+        `version` is the optimistic-lock value from the last read; a stale value returns 409 `STALE_VERSION`.
+        Writes a `stock_movements` row and may create a low-stock alert.
+      x-service: inventory-service
+      x-roles: [pharmacy_technician, branch_manager]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: medicineId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stock_quantity, price]
+              properties:
+                stock_quantity: { type: integer, minimum: 0 }
+                price: { type: string, example: '12.50' }
+                min_threshold: { type: integer, minimum: 0 }
+                batch_no: { type: string, maxLength: 50 }
+                expiration_date: { type: string, format: date }
+                version: { type: integer, description: Required when updating an existing row. }
+      responses:
+        '200':
+          description: Updated row.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/InventoryItem' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /integrations/inventory/sync:
+    post:
+      tags: [inventory]
+      summary: Import a branch inventory feed (XML or JSON)
+      description: |
+        Simulates a legacy branch system pushing stock. The gateway sends the body to the integration-service
+        (Message Translator: XML to internal JSON), which sends rows to the inventory-service.
+        With `strict=true` any bad row rolls back the whole feed; otherwise good rows are applied and bad rows listed.
+      x-service: integration-service
+      x-roles: [branch_manager, ceo]
+      parameters:
+        - name: strict
+          in: query
+          schema: { type: boolean, default: false }
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema: { $ref: '#/components/schemas/InventoryFeedXml' }
+            example: |
+              <?xml version="1.0" encoding="UTF-8"?>
+              <inventoryFeed branchId="1" generatedAt="2026-10-24T08:00:00Z">
+                <item>
+                  <medicineId>12</medicineId>
+                  <stockQuantity>120</stockQuantity>
+                  <price>12.50</price>
+                  <batchNo>B-2026-014</batchNo>
+                  <expirationDate>2027-06-30</expirationDate>
+                </item>
+              </inventoryFeed>
+          application/json:
+            schema: { $ref: '#/components/schemas/InventoryFeedJson' }
+      responses:
+        '200':
+          description: Feed processed (possibly with rejected rows).
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/FeedResult' }
+        '400':
+          description: Malformed XML or JSON (`MALFORMED_REQUEST`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '415':
+          description: Unsupported content type (`UNSUPPORTED_MEDIA_TYPE`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /availability:
+    get:
+      tags: [availability]
+      summary: Branches that have a medicine, ranked by travel time (mashup)
+      description: |
+        Gateway aggregator. Calls inventory-service for branches with free stock
+        (`stock_quantity - reserved_quantity > 0`), then integration-service for OSRM distances, merges by
+        `branch_id` and sorts by `travel_minutes`, then `price`.
+        If OSRM fails the response is still 200: distances become straight-line (haversine) estimates,
+        `distance_source` is `haversine_fallback` and `warnings` contains `DISTANCE_FALLBACK`.
+        Without `lat` and `lng` the list is returned ordered by price with no distance fields.
+      x-service: gateway
+      security: []
+      parameters:
+        - name: medicine_id
+          in: query
+          schema: { type: integer, minimum: 1 }
+          description: Either `medicine_id` or `q` is required.
+        - name: q
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: lat
+          in: query
+          schema: { type: number, minimum: -90, maximum: 90 }
+        - name: lng
+          in: query
+          schema: { type: number, minimum: -180, maximum: 180 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+      responses:
+        '200':
+          description: Ranked branches (may be empty).
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items: { type: array, items: { $ref: '#/components/schemas/AvailabilityItem' } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '504':
+          description: Inventory-service timed out (`UPSTREAM_TIMEOUT`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /reservations:
+    post:
+      tags: [reservations]
+      summary: Create a reservation (holds stock)
+      description: |
+        Core transaction. Reservation-service calls inventory-service to place an atomic stock hold, writes the
+        reservation and history in one transaction (releasing the hold if that fails) and publishes a notification event.
+        If any item requires a prescription, `prescription_review` is `awaiting_upload` until the customer calls
+        `POST /reservations/{id}/prescription`; staff cannot approve before that (409 `PRESCRIPTION_REQUIRED`).
+        Replaying the same `Idempotency-Key` with the same body returns the original response;
+        the same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSED`.
+      x-service: reservation-service
+      x-roles: [customer]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [branch_id, items]
+              properties:
+                branch_id: { type: integer, minimum: 1 }
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  items:
+                    type: object
+                    required: [medicine_id, quantity]
+                    properties:
+                      medicine_id: { type: integer, minimum: 1 }
+                      quantity: { type: integer, minimum: 1, maximum: 20 }
+                notes: { type: string, maxLength: 500 }
+      responses:
+        '201':
+          description: Created. Contains the claim code and expiry.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Reservation' }
+        '200':
+          description: Idempotent replay of an earlier successful request.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Reservation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: |
+            `STOCK_INSUFFICIENT` (details.available), `IDEMPOTENCY_KEY_REUSED`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '504':
+          description: Inventory-service timed out; no reservation was created (`UPSTREAM_TIMEOUT`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    get:
+      tags: [reservations]
+      summary: List reservations
+      description: Customers see their own; staff see their branch; the CEO sees all.
+      x-service: reservation-service
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/ReservationStatus' }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Reservations.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items: { type: array, items: { $ref: '#/components/schemas/Reservation' } }
+                          meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /reservations/{id}:
+    get:
+      tags: [reservations]
+      summary: Reservation detail with status history
+      x-service: reservation-service
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: The reservation.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Reservation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /reservations/{id}/status:
+    patch:
+      tags: [reservations]
+      summary: Change reservation status
+      description: |
+        Allowed transitions: pending to approved or rejected; approved to completed, cancelled or expired;
+        pending to cancelled. `cancel` is for the owning customer; `approve`/`reject` for technician and manager of the branch;
+        `complete` (requires the correct `claim_code`) for technician, assistant and manager of the branch.
+        Approve needs a reviewed prescription when the reservation has Rx items.
+        Reject, cancel and expiry release the stock hold; complete commits it.
+      x-service: reservation-service
+      x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [approve, reject, cancel, complete] }
+                reason: { type: string, maxLength: 500, description: Required for reject. }
+                claim_code: { type: string, description: Required for complete. }
+      responses:
+        '200':
+          description: Updated reservation.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Reservation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: '`INVALID_TRANSITION` or `PRESCRIPTION_REQUIRED`.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /reservations/{id}/prescription:
+    post:
+      tags: [reservations, ocr]
+      summary: Upload the prescription image for a reservation (runs OCR)
+      description: |
+        Stores the image on a private disk, then asks integration-service to extract text (OCR adapter).
+        The extracted text helps customers and staff read the prescription; a pharmacy staff member still reviews the image.
+        If OCR is down the upload still succeeds, `ocr_text` is null and `warnings` contains `OCR_UNAVAILABLE`.
+      x-service: reservation-service
+      x-roles: [customer]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [prescription]
+              properties:
+                prescription: { type: string, format: binary, description: 'JPG or PNG, max 4 MB.' }
+      responses:
+        '200':
+          description: Stored.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Reservation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    get:
+      tags: [reservations]
+      summary: Stream the stored prescription image
+      description: Only the owning customer and staff of the reservation's branch. Never a public URL.
+      x-service: reservation-service
+      x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: The image file.
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/png: { schema: { type: string, format: binary } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /reservations/{id}/prescription/review:
+    patch:
+      tags: [reservations]
+      summary: Staff accepts or rejects the uploaded prescription
+      x-service: reservation-service
+      x-roles: [pharmacy_technician, branch_manager]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [accepted, rejected] }
+                reason: { type: string, maxLength: 500 }
+      responses:
+        '200':
+          description: Updated reservation.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Reservation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /ocr/prescriptions:
+    post:
+      tags: [ocr]
+      summary: Read a prescription image into text (no reservation needed)
+      description: |
+        Gateway forwards the image to integration-service, which uses the OCR adapter. Nothing is stored.
+        Used by the client to preview the text. Result is a reading aid, not a verification.
+        503 `OCR_UNAVAILABLE` means the user should type the details manually.
+      x-service: integration-service
+      x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image: { type: string, format: binary, description: 'JPG or PNG, max 4 MB.' }
+      responses:
+        '200':
+          description: Extracted text.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/OcrResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '415':
+          description: Unsupported file type (`UNSUPPORTED_MEDIA_TYPE`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: Own notifications
+      x-service: reservation-service
+      parameters:
+        - name: unread
+          in: query
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: Notifications.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          items: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+                          meta: { $ref: '#/components/schemas/PageMeta' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /notifications/{id}/read:
+    patch:
+      tags: [notifications]
+      summary: Mark a notification as read
+      x-service: reservation-service
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/Notification' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- system / internal
+  /internal/v1/health:
+    servers:
+      - url: http://localhost:8000
+        description: Gateway (public, no key). The four services expose the same path on 8001-8004 and require X-Internal-Key.
+    get:
+      tags: [system]
+      summary: Health check
+      description: |
+        Gateway: public. Services (identity 8001, inventory 8002, reservation 8003, integration 8004): require
+        `X-Internal-Key`; without it they return 401 `INVALID_INTERNAL_KEY`.
+      security: []
+      responses:
+        '200':
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string, example: ok }
+        '401':
+          description: Missing or wrong internal key (services only).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+
+  /internal/v1/inventory/availability:
+    servers:
+      - url: http://inventory-service:8000
+    get:
+      tags: [internal]
+      summary: Branches with free stock for a medicine (gateway to inventory)
+      security:
+        - internalKey: []
+      parameters:
+        - name: medicine_id
+          in: query
+          schema: { type: integer }
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Branches with `available_quantity > 0`, including coordinates and price.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          medicine: { $ref: '#/components/schemas/Medicine' }
+                          branches:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                branch: { $ref: '#/components/schemas/Branch' }
+                                price: { type: string }
+                                available_quantity: { type: integer }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /internal/v1/stock/holds:
+    servers:
+      - url: http://inventory-service:8000
+    post:
+      tags: [internal]
+      summary: Create an atomic stock hold (reservation to inventory)
+      description: |
+        Locks the rows (`FOR UPDATE`) and increments `reserved_quantity` for every item, or fails the whole hold.
+        Replaying the same `reservation_ref` returns the original hold (idempotent).
+      security:
+        - internalKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reservation_ref, branch_id, items, ttl_minutes]
+              properties:
+                reservation_ref: { type: string, description: Unique per reservation. }
+                branch_id: { type: integer }
+                ttl_minutes: { type: integer, example: 2880 }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [medicine_id, quantity]
+                    properties:
+                      medicine_id: { type: integer }
+                      quantity: { type: integer, minimum: 1 }
+      responses:
+        '201':
+          description: Hold created.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/StockHold' }
+        '200':
+          description: Replay of an existing hold.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/StockHold' }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: '`STOCK_INSUFFICIENT`; details list the short items.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /internal/v1/stock/holds/{ref}/commit:
+    servers:
+      - url: http://inventory-service:8000
+    post:
+      tags: [internal]
+      summary: Commit a hold when the reservation is completed (decrements stock and reserved)
+      security:
+        - internalKey: []
+      parameters:
+        - $ref: '#/components/parameters/HoldRef'
+      responses:
+        '200':
+          description: Committed (also returned when already committed).
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/StockHold' }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /internal/v1/stock/holds/{ref}/release:
+    servers:
+      - url: http://inventory-service:8000
+    post:
+      tags: [internal]
+      summary: Release a hold (cancel, reject or expiry); only reserved quantity goes back
+      security:
+        - internalKey: []
+      parameters:
+        - $ref: '#/components/parameters/HoldRef'
+      responses:
+        '200':
+          description: Released (also returned when already released).
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/StockHold' }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /internal/v1/distance:
+    servers:
+      - url: http://integration-service:8000
+    post:
+      tags: [internal]
+      summary: Driving distance and time from one origin to many branches (OSRM adapter)
+      description: |
+        Retry twice with backoff, 10-minute cache, simple circuit breaker. On provider failure responds 200 with
+        haversine estimates and `warnings: ["DISTANCE_FALLBACK"]`. Never stress the public OSRM server.
+      security:
+        - internalKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [origin, destinations]
+              properties:
+                origin: { $ref: '#/components/schemas/LatLng' }
+                destinations:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items:
+                    allOf:
+                      - $ref: '#/components/schemas/LatLng'
+                      - type: object
+                        required: [branch_id]
+                        properties:
+                          branch_id: { type: integer }
+      responses:
+        '200':
+          description: Distances per branch.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          source: { type: string, enum: [osrm, haversine_fallback] }
+                          results:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                branch_id: { type: integer }
+                                distance_km: { type: number }
+                                travel_minutes: { type: number }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /internal/v1/ocr:
+    servers:
+      - url: http://integration-service:8000
+    post:
+      tags: [internal]
+      summary: Image to text (OCR adapter)
+      description: |
+        Public paths `POST /ocr/prescriptions` and the upload step of `POST /reservations/{id}/prescription` end here.
+        The adapter hides the provider (for example Google Cloud Vision or a local engine); the provider is reported in `provider`.
+      security:
+        - internalKey: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image: { type: string, format: binary }
+      responses:
+        '200':
+          description: Extracted text.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/OcrResult' }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '415':
+          description: Unsupported file type.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '502':
+          description: Provider returned something unusable (`BAD_UPSTREAM_RESPONSE`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '504':
+          description: Provider timed out (`UPSTREAM_TIMEOUT`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /internal/v1/inventory-feed/translate:
+    servers:
+      - url: http://integration-service:8000
+    post:
+      tags: [internal]
+      summary: Translate an XML inventory feed to internal JSON (Message Translator)
+      description: Validates required nodes and numeric formats; returns per-row errors for bad rows.
+      security:
+        - internalKey: []
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema: { $ref: '#/components/schemas/InventoryFeedXml' }
+      responses:
+        '200':
+          description: Translated rows.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/InventoryFeedJson' }
+        '400':
+          description: Malformed XML.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /internal/v1/inventory-feed/apply:
+    servers:
+      - url: http://inventory-service:8000
+    post:
+      tags: [internal]
+      summary: Apply translated feed rows as upserts (integration to inventory)
+      security:
+        - internalKey: []
+      parameters:
+        - name: strict
+          in: query
+          schema: { type: boolean, default: false }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InventoryFeedJson' }
+      responses:
+        '200':
+          description: Result.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/FeedResult' }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /internal/v1/notifications/email:
+    servers:
+      - url: http://integration-service:8000
+    post:
+      tags: [internal]
+      summary: Queue an email (reservation to integration, SMTP adapter)
+      security:
+        - internalKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to, template, data]
+              properties:
+                to: { type: string, format: email }
+                template:
+                  type: string
+                  enum: [email_verification, password_reset, reservation_created, reservation_approved, reservation_rejected, reservation_expired, account_decision]
+                data: { type: object, additionalProperties: true }
+      responses:
+        '202':
+          description: Queued.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/EnvelopeBase'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          queued: { type: boolean, example: true }
+        '401': { $ref: '#/components/responses/InternalKeyInvalid' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Issued by identity-service on login (HS256, 60 min; claims sub, role, branch_id, jti).
+        Authentication = who you are (token valid); authorization = what the role/branch may do (403 otherwise).
+    internalKey:
+      type: apiKey
+      in: header
+      name: X-Internal-Key
+      description: Shared service-to-service secret from the INTERNAL_SERVICE_KEY environment variable.
+
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    HoldRef:
+      name: ref
+      in: path
+      required: true
+      schema: { type: string }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PerPage:
+      name: per_page
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Client-generated unique value (for example a UUID) per reservation attempt.
+      schema: { type: string, minLength: 8, maxLength: 128 }
+
+  responses:
+    OkNoData:
+      description: Success with no payload.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/EnvelopeBase'
+              - type: object
+                properties:
+                  data: { nullable: true, example: null }
+    Unauthorized:
+      description: Missing, invalid or expired token (`UNAUTHENTICATED`, `TOKEN_EXPIRED`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    InternalKeyInvalid:
+      description: Missing or wrong `X-Internal-Key` (`INVALID_INTERNAL_KEY`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Forbidden:
+      description: Role or branch not allowed (`FORBIDDEN`), or account state blocks the action (`ACCOUNT_PENDING`, `EMAIL_NOT_VERIFIED`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    NotFound:
+      description: Record does not exist (`NOT_FOUND`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    Conflict:
+      description: State or uniqueness conflict (`CONFLICT`, `STALE_VERSION`, `INVALID_TRANSITION`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    ValidationFailed:
+      description: Invalid input (`VALIDATION_FAILED`); `error.details` maps field names to messages.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    TooManyRequests:
+      description: Rate limit hit (`TOO_MANY_REQUESTS`); see `Retry-After`.
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    ServiceUnavailable:
+      description: A dependency is unavailable (`SERVICE_UNAVAILABLE`, `OCR_UNAVAILABLE`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  schemas:
+    EnvelopeBase:
+      type: object
+      required: [status, service, request_id, data, error, warnings]
+      properties:
+        status: { type: integer, example: 200 }
+        service: { type: string, example: gateway }
+        request_id: { type: string, example: 3f0c2d1e-8a4b-4a52-9b7e-1d6a5f0c9e11 }
+        data: { nullable: true }
+        error: { nullable: true }
+        warnings:
+          type: array
+          items: { type: string }
+          example: []
+    ErrorEnvelope:
+      type: object
+      required: [status, service, request_id, data, error, warnings]
+      properties:
+        status: { type: integer, example: 409 }
+        service: { type: string, example: inventory-service }
+        request_id: { type: string }
+        data: { nullable: true, example: null }
+        error:
+          type: object
+          required: [code, message, details]
+          properties:
+            code: { type: string, example: STOCK_INSUFFICIENT }
+            message: { type: string, example: Only 2 left at this branch. }
+            details: { nullable: true, example: { available: 2 } }
+        warnings:
+          type: array
+          items: { type: string }
+    PageMeta:
+      type: object
+      properties:
+        page: { type: integer }
+        per_page: { type: integer }
+        total: { type: integer }
+        last_page: { type: integer }
+    LatLng:
+      type: object
+      required: [lat, lng]
+      properties:
+        lat: { type: number, minimum: -90, maximum: 90 }
+        lng: { type: number, minimum: -180, maximum: 180 }
+    Role:
+      type: string
+      enum: [customer, pharmacy_technician, pharmacy_assistant, branch_manager, ceo]
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        contact_no: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+        branch_id: { type: integer, nullable: true, description: Reference to a branch in inventory-service (no foreign key). }
+        email_verified: { type: boolean }
+        verification_status: { type: string, enum: [pending, approved, rejected] }
+        is_active: { type: boolean }
+        created_at: { type: string, format: date-time }
+    Medicine:
+      type: object
+      properties:
+        id: { type: integer }
+        generic_name: { type: string, example: Amoxicillin }
+        brand_name: { type: string, nullable: true, example: Amoxil }
+        category: { type: string }
+        strength: { type: string, example: 500mg }
+        dosage_form: { type: string, example: Capsule }
+        prescription_required: { type: boolean }
+        image_url: { type: string, nullable: true }
+        counseling_summary: { type: string, nullable: true, description: Plain-language guidance. }
+    BranchInput:
+      type: object
+      required: [name, address, latitude, longitude]
+      properties:
+        name: { type: string, maxLength: 150 }
+        address: { type: string, maxLength: 255 }
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+        contact_no: { type: string }
+        opening_hours: { type: string }
+        is_active: { type: boolean }
+    Branch:
+      allOf:
+        - $ref: '#/components/schemas/BranchInput'
+        - type: object
+          properties:
+            id: { type: integer }
+    InventoryItem:
+      type: object
+      properties:
+        id: { type: integer }
+        branch_id: { type: integer }
+        medicine: { $ref: '#/components/schemas/Medicine' }
+        price: { type: string, example: '12.50' }
+        stock_quantity: { type: integer }
+        reserved_quantity: { type: integer }
+        available_quantity: { type: integer, description: stock_quantity minus reserved_quantity. }
+        min_threshold: { type: integer }
+        batch_no: { type: string, nullable: true }
+        expiration_date: { type: string, format: date, nullable: true }
+        status: { type: string, enum: [available, low_stock, out_of_stock] }
+        version: { type: integer }
+    AvailabilityItem:
+      type: object
+      properties:
+        branch: { $ref: '#/components/schemas/Branch' }
+        medicine: { $ref: '#/components/schemas/Medicine' }
+        price: { type: string }
+        available_quantity: { type: integer }
+        distance_km: { type: number, nullable: true }
+        travel_minutes: { type: number, nullable: true }
+        distance_source: { type: string, nullable: true, enum: [osrm, haversine_fallback] }
+    ReservationStatus:
+      type: string
+      enum: [pending, approved, completed, rejected, cancelled, expired]
+    ReservationItem:
+      type: object
+      properties:
+        medicine_id: { type: integer }
+        medicine_name: { type: string, description: Snapshot at reservation time. }
+        unit_price: { type: string, description: Snapshot at reservation time. }
+        quantity: { type: integer }
+    Reservation:
+      type: object
+      properties:
+        id: { type: integer }
+        claim_code: { type: string, example: PA-7K3Q9X2M, description: 'Random, non-guessable. Shown to the owner and staff of the branch only.' }
+        user_id: { type: integer }
+        branch_id: { type: integer }
+        status: { $ref: '#/components/schemas/ReservationStatus' }
+        prescription_review:
+          type: string
+          enum: [not_required, awaiting_upload, pending, accepted, rejected]
+        prescription_uploaded: { type: boolean }
+        ocr_text: { type: string, nullable: true, description: 'Text read from the prescription image; a reading aid, not verification.' }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ReservationItem' }
+        notes: { type: string, nullable: true }
+        expires_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        history:
+          type: array
+          description: Only on the detail endpoint.
+          items:
+            type: object
+            properties:
+              from_status: { type: string, nullable: true }
+              to_status: { type: string }
+              reason: { type: string, nullable: true }
+              created_at: { type: string, format: date-time }
+    StockHold:
+      type: object
+      properties:
+        hold_ref: { type: string }
+        reservation_ref: { type: string }
+        branch_id: { type: integer }
+        status: { type: string, enum: [held, committed, released, expired] }
+        expires_at: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              medicine_id: { type: integer }
+              quantity: { type: integer }
+    OcrResult:
+      type: object
+      properties:
+        text: { type: string }
+        lines: { type: array, items: { type: string } }
+        confidence: { type: number, nullable: true, minimum: 0, maximum: 1 }
+        provider: { type: string, example: google_vision }
+    Notification:
+      type: object
+      properties:
+        id: { type: integer }
+        reservation_id: { type: integer, nullable: true }
+        type: { type: string, example: reservation_approved }
+        message: { type: string }
+        channel: { type: string, enum: [in_app, email] }
+        read_at: { type: string, format: date-time, nullable: true }
+        created_at: { type: string, format: date-time }
+    InventoryFeedXml:
+      type: object
+      xml:
+        name: inventoryFeed
+      properties:
+        branchId: { type: integer, xml: { attribute: true } }
+        generatedAt: { type: string, format: date-time, xml: { attribute: true } }
+        item:
+          type: array
+          xml: { name: item }
+          items:
+            type: object
+            required: [medicineId, stockQuantity]
+            properties:
+              medicineId: { type: integer }
+              stockQuantity: { type: integer, minimum: 0 }
+              price: { type: string }
+              batchNo: { type: string }
+              expirationDate: { type: string, format: date }
+    InventoryFeedJson:
+      type: object
+      required: [branch_id, items]
+      properties:
+        branch_id: { type: integer }
+        generated_at: { type: string, format: date-time }
+        items:
+          type: array
+          items:
+            type: object
+            required: [medicine_id, stock_quantity]
+            properties:
+              medicine_id: { type: integer }
+              stock_quantity: { type: integer, minimum: 0 }
+              price: { type: string }
+              batch_no: { type: string }
+              expiration_date: { type: string, format: date }
+    FeedResult:
+      type: object
+      properties:
+        accepted: { type: integer }
+        rejected: { type: integer }
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              row: { type: integer }
+              code: { type: string, example: UNKNOWN_MEDICINE }
+              message: { type: string }
