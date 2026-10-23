@@ -1,8 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use PharmAssist\Common\Http\Envelope;
 
-Route::get('/internal/v1/health', fn () => response()->json([
-    'status' => 'ok',
-    'service' => 'gateway',
-]));
+// Gateway health stays public.
+Route::get('/internal/v1/health', fn () => Envelope::success(['status' => 'ok']));

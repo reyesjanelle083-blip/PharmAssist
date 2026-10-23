@@ -3,6 +3,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use PharmAssist\Common\Exceptions\RenderEnvelope;
+use PharmAssist\Common\Middleware\RequestId;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -13,8 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->prepend(RequestId::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        RenderEnvelope::register($exceptions);
     })->create();

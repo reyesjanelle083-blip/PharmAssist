@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "626b9e7ddd47fb7eff9aaa53cce0c9ad",
+    "content-hash": "e46e46c074e09f9028f65781e5481508",
     "packages": [
         {
             "name": "brick/math",
@@ -2533,6 +2533,39 @@
                 }
             ],
             "time": "2026-02-16T23:10:27+00:00"
+        },
+        {
+            "name": "pharmassist/common",
+            "version": "dev-feature/step-1-foundation",
+            "dist": {
+                "type": "path",
+                "url": "../../packages/pharmassist-common",
+                "reference": "667baf50a6effbe50689e155bea8d9aa889681cd"
+            },
+            "require": {
+                "illuminate/support": "^11.0",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "PharmAssist\\Common\\PharmAssistServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PharmAssist\\Common\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Shared envelope, request-id, internal-key and exception rendering for PharmAssist services.",
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "phpoption/phpoption",
@@ -8391,7 +8424,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": {
+        "pharmassist/common": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

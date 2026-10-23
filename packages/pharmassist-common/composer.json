@@ -1,0 +1,23 @@
+{
+    "name": "pharmassist/common",
+    "description": "Shared envelope, request-id, internal-key and exception rendering for PharmAssist services.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PharmAssist\\Common\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "PharmAssist\\Common\\PharmAssistServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable"
+}
