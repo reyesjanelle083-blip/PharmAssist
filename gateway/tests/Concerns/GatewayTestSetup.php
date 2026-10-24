@@ -19,6 +19,8 @@ trait GatewayTestSetup
             'pharmassist.service' => 'gateway',
             'services.identity.url' => 'http://identity.test',
             'services.inventory.url' => 'http://inventory.test',
+            'services.integration.url' => 'http://integration.test',
+            'services.integration.ocr_timeout' => 20.0,
         ]);
     }
 

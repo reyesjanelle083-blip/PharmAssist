@@ -1,2 +1,3 @@
 # Keep shell scripts LF so they run inside Linux containers
 *.sh text eol=lf
+*.ini text eol=lf

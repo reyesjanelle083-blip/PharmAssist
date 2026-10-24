@@ -19,5 +19,6 @@ class AppServiceProvider extends ServiceProvider
         // Per client IP. Exceeding a limit returns 429 TOO_MANY_REQUESTS with Retry-After.
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
         RateLimiter::for('register', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+        RateLimiter::for('ocr', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
     }
 }

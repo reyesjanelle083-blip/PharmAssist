@@ -1118,6 +1118,7 @@ components:
         ocr_text: { type: string, nullable: true }
         confidence: { type: number, nullable: true, minimum: 0, maximum: 1 }
         ocr_status: { $ref: '#/components/schemas/OcrStatus' }
+        source: { type: string, enum: [tesseract, stub], description: The OCR engine that produced (or would have produced) the text. }
     Scan:
       allOf:
         - $ref: '#/components/schemas/Ocr'

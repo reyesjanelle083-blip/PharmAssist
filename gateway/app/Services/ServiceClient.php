@@ -28,45 +28,51 @@ class ServiceClient
 
     private const ENVELOPE_KEYS = ['status', 'service', 'request_id', 'data', 'error', 'warnings'];
 
-    /** @param array<string, mixed> $query */
-    public function get(string $service, string $path, array $query = []): JsonResponse
+    /**
+     * Every method takes an optional per-call timeout in seconds (default 3). Only routes that really need longer,
+     * such as OCR, pass one; everything else keeps the 3 second budget.
+     *
+     * @param array<string, mixed> $query
+     */
+    public function get(string $service, string $path, array $query = [], ?float $timeoutSeconds = null): JsonResponse
     {
-        return $this->send($service, 'get', $path, fn (PendingRequest $http, string $url) => $http->get($url, $query));
+        return $this->send($service, 'get', $path, fn (PendingRequest $http, string $url) => $http->get($url, $query), $timeoutSeconds);
     }
 
     /** @param array<string, mixed> $json */
-    public function postJson(string $service, string $path, array $json = []): JsonResponse
+    public function postJson(string $service, string $path, array $json = [], ?float $timeoutSeconds = null): JsonResponse
     {
-        return $this->send($service, 'post', $path, fn (PendingRequest $http, string $url) => $http->asJson()->post($url, $json));
+        return $this->send($service, 'post', $path, fn (PendingRequest $http, string $url) => $http->asJson()->post($url, $json), $timeoutSeconds);
     }
 
     /** @param array<string, mixed> $json */
-    public function putJson(string $service, string $path, array $json = []): JsonResponse
+    public function putJson(string $service, string $path, array $json = [], ?float $timeoutSeconds = null): JsonResponse
     {
-        return $this->send($service, 'put', $path, fn (PendingRequest $http, string $url) => $http->asJson()->put($url, $json));
+        return $this->send($service, 'put', $path, fn (PendingRequest $http, string $url) => $http->asJson()->put($url, $json), $timeoutSeconds);
     }
 
     /**
      * @param array<string, scalar|null> $fields
      * @param array<string, UploadedFile> $files
+     * @param bool $anonymiseFileNames send a neutral file name (upload.png) instead of the uploader's own, for sensitive uploads
      */
-    public function postMultipart(string $service, string $path, array $fields = [], array $files = []): JsonResponse
+    public function postMultipart(string $service, string $path, array $fields = [], array $files = [], ?float $timeoutSeconds = null, bool $anonymiseFileNames = false): JsonResponse
     {
-        return $this->send($service, 'post', $path, function (PendingRequest $http, string $url) use ($fields, $files) {
+        return $this->send($service, 'post', $path, function (PendingRequest $http, string $url) use ($fields, $files, $anonymiseFileNames) {
             foreach ($files as $name => $file) {
                 $http = $http->attach(
                     $name,
                     (string) file_get_contents($file->getRealPath()),
-                    $file->getClientOriginalName(),
+                    $anonymiseFileNames ? 'upload.'.($file->guessExtension() ?: 'bin') : $file->getClientOriginalName(),
                     ['Content-Type' => $file->getMimeType() ?: 'application/octet-stream'],
                 );
             }
 
             return $http->post($url, array_filter($fields, fn ($v) => $v !== null));
-        });
+        }, $timeoutSeconds);
     }
 
-    private function send(string $service, string $method, string $path, callable $call): JsonResponse
+    private function send(string $service, string $method, string $path, callable $call, ?float $timeoutSeconds = null): JsonResponse
     {
         $baseUrl = config("services.{$service}.url");
         if (! is_string($baseUrl) || $baseUrl === '') {
@@ -75,10 +81,7 @@ class ServiceClient
             return $this->failure('SERVICE_UNAVAILABLE', 'The service is temporarily unavailable.', 503);
         }
 
-        $http = Http::withHeaders($this->headers())
-            ->acceptJson()
-            ->timeout(self::TIMEOUT_SECONDS)
-            ->connectTimeout(self::TIMEOUT_SECONDS);
+        $http = $this->pending($timeoutSeconds ?? self::TIMEOUT_SECONDS);
 
         try {
             $response = $call($http, rtrim($baseUrl, '/').$path);
@@ -96,6 +99,18 @@ class ServiceClient
         }
 
         return $this->relay($service, $path, $response->status(), $response->json(), $response->header('Retry-After'));
+    }
+
+    /**
+     * The outgoing request with its timeout. A seam: tests replace it to see which timeout a route asked for.
+     * Connecting must stay quick even when the whole call may take long, so the connect timeout is capped at 3 seconds.
+     */
+    protected function pending(float $timeoutSeconds): PendingRequest
+    {
+        return Http::withHeaders($this->headers())
+            ->acceptJson()
+            ->timeout($timeoutSeconds)
+            ->connectTimeout(min($timeoutSeconds, (float) self::TIMEOUT_SECONDS));
     }
 
     /** @return array<string, string> */

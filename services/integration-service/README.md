@@ -2,9 +2,11 @@
 
 The middleware of PharmAssist: adapters to outside systems, with timeouts, fallbacks and logging.
 Owns `integration_db` (`integration_logs`, `api_cache`). Everything here is internal (`X-Internal-Key` required);
-the gateway's availability aggregator is the caller. No public route exists.
+other services and the gateway are the callers. No route here is public.
 
-Step 5A provides one capability: **distance from a customer to branches** (plan rows I-3 and I-7).
+Capabilities:
+- **Distance from a customer to branches** (OSRM with a haversine fallback; plan rows I-3 and I-7), see "Distance endpoint".
+- **Prescription OCR** with a local Tesseract (image to text), see "Prescription OCR".
 
 ## Distance endpoint
 `POST /internal/v1/distance`
@@ -79,6 +81,113 @@ day the fallback is used, which is the intended behaviour. On Linux or Docker th
 The retry code is **still there and configurable**: `OSRM_RETRIES=1` enables one retry (with `OSRM_BACKOFF_MS` between attempts). If you do that, raise
 `OSRM_DEADLINE_SECONDS` only as far as the gateway's 3 s minus the overhead allows, because the deadline stops any new attempt once it is used up. The tests set
 the timeout, retries and deadline explicitly, so they do not depend on these defaults.
+
+## Prescription OCR (local Tesseract)
+
+Reads a photo or scan of a prescription into text, to help customers and pharmacy staff read it. It is a **reading aid, not a verification**:
+a pharmacist must always check the original image (see Limitations).
+
+### Contract
+`POST /internal/v1/ocr/prescription` (needs `X-Internal-Key`), multipart form with one field `image` (JPEG or PNG).
+Reached by clients as `POST /api/v1/prescriptions/ocr` through the gateway: JWT required, roles `customer`, `pharmacy_technician`,
+`pharmacy_assistant`, `branch_manager`, 10 requests per minute per IP (counted only after the token and role checks), and the gateway waits up to
+`GATEWAY_OCR_TIMEOUT_SECONDS` (20 s) for this route while every other route waits 3 s.
+
+```json
+{
+  "status": 200, "service": "integration-service", "request_id": "…",
+  "data": {
+    "ocr_text": "Amoxicillin 500 mg capsule\nTake 1 capsule three times a day\nfor 7 days after meals",
+    "confidence": 0.96,
+    "ocr_status": "success",
+    "source": "tesseract"
+  },
+  "error": null,
+  "warnings": []
+}
+```
+`ocr_text` is trimmed, whitespace is normalised, line breaks are kept, control characters are removed and the text is capped at 5000 characters.
+`confidence` is the mean of Tesseract's word confidences (words with confidence -1 are ignored), scaled to 0 to 1.
+
+| `ocr_status` | When | `ocr_text` | Warnings |
+|--------------|------|------------|----------|
+| `success` | text of at least 15 characters and confidence at least `OCR_MIN_CONFIDENCE` (0.6) | the text | none |
+| `low_confidence` | confidence below 0.6, or fewer than 15 characters, or no text found | the text (possibly empty) | `LOW_CONFIDENCE_HANDWRITING_LIKELY`, `TEXT_TOO_SHORT`, `NO_TEXT_FOUND` |
+| `unavailable` | Tesseract missing, failed, timed out, circuit open, all slots busy, GD missing, or `OCR_FORCE_FAIL` | `null` | `OCR_UNAVAILABLE`, plus `OCR_BUSY` or `IMAGE_PROCESSING_UNAVAILABLE` |
+
+- An OCR problem is **never a 5xx**: once the file is acceptable the answer is HTTP 200 with `ocr_status: unavailable`, so the client can offer manual entry.
+- A bad file is **422 `VALIDATION_FAILED`** (details under `image`): the real type is sniffed from the file content (a text file renamed `.jpg` is rejected,
+  a PNG named `.txt` is accepted), JPEG or PNG only, at most 5 MB and 4000 x 4000 pixels. No key is 401.
+
+### How it works
+1. Validate the upload (type from the content, size, pixel size).
+2. Preprocess with GD: downscale so the longest side is at most 2000 px, flatten transparency onto white, grayscale, raise the contrast, and write a temporary PNG
+   with a random name in the system temp directory.
+3. Run `tesseract <temp.png> stdout -l eng --psm <OCR_PSM> tsv` with Symfony Process: an **argument array, never a shell string, and no user-supplied value in it**
+   (the image path is the random temp file). The TSV output gives word-level confidence.
+4. Delete the temp file in a `finally` block (success, failure, crash).
+5. Build the result.
+
+Resilience: a missing binary, a non-zero exit, unparsable output or a timeout (`OCR_TIMEOUT_SECONDS`, 15) gives `unavailable`. At most `OCR_MAX_CONCURRENT` (2) jobs run at
+once (a cache lock per slot, released even after a crash); extra callers get `OCR_BUSY` straight away. The circuit breaker (shared with the distance code) opens after
+**3 consecutive failures** for **60 seconds**; a poor reading (`low_confidence`) is not a failure. Every attempt writes one `integration_logs` row
+(`provider=ocr`, `operation=parse_image`, outcome, latency, a fixed reason code such as `binary_not_found`, `timeout`, `nonzero_exit`, `circuit_open`, `busy`).
+
+Providers (`OcrProvider` interface): `TesseractProvider` and `StubOcrProvider` (deterministic sample text, no process, no files; used when `INTEGRATION_MODE=stub` or
+`OCR_PROVIDER=stub`). Another engine only needs a new class implementing the interface and an `OCR_PROVIDER` value.
+
+### Privacy
+The image is processed **locally on this machine** and is **never stored and never sent to a third party** (no cloud OCR API is used). The only copy is a temporary file that
+exists while Tesseract runs and is always deleted. The recognised text, the uploaded file name and the image bytes are **never logged and never written to the database or
+the cache**; log rows hold only a reason code, a status and a duration. The gateway forwards the image with a neutral file name (`upload.png`). Stub mode and
+`OCR_FORCE_FAIL` are refused in production unless `ALLOW_STUB_IN_PRODUCTION=true`.
+
+### Limitations (please read)
+- Tesseract is built for **printed text**. **Handwritten prescriptions will often give `low_confidence` or wrong text** (misread drug names and doses are
+  possible, and a confident-looking result can still be wrong). The text is only a help; **a pharmacist must always check the original image** before anything is dispensed.
+- Phone photos with shadows, folds, skew or low resolution reduce accuracy; the preprocessing is simple (grayscale and contrast) and does not straighten or crop.
+- Only English is installed (`-l eng`), so other languages and special characters are read poorly.
+- Speed depends on the machine (about 1 to 3 s for a clean image in the project's tests; larger or noisy images take longer).
+- PHP's upload limits apply before our code: the PHP default of 2 MB (`upload_max_filesize` in `php.ini`) rejects larger photos on a local run.
+  The Docker image sets 6 MB (`docker/php/uploads.ini`), so the 5 MB rule can be reached there.
+
+### Local setup on Windows
+1. Install **Tesseract** (the UB Mannheim Windows installer is the usual one). Keep "English" selected. The default folder is `C:\Program Files\Tesseract-OCR`.
+   Check it: `"C:\Program Files\Tesseract-OCR\tesseract.exe" --version` and `--list-langs` (must list `eng`).
+2. Tell the service where it is in `services/integration-service/.env`:
+   ```
+   TESSERACT_BIN="C:/Program Files/Tesseract-OCR/tesseract.exe"
+   ```
+   **Use forward slashes inside double quotes** (or single quotes around backslashes). Backslashes inside double quotes, such as
+   `"C:\Program Files\..."`, are read as escape sequences and the whole `.env` file stops loading (every request and artisan command fails with "The environment file is invalid").
+   If `tesseract` is on your `PATH`, `TESSERACT_BIN=tesseract` is enough.
+3. Enable PHP's **GD** extension: in `php.ini` remove the `;` in front of `extension=gd` and restart PHP. Without GD the answer is `unavailable` with `IMAGE_PROCESSING_UNAVAILABLE`
+   (and the OCR tests are skipped). To raise the 2 MB upload limit set `upload_max_filesize = 6M` and `post_max_size = 8M`.
+4. Try it on a local image (one real OCR; refused in stub mode; never run it from tests):
+   ```
+   php artisan integration:ocr-smoke path\to\image.png
+   ```
+   It prints the status, confidence, character count, the first 80 characters, and the duration.
+
+In Docker the integration-service image installs Tesseract and GD itself (build arg `INSTALL_TESSERACT=true`, set only for this service in `docker-compose.yml`).
+
+### OCR environment variables
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `OCR_PROVIDER` | `tesseract` | `tesseract` or `stub` |
+| `TESSERACT_BIN` | `tesseract` | binary name or full path (see the Windows note above) |
+| `OCR_PSM` | `6` | Tesseract page segmentation mode (0 to 13) |
+| `OCR_TIMEOUT_SECONDS` | `15` | the process is killed after this long |
+| `OCR_MIN_CONFIDENCE` | `0.6` | below this the result is `low_confidence` |
+| `OCR_MAX_CONCURRENT` | `2` | simultaneous OCR jobs; more get `OCR_BUSY` |
+| `OCR_FORCE_FAIL` | `false` | every OCR attempt fails at once (testing only) |
+| `GATEWAY_OCR_TIMEOUT_SECONDS` | `20` | gateway side: how long the gateway waits for this route (keep it above `OCR_TIMEOUT_SECONDS`) |
+
+### Tests
+The OCR tests fake the Tesseract process and generate their images with GD, so they need the GD extension:
+`php -d extension=gd vendor/bin/phpunit` (or enable `extension=gd` in `php.ini` and use `php artisan test`). Without GD they are skipped, not failed.
+
+---
 
 ## Environment variables
 | Variable | Default | Meaning |

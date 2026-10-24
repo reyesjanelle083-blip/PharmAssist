@@ -23,6 +23,12 @@ return [
         'url' => env('INVENTORY_URL'),
     ],
 
+    'integration' => [
+        'url' => env('INTEGRATION_URL'),
+        // Seconds the gateway waits for an OCR answer (every other route waits 3 s). Keep it above OCR_TIMEOUT_SECONDS.
+        'ocr_timeout' => (float) env('GATEWAY_OCR_TIMEOUT_SECONDS', 20),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

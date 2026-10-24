@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\PrescriptionController;
 use Illuminate\Support\Facades\Route;
 use PharmAssist\Common\Http\Envelope;
 
@@ -34,5 +35,9 @@ Route::prefix('api/v1')->group(function () {
         Route::put('/branches/{id}/inventory/{medicineId}', [InventoryController::class, 'update'])
             ->whereNumber(['id', 'medicineId'])
             ->middleware('role:pharmacy_technician,branch_manager');
+
+        // Prescription image to text: 10 requests a minute per IP, counted only after the token and role checks pass.
+        Route::post('/prescriptions/ocr', [PrescriptionController::class, 'ocr'])
+            ->middleware(['role:customer,pharmacy_technician,pharmacy_assistant,branch_manager', 'throttle:ocr']);
     });
 });
