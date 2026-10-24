@@ -1,3 +1,34 @@
+# identity-service
+
+Owns `identity_db`: users, roles, email/ID verification, password resets and audit logs.
+Step 3A adds the schema, models and test-account seeder only (no login or routes yet).
+
+## Database setup
+```
+php artisan migrate
+php artisan db:seed --class=UserSeeder
+```
+Needs MySQL running with the `identity_db` schema and `identity_user` (see `docker/mysql/README.md`).
+Set `DB_PASSWORD` and `SEED_PASSWORD` in `.env` first. The seeder fails if `SEED_PASSWORD` is empty
+and refuses to run when `APP_ENV=production`. It can be re-run safely (accounts are matched by email).
+
+## Seeded test accounts
+All use the password from `SEED_PASSWORD`. Never commit that value.
+
+| Email | Role | Branch | Account status |
+|-------|------|--------|----------------|
+| ceo@pharmassist.test | ceo | - | approved |
+| manager1@pharmassist.test | branch_manager | 1 | approved |
+| technician1@pharmassist.test | pharmacy_technician | 1 | approved |
+| assistant1@pharmassist.test | pharmacy_assistant | 1 | approved |
+| customer.approved@pharmassist.test | customer | - | approved |
+| customer.pending@pharmassist.test | customer | - | pending (for testing CEO approval) |
+
+**Note:** `branch_id = 1` is only a reference (no foreign key, branches live in inventory-service).
+The inventory seed must create a branch with id 1, otherwise the staff accounts point at a branch that does not exist.
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
