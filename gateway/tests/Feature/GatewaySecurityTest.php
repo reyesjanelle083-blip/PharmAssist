@@ -18,6 +18,9 @@ class GatewaySecurityTest extends TestCase
         'api/v1/auth/register',
         'api/v1/auth/verify-email',
         'api/v1/auth/login',
+        'api/v1/medicines',
+        'api/v1/medicines/{id}',
+        'api/v1/branches',
     ];
 
     protected function setUp(): void

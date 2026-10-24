@@ -18,6 +18,7 @@ trait GatewayTestSetup
             'pharmassist.internal_key' => $this->internalKey,
             'pharmassist.service' => 'gateway',
             'services.identity.url' => 'http://identity.test',
+            'services.inventory.url' => 'http://inventory.test',
         ]);
     }
 

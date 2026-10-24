@@ -19,6 +19,10 @@ return [
         'url' => env('IDENTITY_URL'),
     ],
 
+    'inventory' => [
+        'url' => env('INVENTORY_URL'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],

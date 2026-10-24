@@ -40,6 +40,12 @@ class ServiceClient
         return $this->send($service, 'post', $path, fn (PendingRequest $http, string $url) => $http->asJson()->post($url, $json));
     }
 
+    /** @param array<string, mixed> $json */
+    public function putJson(string $service, string $path, array $json = []): JsonResponse
+    {
+        return $this->send($service, 'put', $path, fn (PendingRequest $http, string $url) => $http->asJson()->put($url, $json));
+    }
+
     /**
      * @param array<string, scalar|null> $fields
      * @param array<string, UploadedFile> $files
