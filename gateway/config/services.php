@@ -27,6 +27,8 @@ return [
         'url' => env('INTEGRATION_URL'),
         // Seconds the gateway waits for an OCR answer (every other route waits 3 s). Keep it above OCR_TIMEOUT_SECONDS.
         'ocr_timeout' => (float) env('GATEWAY_OCR_TIMEOUT_SECONDS', 20),
+        // Seconds the gateway waits for each step of the inventory feed sync (translate, then apply).
+        'sync_timeout' => (float) env('GATEWAY_SYNC_TIMEOUT_SECONDS', 10),
     ],
 
     'postmark' => [

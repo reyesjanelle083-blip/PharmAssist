@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\InventorySyncController;
 use App\Http\Controllers\MedicineController;
 use App\Http\Controllers\StockHoldController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +30,10 @@ Route::middleware(InternalKey::class)->prefix('internal/v1')->group(function () 
         Route::get('/branches/{id}/inventory', [InventoryController::class, 'index'])
             ->whereNumber('id')
             ->middleware(['allow.roles:pharmacy_technician,pharmacy_assistant,branch_manager,ceo', 'branch.scope']);
+
+        // Branch feed (already translated by integration-service). Only a branch manager (own branch) or the CEO.
+        Route::post('/inventory/sync', [InventorySyncController::class, 'sync'])
+            ->middleware('allow.roles:branch_manager,ceo');
 
         Route::put('/branches/{id}/inventory/{medicineId}', [InventoryController::class, 'update'])
             ->whereNumber(['id', 'medicineId'])

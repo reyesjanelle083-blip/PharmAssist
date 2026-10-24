@@ -1,0 +1,22 @@
+{
+  "branch_id": 1,
+  "generated_at": "2026-10-25T08:00:00Z",
+  "items": [
+    { "generic_name": "Amoxicillin", "brand_name": "", "strength": "500mg", "dosage_form": "Capsule",
+      "quantity": 60, "price": "10.50", "batch_no": "B27-AMOX-01", "expiration_date": "2028-06-30" },
+    { "generic_name": "Phenylephrine + Chlorphenamine + Paracetamol", "brand_name": "Neozep", "strength": "10mg/2mg/500mg", "dosage_form": "Tablet",
+      "quantity": 40, "price": "7.25", "batch_no": "B27-NEOZ-01", "expiration_date": "2028-03-31", "min_threshold": 15 },
+    { "generic_name": "Paracetamol", "brand_name": "Biogesic", "strength": "500mg", "dosage_form": "Tablet",
+      "quantity": 150, "price": "3.75", "batch_no": "B27-PARA-01", "expiration_date": "2028-09-30" },
+    { "generic_name": "IBUPROFEN", "brand_name": "advil", "strength": "200MG", "dosage_form": "capsule",
+      "quantity": 35, "price": "9.50", "batch_no": "B27-IBUP-01", "expiration_date": "2028-02-29", "min_threshold": 20 },
+    { "generic_name": "Cetirizine", "brand_name": "", "strength": "10mg", "dosage_form": "Tablet",
+      "quantity": 75, "price": "6.75", "batch_no": "B27-CETI-01", "expiration_date": "2028-08-31" },
+    { "generic_name": "Losartan", "brand_name": "", "strength": "50mg", "dosage_form": "Tablet",
+      "quantity": 90, "price": "5.25", "batch_no": "B27-LOSA-01", "expiration_date": "2028-12-31", "min_threshold": 25 },
+    { "generic_name": "Metformin", "brand_name": "", "strength": "500mg", "dosage_form": "Tablet",
+      "quantity": 110, "price": "2.75", "batch_no": "B27-METF-01", "expiration_date": "2028-05-31" },
+    { "generic_name": "Ascorbic Acid (Vitamin C)", "brand_name": "", "strength": "500mg", "dosage_form": "Tablet",
+      "quantity": 220, "price": "4.25", "batch_no": "B27-VITC-01", "expiration_date": "2028-10-31" }
+  ]
+}

@@ -111,6 +111,59 @@ medicine names were taken from the old database only as a reference. Counseling 
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Inventory sync (Step 5C)
+
+`POST /internal/v1/inventory/sync` (behind `X-Internal-Key`) applies a normalised feed from integration-service. Body:
+`{branch_id, strict, items: [...]}` (the item shape is the translator's output). Only `branch_manager` and `ceo` may call
+it, and a manager only for their own `X-User-Branch` branch (403 otherwise); the service checks this itself even though
+the gateway already did.
+
+The feed is one XML (or JSON) document per branch. The contract is `docs/schemas/inventory-feed.xsd`; samples are in
+`docs/samples/` (`inventory-feed.xml`, `inventory-feed.json`, and `inventory-feed-bad.xml` with deliberately bad rows).
+
+```xml
+<inventoryFeed branchId="1" generatedAt="2026-10-24T08:00:00+08:00">
+  <item>
+    <genericName>Amoxicillin</genericName>
+    <brandName></brandName>            <!-- may be empty -->
+    <strength>500mg</strength>
+    <dosageForm>Capsule</dosageForm>
+    <quantity>120</quantity>
+    <price>12.50</price>
+    <batchNo>B-2026-014</batchNo>
+    <expirationDate>2027-06-30</expirationDate>
+    <minThreshold>20</minThreshold>    <!-- optional -->
+  </item>
+</inventoryFeed>
+```
+
+A medicine is found by its natural key: generic name + brand name + strength + dosage form (exact match, upper or
+lower case does not matter, an empty brand matches a medicine stored without a brand). A feed never creates medicines.
+
+Rules:
+
+- values are absolute: `stock_quantity`, `price`, `batch_no`, `expiration_date` (and `min_threshold` if given) are set to the feed's values;
+- a changed row gets `version + 1`, a recomputed status and a `stock_movements` row (reason `sync`, delta = new minus old,
+  `actor_id`, `request_id`); an unchanged row gets neither, so sending the same feed again changes nothing (`unchanged` counts them);
+- a missing `branch_inventory` row is created like `PUT` does (reserved 0, default threshold 10, version 1);
+- rows are locked (`lockForUpdate`, ordered by id) in one transaction.
+
+Row codes: `UNKNOWN_MEDICINE`, `INVALID_QUANTITY` (whole number 0 to 1,000,000), `INVALID_PRICE` (greater than 0, at most
+2 decimals), `PAST_EXPIRATION` (must be after today), `BELOW_RESERVED` (quantity lower than the stock held for reservations),
+`DUPLICATE_ITEM` (the same medicine twice in one feed), plus `INVALID_BATCH_NO` and `INVALID_MIN_THRESHOLD`.
+
+- `strict=false` (default): good rows are applied; the answer is `{accepted, rejected, unchanged, errors: [{row, code, message}]}`.
+- `strict=true`: if any row is rejected, nothing is applied and the answer is 422 `FEED_REJECTED` with the same `errors` in `error.details`.
+
+Direct call in PowerShell (only for testing; normal clients use the gateway, which adds the user headers from the JWT):
+
+```powershell
+curl.exe -s -X POST http://localhost:8002/internal/v1/inventory/sync -H "X-Internal-Key: <INTERNAL_SERVICE_KEY>" -H "X-User-Id: 3" -H "X-User-Role: branch_manager" -H "X-User-Branch: 1" -H "Content-Type: application/json" --data-binary "@docs/samples/inventory-feed.json"
+```
+
+(that file is the feed format; to call inventory-service directly, first translate it with the integration-service command
+and send the `data` it returns, adding `"strict": false`.)
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

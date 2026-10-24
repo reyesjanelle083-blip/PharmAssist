@@ -40,6 +40,15 @@ return [
         ],
     ],
 
+    // Branch inventory feed (XML or JSON) translator.
+    'feed' => [
+        // Largest accepted request body, in kilobytes (the gateway enforces 512 KB too).
+        'max_kb' => max(1, (int) env('FEED_MAX_KB', 512)),
+        'max_items' => 500,
+        // The XML contract. docs/schemas/inventory-feed.xsd must stay identical to this file.
+        'xsd_path' => resource_path('schemas/inventory-feed.xsd'),
+    ],
+
     // Prescription OCR, run locally with the Tesseract binary. The image never leaves this machine and is never stored.
     'ocr' => [
         // tesseract | stub. INTEGRATION_MODE=stub always uses the stub as well.

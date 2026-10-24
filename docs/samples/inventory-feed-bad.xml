@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  A feed that is well-formed and matches the XSD, but has a mix of good and bad ROWS for branch 1.
+  The translator accepts it (the shape is fine); inventory-service rejects the bad rows with a code each:
+    row 1 ok            row 2 UNKNOWN_MEDICINE     row 3 INVALID_QUANTITY   row 4 ok
+    row 5 INVALID_PRICE row 6 PAST_EXPIRATION      row 7 ok                 row 8 DUPLICATE_ITEM (same medicine as row 1)
+  A further code, BELOW_RESERVED, depends on stock reserved at that moment, so no file can show it by itself.
+  With strict=true none of the rows is applied; with strict=false rows 1, 4 and 7 are applied.
+-->
+<inventoryFeed branchId="1" generatedAt="2026-10-25T08:30:00Z">
+  <item>
+    <genericName>Amoxicillin</genericName>
+    <brandName/>
+    <strength>500mg</strength>
+    <dosageForm>Capsule</dosageForm>
+    <quantity>61</quantity>
+    <price>10.50</price>
+    <batchNo>B27-AMOX-02</batchNo>
+    <expirationDate>2028-06-30</expirationDate>
+  </item>
+  <item>
+    <genericName>Unobtainium</genericName>
+    <brandName/>
+    <strength>5mg</strength>
+    <dosageForm>Tablet</dosageForm>
+    <quantity>10</quantity>
+    <price>1.00</price>
+    <batchNo>B27-UNOB-01</batchNo>
+    <expirationDate>2028-01-31</expirationDate>
+  </item>
+  <item>
+    <genericName>Paracetamol</genericName>
+    <brandName>Biogesic</brandName>
+    <strength>500mg</strength>
+    <dosageForm>Tablet</dosageForm>
+    <quantity>-5</quantity>
+    <price>3.75</price>
+    <batchNo>B27-PARA-02</batchNo>
+    <expirationDate>2028-09-30</expirationDate>
+  </item>
+  <item>
+    <genericName>Cetirizine</genericName>
+    <brandName/>
+    <strength>10mg</strength>
+    <dosageForm>Tablet</dosageForm>
+    <quantity>76</quantity>
+    <price>6.75</price>
+    <batchNo>B27-CETI-02</batchNo>
+    <expirationDate>2028-08-31</expirationDate>
+  </item>
+  <item>
+    <genericName>Losartan</genericName>
+    <brandName/>
+    <strength>50mg</strength>
+    <dosageForm>Tablet</dosageForm>
+    <quantity>91</quantity>
+    <price>0</price>
+    <batchNo>B27-LOSA-02</batchNo>
+    <expirationDate>2028-12-31</expirationDate>
+  </item>
+  <item>
+    <genericName>Ibuprofen</genericName>
+    <brandName>Advil</brandName>
+    <strength>200mg</strength>
+    <dosageForm>Capsule</dosageForm>
+    <quantity>36</quantity>
+    <price>9.50</price>
+    <batchNo>B20-IBUP-OLD</batchNo>
+    <expirationDate>2020-01-31</expirationDate>
+  </item>
+  <item>
+    <genericName>Metformin</genericName>
+    <brandName/>
+    <strength>500mg</strength>
+    <dosageForm>Tablet</dosageForm>
+    <quantity>111</quantity>
+    <price>2.75</price>
+    <batchNo>B27-METF-02</batchNo>
+    <expirationDate>2028-05-31</expirationDate>
+  </item>
+  <item>
+    <genericName>amoxicillin</genericName>
+    <brandName/>
+    <strength>500MG</strength>
+    <dosageForm>capsule</dosageForm>
+    <quantity>999</quantity>
+    <price>10.50</price>
+    <batchNo>B27-AMOX-DUP</batchNo>
+    <expirationDate>2028-06-30</expirationDate>
+  </item>
+</inventoryFeed>

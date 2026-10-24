@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PharmAssist branch inventory feed (XML contract).
+
+  A branch's own (legacy) stock system pushes absolute stock figures for its medicines.
+  integration-service validates every feed against this schema and translates it to JSON for inventory-service.
+
+  What this schema checks: the SHAPE of the document (required elements, sizes, the date format, at most 500 items).
+  What it deliberately does NOT check: the VALUES of <quantity> and <price> (whether the quantity is an integer of at
+  least 0 and the price is above 0), nor whether the medicine exists or the date is in the future. inventory-service
+  checks those per row and reports a code for each bad row (INVALID_QUANTITY, INVALID_PRICE, PAST_EXPIRATION,
+  UNKNOWN_MEDICINE ...), so one bad row does not make the whole feed unreadable.
+
+  DOCTYPE and ENTITY declarations are not allowed (the translator rejects them before parsing).
+
+  Keep docs/schemas/inventory-feed.xsd identical to this file (a test enforces it).
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="unqualified">
+
+  <xs:element name="inventoryFeed">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="item" type="feedItem" minOccurs="1" maxOccurs="500"/>
+      </xs:sequence>
+      <!-- The branch these figures are for (a branch id from inventory-service) -->
+      <xs:attribute name="branchId" type="branchIdType" use="required"/>
+      <!-- When the branch system produced the feed, for example 2026-10-25T08:00:00Z -->
+      <xs:attribute name="generatedAt" type="xs:dateTime" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="feedItem">
+    <!-- The medicine is identified by its natural key: genericName + brandName + strength + dosageForm (case is ignored). -->
+    <xs:all>
+      <xs:element name="genericName" type="requiredText150"/>
+      <!-- Empty for unbranded generics: <brandName/> -->
+      <xs:element name="brandName" type="optionalText100"/>
+      <xs:element name="strength" type="requiredText50"/>
+      <xs:element name="dosageForm" type="requiredText50"/>
+      <!-- New absolute stock quantity. An integer of at least 0 (checked per row, not here). -->
+      <xs:element name="quantity" type="valueText"/>
+      <!-- New unit price, above 0, at most 2 decimals (checked per row, not here). -->
+      <xs:element name="price" type="valueText"/>
+      <xs:element name="batchNo" type="optionalText50"/>
+      <!-- YYYY-MM-DD. Whether it is in the future is checked per row. -->
+      <xs:element name="expirationDate" type="xs:date"/>
+      <!-- Optional: the low-stock threshold. -->
+      <xs:element name="minThreshold" type="xs:nonNegativeInteger" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:simpleType name="branchIdType">
+    <xs:restriction base="xs:positiveInteger">
+      <xs:maxInclusive value="2147483647"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="requiredText150">
+    <xs:restriction base="xs:string"><xs:minLength value="1"/><xs:maxLength value="150"/></xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="requiredText50">
+    <xs:restriction base="xs:string"><xs:minLength value="1"/><xs:maxLength value="50"/></xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="optionalText100">
+    <xs:restriction base="xs:string"><xs:maxLength value="100"/></xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="optionalText50">
+    <xs:restriction base="xs:string"><xs:maxLength value="50"/></xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="valueText">
+    <xs:restriction base="xs:string"><xs:minLength value="1"/><xs:maxLength value="20"/></xs:restriction>
+  </xs:simpleType>
+
+</xs:schema>

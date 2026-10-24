@@ -45,6 +45,12 @@ class ServiceClient
         return $this->send($service, 'post', $path, fn (PendingRequest $http, string $url) => $http->asJson()->post($url, $json), $timeoutSeconds);
     }
 
+    /** Sends a raw body (for example an XML feed) with the given content type. */
+    public function postRaw(string $service, string $path, string $body, string $contentType, ?float $timeoutSeconds = null): JsonResponse
+    {
+        return $this->send($service, 'post', $path, fn (PendingRequest $http, string $url) => $http->withBody($body, $contentType)->post($url), $timeoutSeconds);
+    }
+
     /** @param array<string, mixed> $json */
     public function putJson(string $service, string $path, array $json = [], ?float $timeoutSeconds = null): JsonResponse
     {

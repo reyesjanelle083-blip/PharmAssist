@@ -774,9 +774,21 @@ paths:
       x-roles: [branch_manager, ceo]
       summary: Import a branch inventory feed (XML or JSON)
       description: |
-        Simulates a legacy branch system pushing stock. The XML is translated to internal JSON by
-        integration-service and applied by inventory-service. With `strict=true` one bad row rolls back the
-        whole feed; otherwise good rows are applied and bad rows are listed in `errors`.
+        Simulates a legacy branch system pushing stock. The gateway forwards the raw body to integration-service
+        (Message Translator: XML is checked against `inventory-feed.xsd` and turned into normalised JSON), checks the
+        branch scope, then inventory-service applies it. A branch manager may only sync the branch in their token;
+        the CEO may sync any branch. Medicines are matched by natural key (generic name, brand name, strength, dosage
+        form; case-insensitive) and are never created. Values are absolute, so sending the same feed twice changes
+        nothing the second time.
+
+        With `strict=true` one rejected row rolls back the whole feed (422 `FEED_REJECTED`); otherwise good rows are
+        applied and rejected rows are listed in `errors`. Row codes: `UNKNOWN_MEDICINE`, `INVALID_QUANTITY`,
+        `INVALID_PRICE`, `PAST_EXPIRATION`, `BELOW_RESERVED`, `DUPLICATE_ITEM`, `INVALID_BATCH_NO`,
+        `INVALID_MIN_THRESHOLD`.
+
+        A malformed or XSD-invalid feed is 400 (`MALFORMED_XML` or `MALFORMED_JSON`, with at most 10 short messages in `error.details.errors`).
+
+        Limits: 512 KB, 500 items, UTF-8 only, no DOCTYPE or ENTITY declarations. 5 requests per minute per IP.
       parameters:
         - { name: strict, in: query, schema: { type: boolean, default: false } }
       requestBody:
@@ -786,25 +798,35 @@ paths:
             schema: { $ref: '#/components/schemas/InventoryFeedXml' }
             example: |
               <?xml version="1.0" encoding="UTF-8"?>
-              <inventoryFeed branchId="1" generatedAt="2026-10-24T08:00:00Z">
+              <inventoryFeed branchId="1" generatedAt="2026-10-24T08:00:00+08:00">
                 <item>
-                  <medicineId>12</medicineId>
-                  <stockQuantity>120</stockQuantity>
+                  <genericName>Amoxicillin</genericName>
+                  <brandName></brandName>
+                  <strength>500mg</strength>
+                  <dosageForm>Capsule</dosageForm>
+                  <quantity>120</quantity>
                   <price>12.50</price>
                   <batchNo>B-2026-014</batchNo>
                   <expirationDate>2027-06-30</expirationDate>
+                  <minThreshold>20</minThreshold>
                 </item>
               </inventoryFeed>
+          text/xml:
+            schema: { $ref: '#/components/schemas/InventoryFeedXml' }
           application/json:
             schema: { $ref: '#/components/schemas/InventoryFeedJson' }
       responses:
-        '200': { description: Processed (possibly with rejected rows)., content: { application/json: { schema: { $ref: '#/components/schemas/FeedResultEnvelope' } } } }
+        '200': { description: Processed (possibly with rejected rows when strict is false)., content: { application/json: { schema: { $ref: '#/components/schemas/FeedResultEnvelope' } } } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '413': { $ref: '#/components/responses/PayloadTooLarge' }
         '415': { $ref: '#/components/responses/UnsupportedMediaType' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
-
+        '422':
+          description: '`strict=true` and at least one row was rejected (`FEED_REJECTED`; nothing was applied), or the body shape is wrong (`VALIDATION_FAILED`).'
+          content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   # ------------------------------------------------------------------ health
   /health:
     get:
@@ -1128,49 +1150,65 @@ components:
     InventoryFeedXml:
       type: object
       xml: { name: inventoryFeed }
+      description: Validated against docs/schemas/inventory-feed.xsd.
+      required: [branchId, generatedAt, item]
       properties:
-        branchId: { type: integer, xml: { attribute: true } }
+        branchId: { type: integer, minimum: 1, xml: { attribute: true } }
         generatedAt: { type: string, format: date-time, xml: { attribute: true } }
         item:
           type: array
+          minItems: 1
+          maxItems: 500
           xml: { name: item }
           items:
             type: object
-            required: [medicineId, stockQuantity]
+            required: [genericName, brandName, strength, dosageForm, quantity, price, batchNo, expirationDate]
             properties:
-              medicineId: { type: integer }
-              stockQuantity: { type: integer, minimum: 0 }
-              price: { type: string }
-              batchNo: { type: string }
-              expirationDate: { type: string, format: date }
+              genericName: { type: string, maxLength: 150 }
+              brandName: { type: string, maxLength: 100, description: May be empty (matches a medicine stored without a brand). }
+              strength: { type: string, maxLength: 50 }
+              dosageForm: { type: string, maxLength: 50 }
+              quantity: { type: string, example: '120', description: 'A whole number from 0 to 1,000,000; judged per row.' }
+              price: { type: string, example: '12.50', description: 'Greater than 0, at most 2 decimals; judged per row.' }
+              batchNo: { type: string, maxLength: 50 }
+              expirationDate: { type: string, format: date, description: Must be in the future; judged per row. }
+              minThreshold: { type: integer, minimum: 0 }
     InventoryFeedJson:
       type: object
-      required: [branch_id, items]
+      required: [branch_id, generated_at, items]
+      description: The same content as the XML feed, with snake_case names.
       properties:
-        branch_id: { type: integer }
+        branch_id: { type: integer, minimum: 1 }
         generated_at: { type: string, format: date-time }
         items:
           type: array
+          minItems: 1
+          maxItems: 500
           items:
             type: object
-            required: [medicine_id, stock_quantity]
+            required: [generic_name, brand_name, strength, dosage_form, quantity, price, batch_no, expiration_date]
             properties:
-              medicine_id: { type: integer }
-              stock_quantity: { type: integer, minimum: 0 }
-              price: { type: string }
-              batch_no: { type: string }
+              generic_name: { type: string, maxLength: 150 }
+              brand_name: { type: string, nullable: true, maxLength: 100 }
+              strength: { type: string, maxLength: 50 }
+              dosage_form: { type: string, maxLength: 50 }
+              quantity: { oneOf: [{ type: integer }, { type: string }] }
+              price: { oneOf: [{ type: number }, { type: string }] }
+              batch_no: { type: string, nullable: true, maxLength: 50 }
               expiration_date: { type: string, format: date }
+              min_threshold: { type: integer, nullable: true, minimum: 0 }
     FeedResult:
       type: object
       properties:
-        accepted: { type: integer }
+        accepted: { type: integer, description: Rows applied (including rows whose values did not change). }
         rejected: { type: integer }
+        unchanged: { type: integer, description: 'Accepted rows that already had these values (no version bump, no stock movement).' }
         errors:
           type: array
           items:
             type: object
             properties:
-              row: { type: integer }
+              row: { type: integer, description: 1-based position of the item in the feed. }
               code: { type: string, example: UNKNOWN_MEDICINE }
               message: { type: string }
     Health:

@@ -189,6 +189,59 @@ The OCR tests fake the Tesseract process and generate their images with GD, so t
 
 ---
 
+## Inventory feed translator (Step 5C)
+
+`POST /internal/v1/inventory-feed/translate` (behind `X-Internal-Key`) is a Message Translator: an XML or JSON branch
+feed becomes one normalised JSON structure. It does not touch the database (except one `integration_logs` row,
+provider `xml_feed`, which holds the outcome and a fixed reason code, never the feed) and makes no outbound calls.
+Values are not judged here (a quantity of -5 is passed on); inventory-service rejects the row with a code.
+
+The feed is one XML (or JSON) document per branch. The contract is `docs/schemas/inventory-feed.xsd`; samples are in
+`docs/samples/` (`inventory-feed.xml`, `inventory-feed.json`, and `inventory-feed-bad.xml` with deliberately bad rows).
+
+```xml
+<inventoryFeed branchId="1" generatedAt="2026-10-24T08:00:00+08:00">
+  <item>
+    <genericName>Amoxicillin</genericName>
+    <brandName></brandName>            <!-- may be empty -->
+    <strength>500mg</strength>
+    <dosageForm>Capsule</dosageForm>
+    <quantity>120</quantity>
+    <price>12.50</price>
+    <batchNo>B-2026-014</batchNo>
+    <expirationDate>2027-06-30</expirationDate>
+    <minThreshold>20</minThreshold>    <!-- optional -->
+  </item>
+</inventoryFeed>
+```
+
+A medicine is found by its natural key: generic name + brand name + strength + dosage form (exact match, upper or
+lower case does not matter, an empty brand matches a medicine stored without a brand). A feed never creates medicines.
+
+Accepted types: `application/xml`, `text/xml`, `application/json` (else 415). Larger than `FEED_MAX_KB` (default 512) is 413.
+
+Hardening for untrusted XML: UTF-8 only; any `DOCTYPE` or `ENTITY` declaration is refused before parsing (so no
+external entities and no entity-expansion bombs); `LIBXML_NONET`, never `LIBXML_NOENT`; libxml internal errors only;
+more than 500 `item` elements is refused; then `DOMDocument::schemaValidate` against `resources/schemas/inventory-feed.xsd`
+(a copy of `docs/schemas/inventory-feed.xsd`; a test keeps the two identical). A bad feed is 400 `MALFORMED_XML`
+(`MALFORMED_JSON` for JSON) with at most 10 short messages such as `Line 12: Element 'quantity': ...`; no server paths.
+
+Output (`data`): `{branch_id, generated_at, items: [{row, generic_name, brand_name, strength, dosage_form, quantity, price, batch_no, expiration_date, min_threshold}]}`.
+The same data gives the same output whether it arrived as XML or JSON.
+
+The `xml_feed` provider needs the migration `2026_10_26_100001_add_xml_feed_provider_to_integration_logs`
+(`php artisan migrate`).
+
+Direct call in PowerShell (only for testing; normal clients use the gateway):
+
+```powershell
+curl.exe -s -X POST http://localhost:8004/internal/v1/inventory-feed/translate -H "X-Internal-Key: <INTERNAL_SERVICE_KEY>" -H "Content-Type: application/xml" --data-binary "@docs/samples/inventory-feed.xml"
+```
+
+Tests: `php -d extension=gd vendor/bin/phpunit` (GD is needed by the OCR tests; the feed tests do not need it).
+
+---
+
 ## Environment variables
 | Variable | Default | Meaning |
 |----------|---------|---------|

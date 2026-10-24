@@ -148,6 +148,7 @@ services:
       OCR_MIN_CONFIDENCE: "${OCR_MIN_CONFIDENCE:-0.6}"
       OCR_MAX_CONCURRENT: "${OCR_MAX_CONCURRENT:-2}"
       OCR_FORCE_FAIL: "${OCR_FORCE_FAIL:-false}"
+      FEED_MAX_KB: "${FEED_MAX_KB:-512}"
     ports:
       - "127.0.0.1:8004:8000"
     healthcheck:
@@ -170,6 +171,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (min 32 characters)}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       GATEWAY_OCR_TIMEOUT_SECONDS: "${GATEWAY_OCR_TIMEOUT_SECONDS:-20}"
+      GATEWAY_SYNC_TIMEOUT_SECONDS: "${GATEWAY_SYNC_TIMEOUT_SECONDS:-10}"
       IDENTITY_URL: http://identity-service:8000
       INVENTORY_URL: http://inventory-service:8000
       RESERVATION_URL: http://reservation-service:8000
