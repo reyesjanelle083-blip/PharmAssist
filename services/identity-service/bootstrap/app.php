@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ApiException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -18,5 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(RequestId::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Expected client-facing failures are not application errors.
+        $exceptions->dontReport(ApiException::class);
         RenderEnvelope::register($exceptions);
     })->create();

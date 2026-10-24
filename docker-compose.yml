@@ -48,6 +48,7 @@ services:
     environment:
       <<: *laravel-env
       SERVICE_NAME: identity-service
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (min 32 characters)}
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: "3306"
@@ -148,6 +149,7 @@ services:
     environment:
       <<: *laravel-env
       SERVICE_NAME: gateway
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env (min 32 characters)}
       IDENTITY_URL: http://identity-service:8000
       INVENTORY_URL: http://inventory-service:8000
       RESERVATION_URL: http://reservation-service:8000

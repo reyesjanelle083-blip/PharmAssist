@@ -12,6 +12,19 @@ Needs MySQL running with the `identity_db` schema and `identity_user` (see `dock
 Set `DB_PASSWORD` and `SEED_PASSWORD` in `.env` first. The seeder fails if `SEED_PASSWORD` is empty
 and refuses to run when `APP_ENV=production`. It can be re-run safely (accounts are matched by email).
 
+## Auth endpoints (internal, need `X-Internal-Key`)
+`POST /internal/v1/auth/register` (multipart, `id_photo` jpg/png max 2 MB), `POST /internal/v1/auth/verify-email`,
+`POST /internal/v1/auth/login` (returns an HS256 JWT, 60 min), `GET /internal/v1/users/{id}`.
+Requires `JWT_SECRET` (at least 32 characters) in `.env`; without it login fails closed with a 500.
+No email is sent yet: with `APP_ENV=local` the 6-digit verification code is written to `storage/logs/laravel.log`.
+
+## Tests
+Tests use in-memory SQLite. On machines where `pdo_sqlite` is disabled in `php.ini` (default on Windows), run:
+```
+php -d extension=pdo_sqlite -d extension=sqlite3 vendor/bin/phpunit
+```
+(`php artisan test` starts a child process that does not inherit `-d` flags.)
+
 ## Seeded test accounts
 All use the password from `SEED_PASSWORD`. Never commit that value.
 
