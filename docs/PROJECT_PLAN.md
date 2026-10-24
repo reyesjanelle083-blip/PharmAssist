@@ -237,11 +237,11 @@ Roles are taken from the old `users.role` enum and the UI screenshot. **No new r
 | Component | Responsibility | Tech | Port (local) | Depends on |
 |-----------|----------------|------|--------------|------------|
 | `client` (React SPA) | UI, accessibility, calls gateway only | React + Vite + React Router + Axios + Leaflet | 5173 | gateway |
-| `gateway` | Single entry, JWT verification, RBAC, routing, aggregation, rate limit, CORS, response envelope, request-id, logging | Laravel 11 | 8000 | all services |
-| `identity-service` | Users, roles, JWT issuing, email/ID verification | Laravel 11 + `identity_db` | 8001 | integration (email) |
-| `inventory-service` | Medicines, branches, branch stock, holds, alerts, feed sync | Laravel 11 + `inventory_db` | 8002 | integration (alert email) |
-| `reservation-service` | Reservations, claim codes, expiry, notifications, status history | Laravel 11 + `reservation_db` | 8003 | inventory, integration |
-| `integration-service` (middleware) | Adapters/translators for distance API, openFDA, SOAP, SMTP; cache, retry, circuit breaker, integration log | Laravel 11 + `integration_db` | 8004 | external APIs, SOAP sim |
+| `gateway` | Single entry, JWT verification, RBAC, routing, aggregation, rate limit, CORS, response envelope, request-id, logging | Laravel 12 | 8000 | all services |
+| `identity-service` | Users, roles, JWT issuing, email/ID verification | Laravel 12 + `identity_db` | 8001 | integration (email) |
+| `inventory-service` | Medicines, branches, branch stock, holds, alerts, feed sync | Laravel 12 + `inventory_db` | 8002 | integration (alert email) |
+| `reservation-service` | Reservations, claim codes, expiry, notifications, status history | Laravel 12 + `reservation_db` | 8003 | inventory, integration |
+| `integration-service` (middleware) | Adapters/translators for distance API, openFDA, SOAP, SMTP; cache, retry, circuit breaker, integration log | Laravel 12 + `integration_db` | 8004 | external APIs, SOAP sim |
 | `legacy-verification-sim` | SOAP/XML prescription verification (WSDL), simulates a legacy/insurance/pharmacy-board system | PHP `SoapServer` | 8005 | none |
 | MySQL | One server, **separate schema + separate DB user per service** | MySQL 8 | 3306 | -- |
 
