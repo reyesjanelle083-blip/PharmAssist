@@ -24,3 +24,6 @@ REFERENCES/
 
 # editor settings
 .vscode/
+
+# Newman exports
+tests/postman/results/
