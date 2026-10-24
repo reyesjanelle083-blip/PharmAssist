@@ -30,6 +30,60 @@ php artisan db:seed
 `db:seed` runs `BranchSeeder`, `MedicineSeeder`, `BranchInventorySeeder` in that order. All three are re-runnable
 (rows are matched by their unique keys, existing stock rows are never overwritten) and refuse to run when `APP_ENV=production`.
 
+## Stock holds (reservation-service only)
+
+A reservation reserves stock with a **hold**. These routes are internal (`X-Internal-Key` required) and are called only by
+the reservation service; there is deliberately no gateway route for them.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/internal/v1/stock/holds` | Create holds: `{reservation_ref, branch_id, items:[{medicine_id, quantity}], ttl_minutes?}`. 201 new, 200 replay |
+| GET | `/internal/v1/stock/holds/{reservationRef}` | Current state of a reservation's holds |
+| POST | `/internal/v1/stock/holds/{reservationRef}/commit` | Reservation completed: stock leaves the shelf |
+| POST | `/internal/v1/stock/holds/{reservationRef}/release` | Reservation cancelled/rejected: stock goes back |
+
+`reservation_ref` is the handle for the whole reservation (1 to 64 chars: letters, digits, `.`, `_`, `:`, `-`); it has one hold row per item.
+Limits: 1 to 10 items, quantity 1 to 20, no duplicate `medicine_id`, active branch. `ttl_minutes` defaults to
+`INVENTORY_HOLD_TTL_HOURS` hours (48).
+
+### Lifecycle
+```
+            create                 commit
+(nothing) ---------> held ---------------------> committed   (stock_quantity AND reserved_quantity down, movement hold_commit)
+                      |  release (cancel / reject)
+                      +-----------------------> released     (reserved_quantity down only, no movement)
+                      |  expires_at passed, inventory:expire-holds
+                      +-----------------------> expired      (reserved_quantity down only)
+```
+- **Create is all or nothing.** All affected stock rows are locked (`FOR UPDATE`, ordered by id) in one transaction and every item
+  must have `stock_quantity - reserved_quantity >= quantity`. Otherwise nothing changes and the answer is
+  `409 STOCK_INSUFFICIENT` with `details.items[]` (`requested`, `available`, `sufficient` per item).
+  Unknown medicine, or a medicine with no stock row at the branch, is `404 NOT_FOUND`.
+- **Idempotent.** The same `reservation_ref` with the same items and branch replays the stored result (200, nothing reserved twice).
+  The same `reservation_ref` with a different body is `409 DUPLICATE_REQUEST`.
+- **Commit** needs every hold of the reference to be `held`, otherwise `409 INVALID_HOLD_STATE` and nothing changes.
+  It also bumps `version`, because `stock_quantity` changed.
+- **Release** is safe to repeat: already `released` or `expired` holds answer `200` unchanged; after a commit it is `409 INVALID_HOLD_STATE`.
+- `reserved_quantity` can never exceed `stock_quantity` or drop below 0: every write is a guarded `UPDATE`, in addition to the MySQL CHECK constraint.
+
+### Expiry
+`php artisan inventory:expire-holds` releases every `held` hold whose `expires_at` has passed (status `expired`). It can run any number
+of times. It is scheduled every minute in `routes/console.php`; the scheduler must be running (`php artisan schedule:work`, or a
+cron entry calling `schedule:run` every minute). This reconciles holds that nobody committed or released.
+
+### Race test (T20)
+```
+php artisan inventory:race-test                          # 20 processes compete for 5 units
+php artisan inventory:race-test --workers=30 --stock=5
+```
+Needs the real MySQL database (it refuses SQLite and `APP_ENV=production`). It creates its own temporary medicine and stock row
+on the first active branch, starts N separate OS processes that each ask for 1 unit at the same wall-clock moment (`--delay` seconds
+of boot time before the start barrier), then prints how many succeeded, how many got `STOCK_INSUFFICIENT`, the final
+`reserved_quantity` and the invariant checks, and finally deletes its temporary rows. Expected for 20 workers and stock 5:
+exactly 5 succeed, 15 fail, final reserved 5. It also verifies that no pre-existing stock row changed.
+
+---
+
 ## Seeded branches
 | id | Name | Area |
 |----|------|------|
