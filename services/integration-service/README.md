@@ -41,7 +41,7 @@ cache hit? --yes--> answer (source osrm)
    |no
 circuit open? --yes--> Haversine estimate for all items (warning)
    |no
-OSRM Table API (per-attempt timeout, <= OSRM_RETRIES retries, 2.5 s deadline overall)
+OSRM Table API (one attempt by default: 1.8 s timeout and 1.8 s deadline; OSRM_RETRIES can add retries)
    |success: items with a null value fall back one by one; a complete answer is cached for 10 minutes
    |failure: Haversine estimate for all items (warning), failure counted by the circuit breaker
 ```
@@ -49,7 +49,8 @@ OSRM Table API (per-attempt timeout, <= OSRM_RETRIES retries, 2.5 s deadline ove
   `duration,distance`, coordinates in `lon,lat` order, `User-Agent` from `HTTP_USER_AGENT`. A `null` for one destination falls back for that item only.
 - **Haversine adapter** (`HaversineProvider`): great-circle distance times `HAVERSINE_ROAD_FACTOR` (1.3), travel time from `HAVERSINE_AVG_SPEED_KMH` (25).
   It is an estimate, not a road distance. Both providers implement `DistanceProvider`, so another routing engine can be added without touching `DistanceService`.
-- **Retry**: only for timeouts and transient connection errors (refused, reset, DNS) and 5xx. Never for 429 (the public server is rate limiting: do not push),
+- **Retry** (off by default, `OSRM_RETRIES=0`): the code is still there and is configurable. When enabled, it only retries timeouts, transient connection errors
+  (refused, reset, DNS) and 5xx, with a short backoff, and never starts an attempt after the deadline. Never for 429 (the public server is rate limiting: do not push),
   malformed bodies, other 4xx, or TLS/certificate errors (those fail the same way every time).
 - **Circuit breaker** (Laravel cache): after **3 consecutive failed OSRM calls** OSRM is skipped for **60 seconds** and every request answers with the fallback.
   After 60 s one request is let through ("half open"): a success closes the circuit, a failure opens it again at once. Cache keys:
@@ -60,22 +61,33 @@ OSRM Table API (per-attempt timeout, <= OSRM_RETRIES retries, 2.5 s deadline ove
   `status_code`, `latency_ms`, a fixed reason code, the `request_id`). A request answered because the circuit is open also writes a `fallback` row (`circuit_open`).
   A failing log or cache write never changes the answer.
 
-## Timeout decision: a 2.5 s deadline, not the plan's 5 s
+## Timeout decision: one attempt, 1.8 s, not the plan's 5 s
 Plan section 4 allows 5 s for external calls, but the **gateway only waits 3 s** for any downstream service. If this service were still waiting for OSRM
-at 3 s, the gateway would answer 504 and the customer would get an error instead of a (slightly less precise) ranking. So the whole OSRM attempt group is
-capped at **2.5 s** (per attempt `OSRM_TIMEOUT_SECONDS` = 1.5 s, one retry, shrinking so the group never starts a new attempt after the deadline),
-leaving about 0.5 s for the cache, logging, the haversine fallback and the network hop to the gateway. Measured from the project machine in the Philippines, the
-public OSRM demo server answered in roughly 1.2 to 1.9 s, so 1.5 s per attempt is tight: on a slow day the fallback will be used, which is the intended behaviour.
-Raising `OSRM_TIMEOUT_SECONDS` towards 2.4 and setting `OSRM_RETRIES=0` trades the retry for more patience.
+at 3 s, the gateway would answer 504 and the customer would get an error instead of a (slightly less precise) ranking. The OSRM call is therefore a
+**single attempt** (`OSRM_RETRIES=0`) with a **1.8 s timeout and a 1.8 s deadline** (`OSRM_TIMEOUT_SECONDS`, `OSRM_DEADLINE_SECONDS`).
+
+Why 1.8 s and not more: the request has to fit in 3 s *including everything else*. Live measurements on the project machine (Windows, PHP dev server) showed
+
+- a **base overhead of about 0.5 to 0.8 s per request** even when no outbound call is made (web server, Laravel boot, database for cache and log);
+- an OSRM attempt group that can **overshoot its limit** a little (a 2.5 s group measured 2.5 to 3.07 s);
+- an earlier setup (1.5 s timeout, one retry, 2.5 s deadline) that produced a **3.06 s end-to-end fallback**, which is already past the gateway's 3 s.
+
+So the OSRM budget has to be about 1.8 s to leave room for the overhead and the haversine fallback. A single attempt also fits what the public demo server
+does: it answered in roughly 1 to 1.9 s from the Philippines and sometimes not at all, so a retry would rarely rescue a request inside the budget. On a slow
+day the fallback is used, which is the intended behaviour. On Linux or Docker the overhead should be smaller; that has not been measured.
+
+The retry code is **still there and configurable**: `OSRM_RETRIES=1` enables one retry (with `OSRM_BACKOFF_MS` between attempts). If you do that, raise
+`OSRM_DEADLINE_SECONDS` only as far as the gateway's 3 s minus the overhead allows, because the deadline stops any new attempt once it is used up. The tests set
+the timeout, retries and deadline explicitly, so they do not depend on these defaults.
 
 ## Environment variables
 | Variable | Default | Meaning |
 |----------|---------|---------|
 | `INTEGRATION_MODE` | `live` | `stub` = no network, deterministic haversine numbers with `source: "stub"` (tests, demos) |
 | `OSRM_BASE_URL` | `https://router.project-osrm.org` | OSRM server (public demo, no SLA: never load test it) |
-| `OSRM_TIMEOUT_SECONDS` | `1.5` | per-attempt timeout |
-| `OSRM_RETRIES` | `1` | extra attempts after the first |
-| `OSRM_DEADLINE_SECONDS` | `2.5` | hard limit across all attempts (keep it below the gateway's 3 s) |
+| `OSRM_TIMEOUT_SECONDS` | `1.8` | per-attempt timeout |
+| `OSRM_RETRIES` | `0` | extra attempts after the first (0 = single attempt; `1` turns the retry on) |
+| `OSRM_DEADLINE_SECONDS` | `1.8` | hard limit across all attempts (must stay well below the gateway's 3 s) |
 | `OSRM_BACKOFF_MS` | `150` | pause between attempts |
 | `HTTP_USER_AGENT` | placeholder | sent to OSRM; put a real contact in your own `.env`, never in git |
 | `HAVERSINE_ROAD_FACTOR` | `1.3` | straight line to road distance |

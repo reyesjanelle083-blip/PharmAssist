@@ -17,11 +17,13 @@ return [
             'base_url' => rtrim((string) env('OSRM_BASE_URL', 'https://router.project-osrm.org'), '/'),
             'profile' => 'driving',
             // Seconds each single attempt may take.
-            'timeout_seconds' => (float) env('OSRM_TIMEOUT_SECONDS', 1.5),
+            'timeout_seconds' => (float) env('OSRM_TIMEOUT_SECONDS', 1.8),
             // Extra attempts after the first one (only for timeouts, connection errors and 5xx).
-            'retries' => (int) env('OSRM_RETRIES', 1),
-            // Hard limit across all attempts. The gateway waits 3 s, so this must stay below that.
-            'deadline_seconds' => (float) env('OSRM_DEADLINE_SECONDS', 2.5),
+            // Default 0: one attempt only. The retry code is kept and can be switched on with OSRM_RETRIES=1.
+            'retries' => (int) env('OSRM_RETRIES', 0),
+            // Hard limit across all attempts. The gateway waits 3 s and the request itself adds roughly 0.5 to 0.8 s
+            // of overhead (measured), so this must stay well below that.
+            'deadline_seconds' => (float) env('OSRM_DEADLINE_SECONDS', 1.8),
             'backoff_ms' => (int) env('OSRM_BACKOFF_MS', 150),
             'user_agent' => (string) env('HTTP_USER_AGENT', 'PharmAssistSIA/1.0 (replace with a contact email)'),
         ],
