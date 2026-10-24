@@ -14,6 +14,11 @@ return [
     |
     */
 
+    // Downstream PharmAssist services (base URLs come from the environment).
+    'identity' => [
+        'url' => env('IDENTITY_URL'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
