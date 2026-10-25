@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventorySyncController;
@@ -18,6 +19,9 @@ Route::middleware(InternalKey::class)->prefix('internal/v1')->group(function () 
     Route::get('/medicines/{id}', [MedicineController::class, 'show'])->whereNumber('id');
     Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/branches/{id}', [BranchController::class, 'show'])->whereNumber('id');
+
+    // Where is a medicine in stock (public data; the gateway adds distances).
+    Route::get('/inventory/availability', [AvailabilityController::class, 'index']);
 
     // Stock holds: called only by reservation-service (plan I-4 / I-5). Deliberately not exposed through the gateway.
     Route::post('/stock/holds', [StockHoldController::class, 'store']);

@@ -21,6 +21,7 @@ class GatewaySecurityTest extends TestCase
         'api/v1/medicines',
         'api/v1/medicines/{id}',
         'api/v1/branches',
+        'api/v1/availability',
     ];
 
     protected function setUp(): void

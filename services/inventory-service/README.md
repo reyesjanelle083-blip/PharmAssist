@@ -168,6 +168,27 @@ curl.exe -s -X POST http://localhost:8002/internal/v1/inventory/sync -H "X-Inter
 (that file is the feed format; to call inventory-service directly, first translate it with the integration-service command
 and send the `data` it returns, adding `"strict": false`.)
 
+## Availability (Step 7)
+
+`GET /internal/v1/inventory/availability` (behind `X-Internal-Key`; public data, no user identity) is the stock half of the
+gateway's `GET /availability` mashup.
+
+| Query | Rule |
+|-------|------|
+| `medicine_id` or `q` | one is required (`medicine_id` wins if both are sent). `q` is at most 100 characters, matched against generic and brand name, at most 5 medicines. Unknown `medicine_id` is `404 NOT_FOUND`; a `q` that matches nothing is `200` with no items |
+| `limit` | rows to return, 1 to 20, default 10 |
+
+A row is listed only when the **branch is active**, **free stock** (`stock_quantity - reserved_quantity`) is above zero, and the
+**expiration date is not in the past** (today is still good). Order: medicine name, then price, then branch id (stable).
+Each row: `branch_id`, `branch_name`, `address`, `latitude`, `longitude`, `medicine_id`, `medicine_name`, `strength`, `dosage_form`,
+`prescription_required`, `price`, `available_quantity`, `status`. `stock_quantity`, `reserved_quantity` and `version` are never returned.
+
+```powershell
+$k = (Select-String -Path .env -Pattern '^INTERNAL_SERVICE_KEY=').Line.Split('=',2)[1]
+curl.exe -s "http://localhost:8002/internal/v1/inventory/availability?q=paracetamol&limit=5" -H "X-Internal-Key: $k"
+curl.exe -s "http://localhost:8002/internal/v1/inventory/availability?medicine_id=1" -H "X-Internal-Key: $k"
+```
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

@@ -23,6 +23,12 @@ return [
         'url' => env('INVENTORY_URL'),
     ],
 
+    // The gateway's own distance estimate, used only when integration-service cannot answer (same defaults as integration-service).
+    'distance' => [
+        'road_factor' => (float) env('HAVERSINE_ROAD_FACTOR', 1.3),
+        'avg_speed_kmh' => (float) env('HAVERSINE_AVG_SPEED_KMH', 25),
+    ],
+
     'reservation' => [
         'url' => env('RESERVATION_URL'),
         // Seconds the gateway waits for POST /reservations and PATCH /reservations/{id}/status: reservation-service itself
@@ -34,6 +40,8 @@ return [
         'url' => env('INTEGRATION_URL'),
         // Seconds the gateway waits for an OCR answer (every other route waits 3 s). Keep it above OCR_TIMEOUT_SECONDS.
         'ocr_timeout' => (float) env('GATEWAY_OCR_TIMEOUT_SECONDS', 20),
+        // Seconds the gateway waits for integration-service's distance answer before estimating the distances itself.
+        'distance_timeout' => (float) env('GATEWAY_DISTANCE_TIMEOUT_SECONDS', 2.5),
         // Seconds the gateway waits for each step of the inventory feed sync (translate, then apply).
         'sync_timeout' => (float) env('GATEWAY_SYNC_TIMEOUT_SECONDS', 10),
     ],

@@ -22,6 +22,9 @@ trait GatewayTestSetup
             'services.integration.url' => 'http://integration.test',
             'services.integration.ocr_timeout' => 20.0,
             'services.integration.sync_timeout' => 10.0,
+            'services.integration.distance_timeout' => 2.5,
+            'services.distance.road_factor' => 1.3,
+            'services.distance.avg_speed_kmh' => 25.0,
             'services.reservation.url' => 'http://reservation.test',
             'services.reservation.timeout' => 10.0,
         ]);

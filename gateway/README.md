@@ -128,6 +128,50 @@ A technician logs in the same way (`technician1@pharmassist.test`) and approves 
 `-d '{\"action\":\"approve\"}'`, or rejects with `-d '{\"action\":\"reject\",\"reason\":\"Unreadable prescription\"}'`.
 An assistant completes with `-d '{\"action\":\"complete\",\"claim_code\":\"PA-XXXXXXXX\"}'`.
 
+## Availability (Step 7)
+
+`GET /api/v1/availability`: public (no token), 60 requests per minute per IP. Which branches have free stock of a medicine,
+nearest first. The gateway is the Aggregator (plan F2 and row I-3): inventory-service says who has stock, integration-service
+says how far each branch is.
+
+| Query | Rule |
+|-------|------|
+| `medicine_id` or `q` | one of them is required; `q` is at most 100 characters (generic or brand name, at most 5 medicines) |
+| `lat`, `lng` | both or neither; plain numbers inside the Philippines (latitude 4.5 to 21.5, longitude 116 to 127), else `422` |
+| `limit` | 1 to 20, default 10 |
+
+Answer: `data.items[]` (`branch_id`, `branch_name`, `address`, `latitude`, `longitude`, `medicine_id`, `medicine_name`, `strength`,
+`dosage_form`, `prescription_required`, `price`, `available_quantity`, `status`, `distance_km`, `travel_min`, `distance_source`)
+and `data.meta` (`count`, `origin_provided`).
+
+- **With `lat` and `lng`**: one call to integration-service `POST /internal/v1/distance` for all distinct branches
+  (waits `GATEWAY_DISTANCE_TIMEOUT_SECONDS`, default 2.5). Ranked by `travel_min`, then price, then medicine name, then branch id.
+  If integration-service reports `DISTANCE_FALLBACK`, the warning is passed on.
+- **Degrade, never fail**: if integration-service is down, too slow or answers with something unusable, the gateway estimates the
+  distances itself (haversine: road factor `HAVERSINE_ROAD_FACTOR` 1.3, speed `HAVERSINE_AVG_SPEED_KMH` 25, minutes rounded up,
+  km with 2 decimals), sets `distance_source: "haversine"`, adds the warning `DISTANCE_FALLBACK` and still answers `200`.
+- **Without coordinates**: no distance call, the three distance fields are `null`, ordered by price then branch name, warning `ORIGIN_NOT_PROVIDED`.
+- **Nothing in stock**: `200`, empty `items`, warning `NO_STOCK_FOUND`.
+- Only inventory-service can cause an error: `404` unknown `medicine_id`, `503`, `504`, `502`.
+- **Privacy**: the coordinates go to integration-service in a request body and nowhere else. They are not sent to inventory-service,
+  logged, cached, stored or echoed back; a test checks the log output.
+
+```powershell
+# by medicine id, ranked from a point in Manila
+curl.exe -s "http://localhost:8000/api/v1/availability?medicine_id=1&lat=14.5995&lng=120.9842"
+
+# by name, no location (ordered by price)
+curl.exe -s "http://localhost:8000/api/v1/availability?q=paracetamol&limit=5"
+
+# a bad location is refused (Tokyo)
+curl.exe -s "http://localhost:8000/api/v1/availability?medicine_id=1&lat=35.68&lng=139.69"
+```
+
+To see the fallback, stop integration-service (or set `INTEGRATION_URL` to an unused port) and repeat the first command: the answer is
+still `200`, with `"distance_source":"haversine"` and `"warnings":["DISTANCE_FALLBACK"]`.
+
+Environment: `GATEWAY_DISTANCE_TIMEOUT_SECONDS` (2.5), `HAVERSINE_ROAD_FACTOR` (1.3), `HAVERSINE_AVG_SPEED_KMH` (25).
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

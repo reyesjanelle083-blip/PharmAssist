@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventorySyncController;
@@ -25,6 +26,9 @@ Route::prefix('api/v1')->group(function () {
     Route::get('/medicines', [CatalogController::class, 'medicines']);
     Route::get('/medicines/{id}', [CatalogController::class, 'medicine'])->whereNumber('id');
     Route::get('/branches', [CatalogController::class, 'branches']);
+
+    // Stock + distance mashup (public: browsing needs no account). 60 per minute per IP.
+    Route::get('/availability', [AvailabilityController::class, 'index'])->middleware('throttle:availability');
 
     // ---- protected (valid JWT required) ------------------------------------
     Route::middleware('auth.jwt')->group(function () {

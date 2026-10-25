@@ -493,21 +493,36 @@ paths:
       x-tier: 0
       x-roles: [public]
       security: []
-      summary: Branches with stock, ranked by travel time (mashup of inventory and OSRM)
+      summary: Branches with free stock, ranked by travel time (mashup of inventory and OSRM)
       description: |
-        Needs `medicine_id` or `q`. With `lat` and `lng` the list is ranked by `travel_minutes`, then price.
-        If OSRM fails the call still returns 200 with straight-line estimates,
-        `distance_source` is `haversine_fallback` and `warnings` has `DISTANCE_FALLBACK`.
+        Needs `medicine_id` or `q` (a search by generic or brand name, at most 5 medicines). A row is listed only when the
+        branch is active, free stock (stock minus reserved) is above zero and the batch has not expired; stock counts and
+        reserved counts are never shown.
+
+        With `lat` and `lng` (both or neither, inside the Philippines: latitude 4.5 to 21.5, longitude 116 to 127) every row gets
+        `distance_km`, `travel_min` and `distance_source`, and the list is ranked by `travel_min`, then price, then medicine name,
+        then branch id. Without them the three fields are null, the list is ordered by price then branch name, and the warning
+        `ORIGIN_NOT_PROVIDED` is returned.
+
+        Distances never make the request fail: if the routing provider is slow, down or answers badly, the gateway estimates the
+        distances itself (`distance_source: haversine`) and returns 200 with the warning `DISTANCE_FALLBACK`. Only inventory-service
+        being unavailable gives a 5xx. No stock at all is 200 with an empty list and the warning `NO_STOCK_FOUND`.
+        The coordinates are used for this request only: they are never stored, logged or echoed back.
+        At most 60 requests per minute per IP.
       parameters:
-        - { name: medicine_id, in: query, schema: { type: integer, minimum: 1 } }
-        - { name: q, in: query, schema: { type: string, maxLength: 100 } }
-        - { name: lat, in: query, schema: { type: number, minimum: -90, maximum: 90 } }
-        - { name: lng, in: query, schema: { type: number, minimum: -180, maximum: 180 } }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 10 } }
+        - { name: medicine_id, in: query, description: 'Required unless q is given. An unknown id is 404.', schema: { type: integer, minimum: 1 } }
+        - { name: q, in: query, description: 'Required unless medicine_id is given.', schema: { type: string, minLength: 1, maxLength: 100 } }
+        - { name: lat, in: query, description: 'Together with lng.', schema: { type: number, minimum: 4.5, maximum: 21.5 } }
+        - { name: lng, in: query, description: 'Together with lat.', schema: { type: number, minimum: 116, maximum: 127 } }
+        - { name: limit, in: query, description: Rows to return., schema: { type: integer, minimum: 1, maximum: 20, default: 10 } }
       responses:
-        '200': { description: Ranked branches (may be empty)., content: { application/json: { schema: { $ref: '#/components/schemas/AvailabilityEnvelope' } } } }
+        '200': { description: 'Ranked rows (may be empty). Warnings: `NO_STOCK_FOUND`, `ORIGIN_NOT_PROVIDED`, `DISTANCE_FALLBACK`.', content: { application/json: { schema: { $ref: '#/components/schemas/AvailabilityEnvelope' } } } }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '504': { $ref: '#/components/responses/GatewayTimeout' }
 
   # ------------------------------------------------------------------ reservations
   /reservations:
@@ -1107,14 +1122,24 @@ components:
               reserved_quantity: { type: integer }
     AvailabilityItem:
       type: object
+      description: One medicine at one branch (flat). Stock counts and reserved counts are never included.
       properties:
-        branch: { $ref: '#/components/schemas/Branch' }
-        medicine: { $ref: '#/components/schemas/Medicine' }
-        price: { type: string }
-        available_quantity: { type: integer }
-        distance_km: { type: number, nullable: true }
-        travel_minutes: { type: number, nullable: true }
-        distance_source: { type: string, nullable: true, enum: [osrm, haversine_fallback] }
+        branch_id: { type: integer }
+        branch_name: { type: string }
+        address: { type: string }
+        latitude: { type: number }
+        longitude: { type: number }
+        medicine_id: { type: integer }
+        medicine_name: { type: string, example: Paracetamol (Biogesic), description: 'Generic name, with the brand in brackets when there is one.' }
+        strength: { type: string }
+        dosage_form: { type: string }
+        prescription_required: { type: boolean }
+        price: { type: string, example: '12.50' }
+        available_quantity: { type: integer, description: Free stock (stock minus reserved). }
+        status: { type: string, enum: [available, low_stock] }
+        distance_km: { type: number, nullable: true, description: 'Null without lat/lng.' }
+        travel_min: { type: integer, nullable: true, description: 'Minutes, rounded up. Null without lat/lng.' }
+        distance_source: { type: string, nullable: true, enum: [osrm, haversine, stub], description: '`haversine` is an estimate (integration-service fallback or the gateway''s own).' }
     ReservationStatus:
       type: string
       enum: [pending, approved, completed, rejected, cancelled, expired]
@@ -1387,6 +1412,11 @@ components:
               type: object
               properties:
                 items: { type: array, items: { $ref: '#/components/schemas/AvailabilityItem' } }
+                meta:
+                  type: object
+                  properties:
+                    count: { type: integer }
+                    origin_provided: { type: boolean }
     ReservationEnvelope:
       allOf:
         - $ref: '#/components/schemas/Envelope'
