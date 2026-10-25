@@ -26,7 +26,7 @@ servers:
 tags:
   - { name: auth, description: 'Accounts, login, approval and staff' }
   - { name: catalog, description: 'Medicines, counseling and branches' }
-  - { name: inventory, description: 'Branch stock, alerts and reports' }
+  - { name: inventory, description: 'Branch stock and reports' }
   - { name: availability, description: Stock plus distance mashup }
   - { name: reservations, description: 'Reservations, notifications and messages' }
   - { name: prescriptions, description: Prescription image to text (OCR) }
@@ -295,7 +295,7 @@ paths:
       security: []
       summary: The distinct categories in the catalog, for the search filter
       responses:
-        '200': { description: Categories, alphabetical., content: { application/json: { schema: { $ref: '#/components/schemas/CategoryListEnvelope' } } } }
+        '200': { description: 'Categories, alphabetical.', content: { application/json: { schema: { $ref: '#/components/schemas/CategoryListEnvelope' } } } }
 
   /medicines/{id}:
     get:
@@ -406,6 +406,11 @@ paths:
       x-tier: 0
       x-roles: [pharmacy_technician, pharmacy_assistant, branch_manager, ceo]
       summary: Stock of one branch (staff only for their own branch)
+      description: |
+        Staff see their own branch (another branch is 403); the CEO may read any branch. There is no separate stock-alerts
+        endpoint: stock alerts are the rows with `status=low_stock` (stock at or below `min_threshold`) or
+        `status=out_of_stock` (stock is zero), so a client builds its alert list by filtering this one. Read only here;
+        changing stock is `PUT /branches/{id}/inventory/{medicineId}`.
       parameters:
         - { $ref: '#/components/parameters/IdPath' }
         - { name: status, in: query, schema: { type: string, enum: [available, low_stock, out_of_stock] } }
@@ -449,23 +454,6 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
-
-  /stock-alerts:
-    get:
-      operationId: listStockAlerts
-      tags: [inventory]
-      x-tier: 1
-      x-roles: [pharmacy_technician, branch_manager, ceo]
-      summary: Low-stock alerts
-      parameters:
-        - { name: branch_id, in: query, schema: { type: integer, minimum: 1 } }
-        - { name: resolved, in: query, schema: { type: boolean } }
-        - { $ref: '#/components/parameters/Page' }
-        - { $ref: '#/components/parameters/PerPage' }
-      responses:
-        '200': { description: Alerts., content: { application/json: { schema: { $ref: '#/components/schemas/StockAlertListEnvelope' } } } }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { $ref: '#/components/responses/Forbidden' }
 
   /reports/branch-summary:
     get:
@@ -694,7 +682,7 @@ paths:
       operationId: getReservationPrescription
       tags: [reservations]
       x-tier: 0
-      x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager]
+      x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager, ceo]
       summary: Stream the stored prescription image (private, never a public URL)
       description: |
         Allowed for the owner, staff of the same branch and the CEO; anyone else is 403. A reservation without an image is 404.
@@ -1110,17 +1098,6 @@ components:
         expiration_date: { type: string, format: date, nullable: true }
         status: { type: string, enum: [available, low_stock, out_of_stock] }
         version: { type: integer }
-    StockAlert:
-      type: object
-      properties:
-        id: { type: integer }
-        branch_id: { type: integer }
-        medicine: { $ref: '#/components/schemas/Medicine' }
-        alert_type: { type: string, enum: [low_stock, critical_stock, out_of_stock] }
-        current_stock: { type: integer }
-        is_resolved: { type: boolean }
-        created_at: { type: string, format: date-time }
-        resolved_at: { type: string, format: date-time, nullable: true }
     Report:
       type: object
       properties:
@@ -1413,16 +1390,6 @@ components:
               type: object
               properties:
                 items: { type: array, items: { $ref: '#/components/schemas/InventoryItem' } }
-                meta: { $ref: '#/components/schemas/PageMeta' }
-    StockAlertListEnvelope:
-      allOf:
-        - $ref: '#/components/schemas/Envelope'
-        - type: object
-          properties:
-            data:
-              type: object
-              properties:
-                items: { type: array, items: { $ref: '#/components/schemas/StockAlert' } }
                 meta: { $ref: '#/components/schemas/PageMeta' }
     ReportEnvelope:
       allOf:

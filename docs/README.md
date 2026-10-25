@@ -23,12 +23,12 @@ Generated from `docs/openapi.yaml` (base path `/api/v1`). Roles: public = no log
 | GET | `/reservations` | customer, technician, assistant, manager, ceo | reservations | List reservations (customer - own, staff - own branch, CEO - all) |
 | GET | `/reservations/{id}` | customer, technician, assistant, manager, ceo | reservations | Reservation detail (owner, staff of the branch or CEO) |
 | PATCH | `/reservations/{id}/status` | customer, technician, assistant, manager | reservations | Change reservation status |
-| GET | `/reservations/{id}/prescription` | customer, technician, assistant, manager | reservations | Stream the stored prescription image (private, never a public URL) |
+| GET | `/reservations/{id}/prescription` | customer, technician, assistant, manager, ceo | reservations | Stream the stored prescription image (private, never a public URL) |
 | POST | `/prescriptions/ocr` | customer, technician, assistant, manager | prescriptions | Read a prescription image into text (nothing is stored) |
 | POST | `/integrations/inventory/sync` | manager, ceo | integrations | Import a branch inventory feed (XML or JSON) |
 | GET | `/health` | public | health | Aggregated health of the gateway and its services |
 
-### Tier 1 - strongly desired (13)
+### Tier 1 - strongly desired (12)
 
 | Method | Path | Role | Module | Summary |
 |--------|------|------|--------|---------|
@@ -40,7 +40,6 @@ Generated from `docs/openapi.yaml` (base path `/api/v1`). Roles: public = no log
 | POST | `/branches` | ceo | catalog | Create a branch |
 | PUT | `/branches/{id}` | ceo | catalog | Replace a branch record |
 | PATCH | `/branches/{id}` | ceo | catalog | Partially update or deactivate a branch |
-| GET | `/stock-alerts` | technician, manager, ceo | inventory | Low-stock alerts |
 | GET | `/reports/branch-summary` | assistant, manager, ceo | inventory | Branch KPIs |
 | GET | `/reports/system-summary` | ceo | inventory | All-branch KPIs |
 | GET | `/notifications` | customer, technician, assistant, manager, ceo | reservations | Own notifications |
