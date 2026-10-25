@@ -165,6 +165,105 @@ class CatalogTest extends TestCase
             ->assertOk()->assertJsonPath('data.items', ['Antibiotics', 'Pain Relievers']);
     }
 
+    // ---------------------------------------------------------------- branch-aware browse (include=availability, branch_id)
+
+    /** Amoxicillin: stocked at open1 (35 free of 40), open2 (low), not free at full (all reserved), inactive and expired. Ibuprofen: nowhere. */
+    private function stockedCatalog(): array
+    {
+        $open1 = $this->makeBranch('Open One');
+        $open2 = $this->makeBranch('Open Two');
+        $full = $this->makeBranch('Full');
+        $closed = $this->makeBranch('Closed', false);
+        $old = $this->makeBranch('Old Batch');
+
+        $amox = $this->makeMedicine('Amoxicillin');
+        $ibu = $this->makeMedicine('Ibuprofen', 'Advil', 'Pain Relievers', false);
+
+        $this->makeInventory($open1, $amox, 40, 5);
+        $this->makeInventory($open2, $amox, 8, 0, 20); // low stock
+        $this->makeInventory($full, $amox, 10, 10);
+        $this->makeInventory($closed, $amox, 50);
+        $this->makeInventory($old, $amox, 50)->update(['expiration_date' => now()->subDay()->toDateString()]);
+        $this->makeInventory($open1, $ibu, 0, 0); // out of stock where it is listed
+
+        return compact('open1', 'open2', 'amox', 'ibu');
+    }
+
+    public function test_the_catalog_has_no_availability_unless_asked_for(): void
+    {
+        $this->stockedCatalog();
+
+        $items = $this->getJson('/internal/v1/medicines', $this->internal())->assertOk()->json('data.items');
+
+        $this->assertCount(2, $items);
+        $this->assertArrayNotHasKey('availability', $items[0]);
+    }
+
+    public function test_include_availability_counts_only_branches_with_free_stock_that_are_active_and_unexpired(): void
+    {
+        $s = $this->stockedCatalog();
+
+        $items = collect($this->getJson('/internal/v1/medicines?include=availability', $this->internal())->assertOk()->json('data.items'))->keyBy('generic_name');
+
+        $amox = $items['Amoxicillin']['availability'];
+        $this->assertSame(2, $amox['branch_count']);
+        $this->assertSame(43, $amox['total_available']); // 35 + 8
+        $this->assertSame([
+            ['branch_id' => $s['open1']->id, 'available_quantity' => 35, 'status' => 'available'],
+            ['branch_id' => $s['open2']->id, 'available_quantity' => 8, 'status' => 'low_stock'],
+        ], $amox['branches']);
+
+        $this->assertSame(['branch_count' => 0, 'total_available' => 0, 'branches' => []], $items['Ibuprofen']['availability']);
+    }
+
+    public function test_availability_never_exposes_stock_or_reserved_counts(): void
+    {
+        $this->stockedCatalog();
+
+        $raw = $this->getJson('/internal/v1/medicines?include=availability', $this->internal())->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('reserved', $raw);
+        $this->assertStringNotContainsString('stock_quantity', $raw);
+    }
+
+    public function test_the_branch_filter_keeps_only_medicines_that_branch_has_free_stock_of(): void
+    {
+        $s = $this->stockedCatalog();
+
+        $open1 = $this->getJson('/internal/v1/medicines?branch_id='.$s['open1']->id, $this->internal())->assertOk();
+        $this->assertSame(['Amoxicillin'], array_column($open1->json('data.items'), 'generic_name')); // Ibuprofen is 0 there
+        $this->assertSame(1, $open1->json('data.meta.total'));
+
+        // the filter does not hide where else it is stocked
+        $withAvailability = $this->getJson('/internal/v1/medicines?include=availability&branch_id='.$s['open2']->id, $this->internal())->assertOk();
+        $this->assertSame(2, $withAvailability->json('data.items.0.availability.branch_count'));
+    }
+
+    public function test_the_branch_filter_gives_nothing_for_branches_with_no_sellable_stock(): void
+    {
+        $this->stockedCatalog();
+        $ids = \App\Models\Branch::whereIn('name', ['Full', 'Closed', 'Old Batch'])->pluck('id');
+
+        foreach ([...$ids, 9999] as $id) {
+            $this->getJson("/internal/v1/medicines?branch_id={$id}", $this->internal())->assertOk()->assertJsonPath('data.meta.total', 0);
+        }
+    }
+
+    public function test_the_branch_filter_combines_with_the_other_filters(): void
+    {
+        $s = $this->stockedCatalog();
+
+        $this->getJson("/internal/v1/medicines?branch_id={$s['open1']->id}&rx=false", $this->internal())->assertOk()->assertJsonPath('data.meta.total', 0);
+        $this->getJson("/internal/v1/medicines?branch_id={$s['open1']->id}&rx=true&q=amox", $this->internal())->assertOk()->assertJsonPath('data.meta.total', 1);
+    }
+
+    public function test_bad_availability_options_are_422(): void
+    {
+        $this->getJson('/internal/v1/medicines?include=everything', $this->internal())->assertStatus(422);
+        $this->getJson('/internal/v1/medicines?branch_id=0', $this->internal())->assertStatus(422);
+        $this->getJson('/internal/v1/medicines?branch_id=abc', $this->internal())->assertStatus(422);
+    }
+
     public function test_inactive_branches_are_hidden_from_public_lists_and_detail(): void
     {
         $active = $this->makeBranch('Active Branch');

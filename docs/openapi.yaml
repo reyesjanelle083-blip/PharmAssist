@@ -276,10 +276,17 @@ paths:
       x-roles: [public]
       security: []
       summary: Search the medicine catalog (generic or brand name)
+      description: |
+        The catalog is global: a medicine belongs to no branch. `branch_id` and `include=availability` only look at stock; the
+        list and its paging still describe medicines. Availability follows the same rule as `GET /availability`: active branch,
+        free stock (stock minus reserved) above zero, batch not expired. A medicine with no such branch has `branch_count: 0`
+        (out of stock everywhere). Stock and reserved counts are never shown, only the free quantity.
       parameters:
         - { name: q, in: query, schema: { type: string, maxLength: 100 } }
         - { name: category, in: query, schema: { type: string } }
         - { name: rx, in: query, schema: { type: boolean }, description: Filter by prescription required. }
+        - { name: branch_id, in: query, schema: { type: integer, minimum: 1 }, description: 'Keep only medicines this branch has free stock of right now (active branch, free stock above zero, batch not expired). An unknown or closed branch gives an empty list.' }
+        - { name: include, in: query, schema: { type: string, enum: [availability] }, description: 'availability adds an availability object to every medicine of the page (one query for the page, not one per medicine).' }
         - { $ref: '#/components/parameters/Page' }
         - { $ref: '#/components/parameters/PerPage' }
       responses:
@@ -1047,6 +1054,21 @@ components:
         dosage_form: { type: string, example: Capsule }
         prescription_required: { type: boolean }
         image_url: { type: string, nullable: true }
+        availability: { $ref: '#/components/schemas/MedicineAvailability' }
+    MedicineAvailability:
+      type: object
+      description: Only present when the list was requested with `include=availability`.
+      properties:
+        branch_count: { type: integer, description: Branches that have free stock of it right now. }
+        total_available: { type: integer, description: Free quantity summed over those branches. }
+        branches:
+          type: array
+          items:
+            type: object
+            properties:
+              branch_id: { type: integer }
+              available_quantity: { type: integer, minimum: 1 }
+              status: { type: string, enum: [available, low_stock] }
     Counseling:
       type: object
       properties:

@@ -14,7 +14,7 @@ class CatalogController extends Controller
     public function medicines(Request $request): JsonResponse
     {
         // Only the documented filters are forwarded; the downstream service validates them.
-        return $this->services->get('inventory', '/internal/v1/medicines', $request->only(['q', 'category', 'rx', 'page', 'per_page']));
+        return $this->services->get('inventory', '/internal/v1/medicines', $request->only(['q', 'category', 'rx', 'branch_id', 'include', 'page', 'per_page']));
     }
 
     public function medicine(int $id): JsonResponse

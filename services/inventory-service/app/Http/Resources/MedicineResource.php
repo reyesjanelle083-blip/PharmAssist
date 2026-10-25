@@ -21,6 +21,8 @@ class MedicineResource extends JsonResource
             'dosage_form' => $this->dosage_form,
             'prescription_required' => $this->prescription_required,
             'image_url' => $this->image_path,
+            // only when the list was asked for it (?include=availability)
+            'availability' => $this->when(array_key_exists('availability', $this->resource->getAttributes()), fn () => $this->resource->getAttribute('availability')),
         ];
     }
 }

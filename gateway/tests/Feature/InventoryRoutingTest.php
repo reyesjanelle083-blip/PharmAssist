@@ -53,13 +53,13 @@ class InventoryRoutingTest extends TestCase
     {
         $this->fakeInventory();
 
-        $this->getJson('/api/v1/medicines?q=amox&category=Antibiotics&rx=true&page=2&per_page=5&admin=1&branch_id=9')->assertOk();
+        $this->getJson('/api/v1/medicines?q=amox&category=Antibiotics&rx=true&page=2&per_page=5&branch_id=2&include=availability&admin=1&sort=price')->assertOk();
 
         Http::assertSent(function (Request $r) {
             parse_str((string) parse_url($r->url(), PHP_URL_QUERY), $query);
 
             return str_starts_with($r->url(), 'http://inventory.test/internal/v1/medicines?')
-                && $query === ['q' => 'amox', 'category' => 'Antibiotics', 'rx' => 'true', 'page' => '2', 'per_page' => '5'];
+                && $query === ['q' => 'amox', 'category' => 'Antibiotics', 'rx' => 'true', 'branch_id' => '2', 'include' => 'availability', 'page' => '2', 'per_page' => '5'];
         });
     }
 

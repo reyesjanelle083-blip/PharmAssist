@@ -28,6 +28,8 @@ class MedicineIndexRequest extends FormRequest
             'q' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', 'string', 'max:100'],
             'rx' => ['nullable', 'boolean'],
+            'branch_id' => ['nullable', 'integer', 'min:1'],
+            'include' => ['nullable', 'string', 'in:availability'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];

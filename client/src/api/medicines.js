@@ -1,7 +1,11 @@
 import http from './http.js'
 
-export function getMedicines({ q, category, rx, page, per_page } = {}, { signal } = {}) {
-  return http.get('/medicines', { params: { q, category, rx, page, per_page }, signal })
+/**
+ * GET /medicines (public). The catalog is global; branchId keeps only the medicines that branch has free stock of, and
+ * include: 'availability' adds where each medicine of the page is in stock (one request for the whole page).
+ */
+export function getMedicines({ q, category, rx, branchId, include, page, per_page } = {}, { signal } = {}) {
+  return http.get('/medicines', { params: { q, category, rx, branch_id: branchId || undefined, include, page, per_page }, signal })
 }
 
 /** The distinct categories in the catalog, for the search filter. */
