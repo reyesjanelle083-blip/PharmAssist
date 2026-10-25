@@ -16,6 +16,10 @@
   --pa-primary-soft: #eef4f8;
   --pa-primary-edge: #c3d4de;
   --pa-on-primary: #ffffff;
+  /* the old hero's lighter "About Us" blue, given a general-purpose name; its high-contrast form is on the button itself
+     (ui.css), since it needs to stay visibly different from the primary button rather than follow the usual formula */
+  --pa-secondary: #b5cfd8;
+  --pa-secondary-dark: #9fc0cb;
   --pa-danger: #c0392b;
   --pa-danger-soft: #fdf2f1;
   --pa-danger-edge: #e8c5c2;
@@ -47,9 +51,14 @@
   --pa-space-5: 24px;
   --pa-space-6: 40px;
 
-  /* type and touch target */
+  /* type and touch target: one scale, so new headings stop picking arbitrary rem values */
   --pa-font: 'Bricolage Grotesque', sans-serif;
   --pa-control-height: 44px;
+  --pa-text-sm: 0.85rem;
+  --pa-text-base: 1rem;
+  --pa-text-lg: 1.15rem;
+  --pa-text-xl: 1.65rem;
+  --pa-text-hero: clamp(1.75rem, 1.1rem + 3vw, 2.5rem);
 }
 
 html[data-contrast='high'] {

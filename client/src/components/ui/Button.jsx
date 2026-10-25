@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
 
-const VARIANTS = { primary: 'ui-btn--primary', outline: 'ui-btn--outline', danger: 'ui-btn--danger' }
+const VARIANTS = { primary: 'ui-btn--primary', secondary: 'ui-btn--secondary', outline: 'ui-btn--outline', danger: 'ui-btn--danger' }
 
 /**
- * The one button of the app. `variant` is primary (filled), outline or danger. With `to` it is a router link that looks the same.
+ * The one button of the app. `variant` is primary (filled), secondary (filled, lighter, for a second action beside a
+ * primary one), outline or danger. With `to` it is a router link that looks the same.
  * Every button is at least 44 px high (--pa-control-height). Extra props (onClick, disabled, aria-*) go to the element.
  */
 export default function Button({ variant = 'outline', block = false, to, type = 'button', className = '', children, ...rest }) {

@@ -59,6 +59,16 @@
   border-color: var(--pa-danger-edge);
 }
 
+.ui-btn--secondary {
+  background: var(--pa-secondary);
+  color: var(--pa-on-primary);
+}
+
+.ui-btn--secondary:hover {
+  background: var(--pa-secondary-dark);
+  box-shadow: var(--pa-shadow-md);
+}
+
 html[data-contrast='high'] .ui-btn--primary,
 html[data-contrast='high'] .ui-btn--outline,
 html[data-contrast='high'] .ui-btn--danger {
@@ -67,6 +77,14 @@ html[data-contrast='high'] .ui-btn--danger {
 
 html[data-contrast='high'] .ui-btn--primary {
   border-color: #ffffff;
+}
+
+/* secondary stays visibly different from primary (solid yellow) and danger (pink) in high contrast, instead of the
+   usual colour-swap formula, since here the two are a primary/secondary pair shown side by side */
+html[data-contrast='high'] .ui-btn--secondary {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #ffffff;
 }
 
 /* ---- form controls (FormField, SelectField) ---- */
@@ -110,7 +128,7 @@ html[data-contrast='high'] .ui-field__control {
 .ui-field__error {
   display: block;
   margin: var(--pa-space-1) 0 0;
-  font-size: 0.78rem;
+  font-size: var(--pa-text-sm);
   line-height: 1.4;
 }
 
@@ -189,7 +207,7 @@ html[data-contrast='high'] .ui-field__control {
 
 .ui-page-header__title {
   margin: 0;
-  font-size: 1.65rem;
+  font-size: var(--pa-text-xl);
   font-weight: 700;
   letter-spacing: -0.3px;
   color: var(--pa-text);

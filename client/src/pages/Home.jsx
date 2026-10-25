@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AboutDialog, ContactDialog } from '../components/SiteDialogs.jsx'
+import Button from '../components/ui/Button.jsx'
 import Carousel from '../components/Carousel.jsx'
 import SearchResults from '../components/SearchResults.jsx'
 import { usePageTitle } from '../hooks/usePageTitle.js'
@@ -35,38 +36,24 @@ export default function Home() {
     <div className="legacy-home">
       <div className="container-fluid p-0 w-100">
         <div
-          className="parallax d-flex flex-lg-row flex-column justify-content-center align-items-center px-5 py-5 gap-5"
+          className="parallax d-flex flex-lg-row flex-column justify-content-center align-items-center px-5 py-4 gap-5"
           style={{ backgroundColor: '#E8ECF1' }}
         >
           <div className="pe-lg-1 text-center text-lg-start" style={{ maxWidth: '46rem' }}>
-            <h1 className="m-0 text-uppercase display-3 fw-bold" style={{ color: '#7393A7' }}>
+            <h1 className="m-0 text-uppercase hero-title fw-bold" style={{ color: 'var(--pa-primary)' }}>
               Reserve it now. Pick it up later.
             </h1>
-            <p className="fs-5" style={{ color: '#6C737E' }}>
+            <p className="hero-subtitle fs-5">
               Browse available medicines from any branch, reserve them online, and simply show your ticket when you arrive &mdash; no more
               waiting in line.
             </p>
             <div className="button d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start align-items-center gap-2 mt-3">
-              <button
-                type="button"
-                ref={aboutButton}
-                className="btn btn-lg w-100 w-sm-auto"
-                style={{ backgroundColor: '#B5CFD8', color: '#FFFFFF' }}
-                onClick={() => setDialog('about')}
-                aria-haspopup="dialog"
-              >
+              <Button variant="secondary" ref={aboutButton} className="w-100 w-sm-auto" onClick={() => setDialog('about')} aria-haspopup="dialog">
                 About Us
-              </button>
-              <button
-                type="button"
-                ref={contactButton}
-                className="btn btn-lg w-100 w-sm-auto"
-                style={{ backgroundColor: '#7393A7', color: '#FFFFFF' }}
-                onClick={() => setDialog('contact')}
-                aria-haspopup="dialog"
-              >
+              </Button>
+              <Button variant="primary" ref={contactButton} className="w-100 w-sm-auto" onClick={() => setDialog('contact')} aria-haspopup="dialog">
                 Contact Us
-              </button>
+              </Button>
             </div>
           </div>
         </div>

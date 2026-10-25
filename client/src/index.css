@@ -47,6 +47,7 @@
 @import './styles/app-cart.css';
 @import './styles/tokens.css';
 @import './styles/ui.css';
+@import './styles/consolidate.css';
 @import './styles/contrast.css';
 @import './styles/contrast-cart.css';
 @import './styles/responsive.css';

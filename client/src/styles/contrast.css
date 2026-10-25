@@ -62,13 +62,10 @@ html[data-contrast='high'] .home-content .text,
 html[data-contrast='high'] .home-content a { color: #fff !important; }
 
 /* ---- home hero ---- */
+/* the hero buttons are the shared Button component now; .ui-btn--primary/--secondary already carry their own
+   high-contrast styling (ui.css), so only the band and the heading need a rule here. */
 html[data-contrast='high'] .parallax { background-color: #000 !important; }
 html[data-contrast='high'] .parallax h1 { color: #ffee00 !important; }
-html[data-contrast='high'] .parallax .btn {
-  background-color: #ffee00 !important;
-  color: #000 !important;
-  border: 2px solid #fff;
-}
 
 /* ---- search panel, banner and cards ---- */
 html[data-contrast='high'] .global-filter,

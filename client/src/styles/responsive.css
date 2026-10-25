@@ -93,8 +93,7 @@ video {
     gap: 1rem !important;
   }
 
-  .parallax h1.display-3 {
-    font-size: 2rem;
+  .parallax h1.hero-title {
     overflow-wrap: anywhere;
   }
 

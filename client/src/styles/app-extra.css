@@ -486,7 +486,7 @@ dialog.legacy-dialog::backdrop {
 
 .pa-card__header h2 {
   margin: 0;
-  font-size: 1.15rem;
+  font-size: var(--pa-text-lg);
   color: var(--pa-text);
 }
 
