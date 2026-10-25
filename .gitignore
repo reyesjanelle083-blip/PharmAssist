@@ -5,25 +5,63 @@
 *credentials*.json
 *service-account*.json
 
+!*.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+auth.json
+
 # dependencies
 vendor/
 node_modules/
 
-# user data / private files
+# user data / private files (ID photos, prescriptions, uploads)
 uploads/
 storage/app/private/
+storage/app/public/*
+!storage/app/public/.gitignore
+**/id-documents/
+**/prescriptions/
+*.sqlite
+*.sqlite3
+*.dump
+*.bak
 
 # logs, models, archives
 *.log
 ocr_models/
 *.zip
+*.tar
+*.tar.gz
+*.7z
+
+# generated / cache / runtime
+dist/
+dist-ssr/
+build/
+coverage/
+.phpunit.cache/
+.phpunit.result.cache
+bootstrap/cache/*.php
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*.php
+.cache/
+*.tmp
+*.local
 
 # legacy and reference material (not part of the new repo; REFERENCES contains personal data)
 old/
 REFERENCES/
 
-# editor settings
+# editor and OS files
 .vscode/
+.idea/
+.DS_Store
+Thumbs.db
 
-# Newman exports
+# Newman / JMeter outputs
 tests/postman/results/
+tests/jmeter/results/
+*.jtl
