@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createReservation, friendlyMessage, shortages } from '../api/index.js'
+import CartItem from '../components/CartItem.jsx'
 import ClaimTicket from '../components/ClaimTicket.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import ErrorMessage from '../components/ErrorMessage.jsx'
+import PrescriptionUploader from '../components/PrescriptionUploader.jsx'
 import Button from '../components/ui/Button.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import PageHeader from '../components/ui/PageHeader.jsx'
-import { MAX_QUANTITY } from '../context/cartContextObject.js'
 import { useCart } from '../context/useCart.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
-import { formatCents, formatPeso } from '../utils/format.js'
+import { formatCents } from '../utils/format.js'
 
 const MAX_PHOTO_BYTES = 4 * 1024 * 1024
 const PHOTO_TYPES = ['image/jpeg', 'image/png']
@@ -169,52 +170,16 @@ export default function Cart() {
         <div className="cart-layout">
           <section aria-label="Items in your cart">
             <ul className="items-list" style={{ listStyle: 'none', padding: 0 }}>
-              {cart.items.map((item) => {
-                const problem = shortById.get(item.medicineId)
-                return (
-                  <li key={item.medicineId} className="cart-item">
-                    <div className="item-thumb" aria-hidden="true">
-                      <i className="bi bi-capsule"></i>
-                    </div>
-                    <div className="item-body">
-                      <h2 className="item-name">{item.name}</h2>
-                      <div className="item-badges">
-                        {item.requiresPrescription ? (
-                          <span className="badge-pill badge-rx-yes">Prescription required</span>
-                        ) : (
-                          <span className="badge-pill badge-rx-no">No Rx Needed</span>
-                        )}
-                        {item.detail ? <span className="meta-unit-price">{item.detail}</span> : null}
-                      </div>
-                      <div className="item-meta">
-                        <div className="qty-stepper" role="group" aria-label={`Quantity of ${item.name}`}>
-                          <button type="button" className="qty-btn" onClick={() => cart.setQuantity(item.medicineId, item.quantity - 1)} disabled={busy || item.quantity <= 1} aria-label={`Decrease quantity of ${item.name}`}>
-                            &minus;
-                          </button>
-                          <output className="qty-display" aria-live="polite" aria-label={`${item.name} quantity`}>
-                            {item.quantity}
-                          </output>
-                          <button type="button" className="qty-btn" onClick={() => cart.setQuantity(item.medicineId, item.quantity + 1)} disabled={busy || item.quantity >= Math.min(MAX_QUANTITY, item.available)} aria-label={`Increase quantity of ${item.name}`}>
-                            +
-                          </button>
-                        </div>
-                        <span className="meta-unit-price">
-                          @ <strong>{formatPeso(item.price)}</strong>/pc &middot; {item.available} available
-                        </span>
-                        <span className="item-line-total">{formatCents(Math.round(Number(item.price) * 100) * item.quantity)}</span>
-                        <button type="button" className="remove-btn" onClick={() => cart.removeLine(item.medicineId)} disabled={busy} aria-label={`Remove ${item.name}`}>
-                          <i className="bi bi-trash3" aria-hidden="true"></i>
-                        </button>
-                      </div>
-                      {problem ? (
-                        <p className="vat-note short-note" role="alert">
-                          Only {problem.available} {problem.available === 1 ? 'is' : 'are'} available now (you asked for {problem.requested}).
-                        </p>
-                      ) : null}
-                    </div>
-                  </li>
-                )
-              })}
+              {cart.items.map((item) => (
+                <CartItem
+                  key={item.medicineId}
+                  item={item}
+                  busy={busy}
+                  problem={shortById.get(item.medicineId)}
+                  onQuantityChange={(quantity) => cart.setQuantity(item.medicineId, quantity)}
+                  onRemove={() => cart.removeLine(item.medicineId)}
+                />
+              ))}
             </ul>
           </section>
 
@@ -275,24 +240,16 @@ export default function Cart() {
                   </div>
 
                   {needsPhoto ? (
-                    <div className="presc-upload-item">
-                      <label htmlFor="cart-prescription">Prescription photo (JPG or PNG, up to 4 MB) *</label>
-                      {preview ? (
-                        <div className="presc-preview">
-                          <img src={preview} alt="Preview of the prescription photo you chose" />
-                          <button type="button" className="btn-outline btn-outline-red" onClick={() => { setFile(null); setFileError('') }} disabled={busy}>
-                            <i className="bi bi-x-circle" aria-hidden="true"></i> Remove photo
-                          </button>
-                        </div>
-                      ) : null}
-                      <input id="cart-prescription" type="file" accept="image/jpeg,image/png" onChange={choosePhoto} aria-describedby="cart-prescription-help cart-prescription-error" aria-invalid={fileError ? 'true' : undefined} disabled={busy} />
-                      <small id="cart-prescription-help">
-                        A pharmacist will check your prescription. The photo is stored privately and only you and the branch staff can see it. Text reading of prescriptions is not active yet.
-                      </small>
-                      <p id="cart-prescription-error" className="field-error" style={{ marginLeft: 0 }} role="alert">
-                        {fileError}
-                      </p>
-                    </div>
+                    <PrescriptionUploader
+                      preview={preview}
+                      fileError={fileError}
+                      busy={busy}
+                      onChoose={choosePhoto}
+                      onRemove={() => {
+                        setFile(null)
+                        setFileError('')
+                      }}
+                    />
                   ) : null}
 
                   <button type="submit" className="submit-btn" disabled={busy}>
