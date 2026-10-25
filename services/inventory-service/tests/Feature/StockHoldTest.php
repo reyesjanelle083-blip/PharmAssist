@@ -83,6 +83,26 @@ class StockHoldTest extends TestCase
 
     // ------------------------------------------------------------ create
 
+    public function test_the_hold_answer_names_each_medicine_with_its_current_price_and_prescription_flag(): void
+    {
+        $branded = $this->makeInventory($this->branch, $this->makeMedicine('Paracetamol', 'Biogesic', 'Pain', false, '500mg', 'Tablet'), 10, 0, 2, '12.50');
+        $unbranded = $this->makeInventory($this->branch, $this->makeMedicine('Amoxicillin', '', 'Antibiotics', true, '500mg', 'Capsule'), 10, 0, 2, '8.00');
+
+        $items = $this->hold('RES-NAMES', [[$branded, 1], [$unbranded, 2]])->assertStatus(201)->json('data.items');
+
+        $byId = collect($items)->keyBy('medicine_id');
+        $this->assertSame('Paracetamol (Biogesic) 500mg Tablet', $byId[$branded->medicine_id]['medicine_name']);
+        $this->assertSame('12.50', $byId[$branded->medicine_id]['unit_price']);
+        $this->assertFalse($byId[$branded->medicine_id]['prescription_required']);
+        $this->assertSame('Amoxicillin 500mg Capsule', $byId[$unbranded->medicine_id]['medicine_name']);
+        $this->assertSame('8.00', $byId[$unbranded->medicine_id]['unit_price']);
+        $this->assertTrue($byId[$unbranded->medicine_id]['prescription_required']);
+
+        // The price is the CURRENT one: a replay after a price change shows the new price, the stock is not reserved twice.
+        $branded->update(['price' => '13.00']);
+        $this->hold('RES-NAMES', [[$branded, 1], [$unbranded, 2]])->assertOk()->assertJsonPath('data.items.0.unit_price', '13.00');
+    }
+
     public function test_a_hold_reserves_stock_and_creates_hold_rows(): void
     {
         $item = $this->stocked('Amoxicillin', 10);

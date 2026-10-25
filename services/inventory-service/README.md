@@ -42,6 +42,10 @@ the reservation service; there is deliberately no gateway route for them.
 | POST | `/internal/v1/stock/holds/{reservationRef}/commit` | Reservation completed: stock leaves the shelf |
 | POST | `/internal/v1/stock/holds/{reservationRef}/release` | Reservation cancelled/rejected: stock goes back |
 
+Each item in the answer (create, show, commit and release) carries `medicine_id`, `medicine_name` (for example `Paracetamol (Biogesic) 500mg Tablet`;
+the brand is left out when there is none), `unit_price` (the branch's CURRENT `branch_inventory.price`, as a string such as `"12.50"`),
+`prescription_required`, `quantity` and `status`. reservation-service snapshots the name and price when it creates a reservation.
+
 `reservation_ref` is the handle for the whole reservation (1 to 64 chars: letters, digits, `.`, `_`, `:`, `-`); it has one hold row per item.
 Limits: 1 to 10 items, quantity 1 to 20, no duplicate `medicine_id`, active branch. `ttl_minutes` defaults to
 `INVENTORY_HOLD_TTL_HOURS` hours (48).

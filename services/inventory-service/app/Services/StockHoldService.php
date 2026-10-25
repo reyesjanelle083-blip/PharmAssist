@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\ApiException;
 use App\Models\Branch;
 use App\Models\BranchInventory;
+use App\Models\Medicine;
 use App\Models\StockHold;
 use App\Models\StockMovement;
 use Illuminate\Database\Eloquent\Collection;
@@ -314,7 +315,7 @@ class StockHoldService
     /** @return array<string, mixed> */
     private function present(string $reservationRef): array
     {
-        $holds = StockHold::with('inventory')->where('reservation_ref', $reservationRef)->orderBy('branch_inventory_id')->get();
+        $holds = StockHold::with('inventory.medicine')->where('reservation_ref', $reservationRef)->orderBy('branch_inventory_id')->get();
         $statuses = $holds->pluck('status')->unique();
 
         return [
@@ -324,10 +325,22 @@ class StockHoldService
             'expires_at' => $holds->sortBy('expires_at')->first()->expires_at->toIso8601String(),
             'items' => $holds->map(fn (StockHold $h) => [
                 'medicine_id' => $h->inventory->medicine_id,
+                // Added for reservation-service, which snapshots them (the price is the branch's current price).
+                'medicine_name' => $this->medicineName($h->inventory->medicine),
+                'unit_price' => (string) $h->inventory->price,
+                'prescription_required' => (bool) $h->inventory->medicine->prescription_required,
                 'quantity' => $h->quantity,
                 'status' => $h->status,
             ])->sortBy('medicine_id')->values()->all(),
         ];
+    }
+
+    /** For example "Paracetamol (Biogesic) 500mg Tablet"; the brand is left out for unbranded medicines. */
+    private function medicineName(Medicine $medicine): string
+    {
+        $brand = $medicine->brand_name === '' ? '' : " ({$medicine->brand_name})";
+
+        return "{$medicine->generic_name}{$brand} {$medicine->strength} {$medicine->dosage_form}";
     }
 
     /** @param array<int, array<string, mixed>> $report */

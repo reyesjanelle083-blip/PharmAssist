@@ -105,6 +105,9 @@ services:
       DB_DATABASE: reservation_db
       DB_USERNAME: reservation_user
       DB_PASSWORD: ${RESERVATION_DB_PASSWORD:?set RESERVATION_DB_PASSWORD in .env}
+      INVENTORY_URL: http://inventory-service:8000
+      INTEGRATION_URL: http://integration-service:8000
+      RESERVATION_TTL_HOURS: "${RESERVATION_TTL_HOURS:-48}"
     ports:
       - "127.0.0.1:8003:8000"
     healthcheck:

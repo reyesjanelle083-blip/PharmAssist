@@ -1,5 +1,8 @@
 <?php
 
+use App\Exceptions\ApiException;
+use App\Http\Middleware\AllowRoles;
+use App\Http\Middleware\ForwardedUser;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,7 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->prepend(RequestId::class);
+
+        $middleware->alias([
+            'forwarded.user' => ForwardedUser::class,
+            'allow.roles' => AllowRoles::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // Expected client-facing failures are not application errors.
+        $exceptions->dontReport(ApiException::class);
         RenderEnvelope::register($exceptions);
     })->create();
