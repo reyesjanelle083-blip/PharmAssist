@@ -32,7 +32,10 @@ class ReservationService
 
     private const CODE_ATTEMPTS = 5;
 
-    public function __construct(private readonly InventoryClient $inventory) {}
+    public function __construct(
+        private readonly InventoryClient $inventory,
+        private readonly IntegrationClient $integration,
+    ) {}
 
     /**
      * @param array{branch_id: int|string, items: list<array<string, mixed>>, notes?: ?string} $data validated input
@@ -129,18 +132,35 @@ class ReservationService
             throw $e;
         }
 
+        // 2b. OCR, only when a prescription was actually needed and sent (plan M7): a file attached to an order that
+        // does not need one is still stored with the reservation, but is not read - there is nothing to check it
+        // against. A best-effort read of its own, never allowed to turn into a failed reservation or to give the hold
+        // back: IntegrationClient already turns every problem on its side into 'unavailable'; the catch here is only
+        // for an exception IntegrationClient itself did not anticipate.
+        $ocr = ['ocr_text' => null, 'confidence' => null, 'ocr_status' => 'not_required'];
+        if ($needsPrescription !== [] && $file !== null) {
+            try {
+                $ocr = $this->integration->ocr($file, $requestId);
+            } catch (Throwable $e) {
+                Log::error('Unexpected error reading the prescription; continuing without it', ['request_id' => $requestId, 'exception' => $e::class]);
+                $ocr = ['ocr_text' => null, 'confidence' => null, 'ocr_status' => 'not_processed'];
+            }
+        }
+
         // 3. Everything from here on must give the hold back if it fails.
         $path = null;
         try {
             $lines = $this->snapshotLines($items, $hold);
             $expiresAt = $this->expiry($hold, $ttlHours);
 
-            $reservation = DB::transaction(function () use ($user, $branchId, $notes, $file, $key, $requestId, $holdRef, $lines, $expiresAt, $needsPrescription, &$path) {
+            $reservation = DB::transaction(function () use ($user, $branchId, $notes, $file, $key, $requestId, $holdRef, $lines, $expiresAt, $ocr, &$path) {
                 $reservation = $this->insertReservation([
                     'user_id' => $user->id,
                     'branch_id' => $branchId,
                     'status' => 'pending',
-                    'ocr_status' => $needsPrescription === [] ? 'not_required' : 'not_processed',
+                    'ocr_status' => $ocr['ocr_status'],
+                    'ocr_text' => $ocr['ocr_text'],
+                    'ocr_confidence' => $ocr['confidence'],
                     'hold_ref' => $holdRef,
                     'notes' => $notes,
                     'expires_at' => $expiresAt,

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { createReservation, friendlyMessage, shortages } from '../api/index.js'
+import { createReservation, friendlyMessage, ocrPrescription, shortages } from '../api/index.js'
 import CartItem from '../components/CartItem.jsx'
 import ClaimTicket from '../components/ClaimTicket.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
@@ -69,6 +69,27 @@ export default function Cart() {
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file])
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
 
+  // A preview of what will be read from the photo (POST /prescriptions/ocr: nothing is stored by this call). It is
+  // only a reading aid shown before submitting; reservation-service reads the photo again, on its own, once the
+  // reservation is actually created, and that second reading - not this preview - is what gets stored with it.
+  // Started from the event handlers below (choosing or removing a photo), not from an effect watching `file`: that
+  // keeps the loading state an immediate reaction to what the person just did, not a side effect of a render.
+  const [ocr, setOcr] = useState({ phase: 'idle' })
+  const ocrAbort = useRef(null)
+  useEffect(() => () => ocrAbort.current?.abort(), []) // cancel an in-flight read if the page is left mid-upload
+
+  function startOcrPreview(chosen) {
+    ocrAbort.current?.abort()
+    const controller = new AbortController()
+    ocrAbort.current = controller
+    setOcr({ phase: 'loading' })
+    ocrPrescription(chosen, { signal: controller.signal })
+      .then(({ data }) => setOcr({ phase: 'done', text: data.ocr_text, status: data.ocr_status }))
+      .catch((caught) => {
+        if (caught?.name !== 'CanceledError') setOcr({ phase: 'error' })
+      })
+  }
+
   if (step === 'done' && created) return <ClaimTicket reservation={created.reservation} branchName={created.branchName} />
 
   const needsPhoto = cart.needsPrescription
@@ -87,7 +108,19 @@ export default function Cart() {
     if (!chosen) return
     const problem = photoProblem(chosen)
     setFileError(problem)
-    setFile(problem ? null : chosen)
+    if (problem) {
+      setFile(null)
+      return
+    }
+    setFile(chosen)
+    startOcrPreview(chosen)
+  }
+
+  function removePhoto() {
+    ocrAbort.current?.abort()
+    setFile(null)
+    setFileError('')
+    setOcr({ phase: 'idle' })
   }
 
   /** Checkout step -> Review step: only client-side validation here, nothing is sent yet. */
@@ -286,11 +319,9 @@ export default function Cart() {
                       preview={preview}
                       fileError={fileError}
                       busy={busy}
+                      ocr={ocr}
                       onChoose={choosePhoto}
-                      onRemove={() => {
-                        setFile(null)
-                        setFileError('')
-                      }}
+                      onRemove={removePhoto}
                     />
                   ) : null}
 
@@ -333,6 +364,15 @@ export default function Cart() {
                     <>
                       <div className="form-section-title">Prescription photo</div>
                       {preview ? <img className="presc-photo" src={preview} alt="The prescription photo that will be submitted with this reservation" /> : null}
+                      {ocr.phase === 'done' && ocr.text ? (
+                        <>
+                          <p className="field-hint">What we read from it:</p>
+                          <p className="detail-notes">{ocr.text}</p>
+                        </>
+                      ) : null}
+                      {ocr.phase === 'done' && !ocr.text ? (
+                        <p className="field-hint">We could not automatically read this photo. That is fine: the pharmacist will check the original.</p>
+                      ) : null}
                     </>
                   ) : null}
 

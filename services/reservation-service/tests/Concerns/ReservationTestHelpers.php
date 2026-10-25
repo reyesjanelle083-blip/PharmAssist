@@ -42,6 +42,9 @@ trait ReservationTestHelpers
     /** What commit answers: ok | already_committed | released (409, other state) | not_found | timeout | down | garbage */
     protected string $commitMode = 'ok';
 
+    /** What the fake integration-service answers for OCR: success | low_confidence | unavailable | down | timeout | garbage */
+    protected string $ocrMode = 'success';
+
     /** Hold references whose release always fails with a connection error (to test that one failure does not stop the rest). @var list<string> */
     protected array $failReleaseFor = [];
 
@@ -54,6 +57,7 @@ trait ReservationTestHelpers
             'pharmassist.internal_key' => $this->internalKey,
             'pharmassist.service' => 'reservation-service',
             'reservation.inventory_url' => 'http://inventory.test',
+            'reservation.integration_url' => 'http://integration.test',
             'reservation.release_pause_ms' => 0,
             'reservation.ttl_hours' => 48,
         ]);
@@ -175,6 +179,19 @@ trait ReservationTestHelpers
                 }
 
                 return Http::response($this->envelope(['status' => 'released']));
+            }
+
+            if (str_ends_with($url, '/ocr/prescription')) {
+                $envelope = fn (array $data) => ['status' => 200, 'service' => 'integration-service', 'request_id' => 'int-1', 'data' => $data, 'error' => null, 'warnings' => []];
+
+                return match ($this->ocrMode) {
+                    'down' => throw new ConnectionException('cURL error 7: Failed to connect to integration.test'),
+                    'timeout' => throw new ConnectionException('cURL error 28: Operation timed out after 20001 milliseconds'),
+                    'garbage' => Http::response('<html>Fatal error in /var/www/app.php</html>', 200),
+                    'unavailable' => Http::response($envelope(['ocr_text' => null, 'confidence' => null, 'ocr_status' => 'unavailable', 'source' => 'tesseract'])),
+                    'low_confidence' => Http::response($envelope(['ocr_text' => 'Amox1cillin 5OOmg', 'confidence' => 0.41, 'ocr_status' => 'low_confidence', 'source' => 'tesseract'])),
+                    default => Http::response($envelope(['ocr_text' => 'Amoxicillin 500mg - take twice daily for 7 days', 'confidence' => 0.93, 'ocr_status' => 'success', 'source' => 'tesseract'])),
+                };
             }
 
             if (str_ends_with($url, '/internal/v1/stock/holds')) {

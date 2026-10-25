@@ -33,7 +33,12 @@ class ReservationController extends Controller
             $request->attributes->get('request_id'),
         );
 
-        return Envelope::success($data, $status);
+        // openapi: "If OCR is unavailable the reservation still succeeds with ocr_status: unavailable and a
+        // warning." Derived here, from the answer itself, so a replay of an earlier request carries the same
+        // warning it originally did, with nothing extra to store alongside the idempotency record.
+        $warnings = ($data['ocr_status'] ?? null) === 'unavailable' ? ['OCR_UNAVAILABLE'] : [];
+
+        return Envelope::success($data, $status, $warnings);
     }
 
     public function index(ListReservationsRequest $request): JsonResponse

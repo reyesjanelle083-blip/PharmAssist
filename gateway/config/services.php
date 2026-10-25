@@ -31,9 +31,11 @@ return [
 
     'reservation' => [
         'url' => env('RESERVATION_URL'),
-        // Seconds the gateway waits for POST /reservations and PATCH /reservations/{id}/status: reservation-service itself
-        // makes up to two sequential calls to inventory-service. The GET routes keep 3 s.
-        'timeout' => (float) env('GATEWAY_RESERVATION_TIMEOUT_SECONDS', 10),
+        // Seconds the gateway waits for POST /reservations and PATCH /reservations/{id}/status: reservation-service
+        // itself makes up to two sequential calls to inventory-service, and, when a prescription photo was sent, one
+        // OCR call to integration-service (its own timeout there is RESERVATION_OCR_TIMEOUT_SECONDS, 20 by default -
+        // keep this above that). The GET routes keep 3 s.
+        'timeout' => (float) env('GATEWAY_RESERVATION_TIMEOUT_SECONDS', 30),
     ],
 
     'integration' => [

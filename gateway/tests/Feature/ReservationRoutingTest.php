@@ -434,7 +434,7 @@ class ReservationRoutingTest extends TestCase
         $this->assertSame([10.0, 10.0, 3.0, 3.0, 3.0], $spy->timeouts);
     }
 
-    public function test_the_reservation_timeout_comes_from_configuration_and_defaults_to_ten(): void
+    public function test_the_reservation_timeout_comes_from_configuration_and_defaults_to_thirty(): void
     {
         $spy = $this->clientSpy();
         $this->fake();
@@ -443,7 +443,9 @@ class ReservationRoutingTest extends TestCase
         $this->postJsonReservation()->assertOk();
         $this->assertSame([25.0], $spy->timeouts);
 
-        $this->assertSame(10.0, (float) (include base_path('config/services.php'))['reservation']['timeout']);
+        // 30 s: reservation-service now also makes one OCR call (up to RESERVATION_OCR_TIMEOUT_SECONDS, 20 s by
+        // default) when a prescription photo is sent, on top of its two inventory-service calls.
+        $this->assertSame(30.0, (float) (include base_path('config/services.php'))['reservation']['timeout']);
     }
 
     // ------------------------------------------------------------ failures

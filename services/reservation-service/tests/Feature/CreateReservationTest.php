@@ -133,7 +133,7 @@ class CreateReservationTest extends TestCase
             'prescription' => $this->png(),
         ], $this->customer());
 
-        $response->assertStatus(201)->assertJsonPath('data.ocr_status', 'not_processed')->assertJsonPath('data.prescription_uploaded', true);
+        $response->assertStatus(201)->assertJsonPath('data.ocr_status', 'success')->assertJsonPath('data.ocr_text', 'Amoxicillin 500mg - take twice daily for 7 days')->assertJsonPath('data.prescription_uploaded', true);
         $this->assertCount(2, ReservationItem::all());
     }
 
@@ -164,7 +164,7 @@ class CreateReservationTest extends TestCase
         $this->assertStringNotContainsString('juan', $reservation->prescription_path);
         Storage::disk('local')->assertExists($reservation->prescription_path);
         $this->assertSame(base64_decode(self::PNG), Storage::disk('local')->get($reservation->prescription_path));
-        $this->assertSame('not_processed', $reservation->ocr_status);
+        $this->assertSame('success', $reservation->ocr_status);
 
         $raw = $response->getContent();
         $this->assertStringNotContainsString($reservation->prescription_path, $raw);
@@ -176,9 +176,10 @@ class CreateReservationTest extends TestCase
     public function test_a_file_sent_when_none_is_needed_is_kept_and_ocr_stays_not_required(): void
     {
         $this->post(self::URL, ['branch_id' => 1, 'items' => [['medicine_id' => 1, 'quantity' => 1]], 'prescription' => $this->png()], $this->customer())
-            ->assertStatus(201)->assertJsonPath('data.ocr_status', 'not_required');
+            ->assertStatus(201)->assertJsonPath('data.ocr_status', 'not_required')->assertJsonPath('warnings', []);
 
         Storage::disk('local')->assertExists(Reservation::firstOrFail()->prescription_path);
+        $this->assertSame([], $this->sent('/ocr/prescription'), 'a photo nobody needs is stored, not read');
     }
 
     // ------------------------------------------------------------ idempotency
@@ -435,11 +436,11 @@ class CreateReservationTest extends TestCase
         $this->makeReservation(99, 1, 'PA-AAAAAAAA');
 
         $codes = ['PA-AAAAAAAA', 'PA-BBBBBBBB'];
-        $this->app->bind(ReservationService::class, fn ($app) => new class($app->make(\App\Services\InventoryClient::class), $codes) extends ReservationService
+        $this->app->bind(ReservationService::class, fn ($app) => new class($app->make(\App\Services\InventoryClient::class), $app->make(\App\Services\IntegrationClient::class), $codes) extends ReservationService
         {
-            public function __construct(\App\Services\InventoryClient $inventory, private array $queue)
+            public function __construct(\App\Services\InventoryClient $inventory, \App\Services\IntegrationClient $integration, private array $queue)
             {
-                parent::__construct($inventory);
+                parent::__construct($inventory, $integration);
             }
 
             protected function newClaimCode(): string
@@ -455,7 +456,7 @@ class CreateReservationTest extends TestCase
 
     public function test_generated_claim_codes_are_all_in_the_unambiguous_alphabet(): void
     {
-        $service = new class(app(\App\Services\InventoryClient::class)) extends ReservationService
+        $service = new class(app(\App\Services\InventoryClient::class), app(\App\Services\IntegrationClient::class)) extends ReservationService
         {
             public function code(): string
             {

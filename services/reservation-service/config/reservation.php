@@ -10,8 +10,10 @@ return [
     // Seconds to wait for each inventory-service call. A POST is never retried.
     'inventory_timeout' => (float) env('INVENTORY_TIMEOUT_SECONDS', 3),
 
-    // integration-service: not called yet (prescription OCR is connected in a later step).
+    // integration-service: prescription OCR only (plan M7). A problem here never fails the reservation (IntegrationClient).
     'integration_url' => env('INTEGRATION_URL'),
+    // Seconds to wait for an OCR answer. Keep it above integration-service's own OCR_TIMEOUT_SECONDS (15 by default).
+    'ocr_timeout' => (float) env('RESERVATION_OCR_TIMEOUT_SECONDS', 20),
 
     // Compensation: how often a hold release is attempted, and the pause between attempts.
     'release_attempts' => 3,

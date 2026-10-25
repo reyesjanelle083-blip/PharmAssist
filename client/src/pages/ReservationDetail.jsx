@@ -242,6 +242,15 @@ function Detail({ id }) {
                 <>
                   <div className="form-section-title">Prescription photo</div>
                   <PrescriptionPhoto id={r.id} />
+                  {r.ocr_status === 'success' || r.ocr_status === 'low_confidence' ? (
+                    <>
+                      <p className="field-hint">What we read from it:</p>
+                      <p className="detail-notes">{r.ocr_text}</p>
+                    </>
+                  ) : null}
+                  {r.ocr_status === 'unavailable' || r.ocr_status === 'not_processed' ? (
+                    <p className="field-hint">This photo was not read automatically; the pharmacist checks the original.</p>
+                  ) : null}
                 </>
               ) : null}
             </div>
