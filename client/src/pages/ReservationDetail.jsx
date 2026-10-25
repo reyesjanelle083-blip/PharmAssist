@@ -10,8 +10,10 @@ import StatusBadge from '../components/ui/StatusBadge.jsx'
 import Forbidden from './Forbidden.jsx'
 import NotFound from './NotFound.jsx'
 import { branchLabel, useBranchNames } from '../hooks/useBranchNames.js'
+import { useAutoRefresh } from '../hooks/useAutoRefresh.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
 import { formatCents, formatDateTime, formatPeso, toCents } from '../utils/format.js'
+import { isActiveStatus, STATUS_HELP, STATUS_LABELS } from '../utils/status.js'
 
 const CANCELLABLE = ['pending', 'approved']
 
@@ -61,16 +63,26 @@ function Detail({ id }) {
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState(null)
   const [notice, setNotice] = useState('')
+  const [copyStatus, setCopyStatus] = useState('')
+  const lastStatus = useRef(null)
   const cancelButton = useRef(null)
   const heading = useRef(null)
   usePageTitle(state.phase === 'done' ? `Reservation ${state.reservation.claim_code}` : 'Reservation')
 
+  // A reload keeps what is on screen: a failed background refresh shows a small notice instead of replacing the page with an error.
   const load = useCallback(
     (signal) =>
       getReservation(id, { signal })
-        .then(({ data }) => setState({ phase: 'done', reservation: data }))
+        .then(({ data }) => {
+          if (lastStatus.current && lastStatus.current !== data.status) {
+            setNotice(`This reservation is now ${STATUS_LABELS[data.status] ?? data.status}.`)
+          }
+          lastStatus.current = data.status
+          setState({ phase: 'done', reservation: data, stale: false, checkedAt: Date.now() })
+        })
         .catch((error) => {
-          if (error?.name !== 'CanceledError') setState({ phase: 'error', error })
+          if (error?.name === 'CanceledError') return
+          setState((current) => (current.phase === 'done' ? { ...current, stale: true } : { phase: 'error', error }))
         }),
     [id],
   )
@@ -80,6 +92,18 @@ function Detail({ id }) {
     load(controller.signal)
     return () => controller.abort()
   }, [load])
+
+  const active = state.phase === 'done' && isActiveStatus(state.reservation.status)
+  useAutoRefresh(() => load(), { enabled: active && !cancelling && !confirm })
+
+  async function copyCode(code) {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopyStatus('Code copied.')
+    } catch {
+      setCopyStatus('Could not copy automatically. Please select the code and copy it.')
+    }
+  }
 
   async function doCancel() {
     setConfirm(false)
@@ -114,6 +138,10 @@ function Detail({ id }) {
 
   const r = state.reservation
   const totalCents = r.items.reduce((sum, item) => sum + toCents(item.unit_price) * item.quantity, 0)
+  const usable = isActiveStatus(r.status)
+  const holdPassed = usable && new Date(r.expires_at).getTime() < state.checkedAt
+  const reason = [...(r.history ?? [])].reverse().find((h) => h.to_status === r.status && h.reason)?.reason
+  const bannerTone = { pending: 'info', approved: 'success', completed: 'success', rejected: 'error', cancelled: 'warning', expired: 'warning' }[r.status] ?? 'info'
 
   return (
     <div className="legacy-cart legacy-notif">
@@ -147,6 +175,17 @@ function Detail({ id }) {
         <div aria-live="polite">
           {notice ? <p className="app-notice app-notice--success">{notice}</p> : null}
           {cancelError ? <ErrorMessage error={cancelError} /> : <ErrorMessage />}
+          {state.stale ? <p className="app-notice app-notice--warning">Could not refresh just now. Showing the last details we loaded.</p> : null}
+        </div>
+
+        <div className={`app-notice app-notice--${bannerTone}`} aria-label="What this status means">
+          <p>
+            <strong>{STATUS_LABELS[r.status] ?? r.status}: </strong>
+            {STATUS_HELP[r.status] ?? ''}
+          </p>
+          {reason && (r.status === 'rejected' || r.status === 'cancelled') ? <p>Reason: {reason}</p> : null}
+          {holdPassed ? <p>The hold time has passed. The branch will update this reservation shortly.</p> : null}
+          {usable ? <p className="app-notice__reference">This page checks for updates on its own.</p> : null}
         </div>
 
         <div className="cart-layout">
@@ -195,14 +234,30 @@ function Detail({ id }) {
             </section>
           </div>
 
-          <aside className="summary-card" aria-labelledby="detail-heading">
+          <aside aria-label="Claim ticket and details">
+          <section className="summary-card claim-ticket" aria-labelledby="detail-heading" style={{ position: 'static' }}>
             <div className="summary-head">
-              <h2 id="detail-heading">Reservation</h2>
-              <p>Show the claim code at the branch</p>
+              <h2 id="detail-heading">PharmAssist reservation</h2>
+              <p>{usable ? 'Show this code at the branch' : 'This code can no longer be used at the branch'}</p>
             </div>
             <div className="summary-body">
               <p className="claim-label">Claim code</p>
-              <p className="claim-code claim-code--small">{r.claim_code}</p>
+              <p className="claim-code claim-code--small" aria-label={`Claim code ${r.claim_code.split('').join(' ')}`} style={usable ? undefined : { opacity: 0.6 }}>
+                {r.claim_code}
+              </p>
+              {usable ? (
+                <div className="no-print claim-copy">
+                  <Button onClick={() => copyCode(r.claim_code)}>
+                    <i className="bi bi-clipboard" aria-hidden="true"></i> Copy code
+                  </Button>
+                  <Button onClick={() => window.print()}>
+                    <i className="bi bi-printer" aria-hidden="true"></i> Print ticket
+                  </Button>
+                  <span role="status" className="claim-copy-status">
+                    {copyStatus}
+                  </span>
+                </div>
+              ) : null}
               <dl className="claim-facts">
                 <div>
                   <dt>Status</dt>
@@ -232,6 +287,15 @@ function Detail({ id }) {
               <p className="pay-note">
                 <i className="bi bi-shop" aria-hidden="true"></i> <strong>You pay at the branch.</strong>
               </p>
+            </div>
+          </section>
+
+          <section className="summary-card" aria-labelledby="extras-heading" style={{ position: 'static', marginTop: 20 }}>
+            <div className="summary-head">
+              <h2 id="extras-heading">Notes and prescription</h2>
+            </div>
+            <div className="summary-body">
+              {!r.notes && !r.prescription_uploaded ? <p className="field-hint">No notes or prescription were added to this reservation.</p> : null}
               {r.notes ? (
                 <>
                   <div className="form-section-title">Your notes</div>
@@ -254,6 +318,7 @@ function Detail({ id }) {
                 </>
               ) : null}
             </div>
+          </section>
           </aside>
         </div>
       </div>
