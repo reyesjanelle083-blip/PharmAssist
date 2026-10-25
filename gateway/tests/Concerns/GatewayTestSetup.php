@@ -22,6 +22,8 @@ trait GatewayTestSetup
             'services.integration.url' => 'http://integration.test',
             'services.integration.ocr_timeout' => 20.0,
             'services.integration.sync_timeout' => 10.0,
+            'services.reservation.url' => 'http://reservation.test',
+            'services.reservation.timeout' => 10.0,
         ]);
     }
 

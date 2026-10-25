@@ -23,6 +23,13 @@ return [
         'url' => env('INVENTORY_URL'),
     ],
 
+    'reservation' => [
+        'url' => env('RESERVATION_URL'),
+        // Seconds the gateway waits for POST /reservations and PATCH /reservations/{id}/status: reservation-service itself
+        // makes up to two sequential calls to inventory-service. The GET routes keep 3 s.
+        'timeout' => (float) env('GATEWAY_RESERVATION_TIMEOUT_SECONDS', 10),
+    ],
+
     'integration' => [
         'url' => env('INTEGRATION_URL'),
         // Seconds the gateway waits for an OCR answer (every other route waits 3 s). Keep it above OCR_TIMEOUT_SECONDS.

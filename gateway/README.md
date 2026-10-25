@@ -69,6 +69,65 @@ curl.exe -s -X POST "http://localhost:8000/api/v1/integrations/inventory/sync?st
 
 `--data-binary` is needed so the file is sent unchanged (`-d` would strip line breaks).
 
+## Reservation routes (Step 6C)
+
+All under `/api/v1` and behind `auth.jwt`. The gateway checks the role, rate limits, and passes the call to
+reservation-service, whose envelope and status come back unchanged. reservation-service re-checks role, branch and
+ownership itself, so a customer sending `approve` passes the gateway and is refused (403) by the service.
+`X-User-*` are built from the verified token; client-sent `X-User-*`, `X-Internal-Key` and `Authorization` are never
+forwarded. The only client header passed on is `Idempotency-Key`.
+
+| Method | Route | Roles (checked here) | Limit | Timeout |
+|--------|-------|----------------------|-------|---------|
+| POST | `/reservations` | customer | 10 per minute per IP | `GATEWAY_RESERVATION_TIMEOUT_SECONDS` (10 s) |
+| GET | `/reservations` | customer, pharmacy_technician, pharmacy_assistant, branch_manager, ceo | - | 3 s |
+| GET | `/reservations/{id}` | same as the list | - | 3 s |
+| PATCH | `/reservations/{id}/status` | customer, pharmacy_technician, pharmacy_assistant, branch_manager | 30 per minute per IP | 10 s |
+| GET | `/reservations/{id}/prescription` | customer, pharmacy_technician, pharmacy_assistant, branch_manager, ceo | - | 3 s |
+
+Limits count only requests that passed the token and role checks. A POST or PATCH is never retried: a timeout is `504 UPSTREAM_TIMEOUT`,
+no connection `503`, an answer that is not an envelope `502`. The 10 second timeout exists because reservation-service itself
+calls inventory-service (up to two calls in a row). `{id}` must be a number, otherwise `404` before anything is called.
+
+- **POST**: JSON or multipart. `Idempotency-Key` is required (`400 IDEMPOTENCY_KEY_REQUIRED`). Only `branch_id`, `notes` and
+  `items[].medicine_id` / `items[].quantity` are forwarded. The optional `prescription` image is checked for size here (more than
+  4 MB is `413`) and forwarded as `upload.<ext>`, never under the uploader's own file name. Other content types are `415`.
+- **GET list**: only `status`, `page`, `per_page` and `branch_id` are forwarded.
+- **PATCH status**: only `action`, `reason` and `claim_code` are forwarded.
+- **GET prescription**: the only route that answers with a file instead of an envelope. A `200` with a png or jpeg body is streamed with
+  `Content-Type`, `Content-Disposition: inline; filename=prescription.<ext>`, `X-Content-Type-Options: nosniff` and
+  `Cache-Control: private, no-store`. An error from the service is relayed as an envelope; a `200` that is not an image is a `502`.
+  Paths and stored file names are never passed on.
+
+Environment: `RESERVATION_URL` (for example `http://127.0.0.1:8003`) and `GATEWAY_RESERVATION_TIMEOUT_SECONDS` (default 10).
+
+Try it in PowerShell (use `curl.exe`, because `curl` is an alias of `Invoke-WebRequest`). Log in as a customer first; the
+seeded customer is `customer.approved@pharmassist.test`:
+
+```powershell
+$login = curl.exe -s -X POST http://localhost:8000/api/v1/auth/login -H "Content-Type: application/json" -d '{\"email\":\"customer.approved@pharmassist.test\",\"password\":\"<seed password>\"}' | ConvertFrom-Json
+$token = $login.data.access_token
+$key = [guid]::NewGuid().ToString()
+
+# create (JSON). Running this again with the same $key replays the same reservation.
+curl.exe -s -X POST http://localhost:8000/api/v1/reservations -H "Authorization: Bearer $token" -H "Idempotency-Key: $key" -H "Content-Type: application/json" -d '{\"branch_id\":1,\"items\":[{\"medicine_id\":1,\"quantity\":2}]}'
+
+# create with a prescription image (multipart; items use the bracket names)
+curl.exe -s -X POST http://localhost:8000/api/v1/reservations -H "Authorization: Bearer $token" -H "Idempotency-Key: $([guid]::NewGuid())" -F "branch_id=1" -F "items[0][medicine_id]=3" -F "items[0][quantity]=1" -F "prescription=@C:/path/to/prescription.png"
+
+# list, detail, cancel
+curl.exe -s "http://localhost:8000/api/v1/reservations?status=pending&per_page=10" -H "Authorization: Bearer $token"
+curl.exe -s http://localhost:8000/api/v1/reservations/1 -H "Authorization: Bearer $token"
+curl.exe -s -X PATCH http://localhost:8000/api/v1/reservations/1/status -H "Authorization: Bearer $token" -H "Content-Type: application/json" -d '{\"action\":\"cancel\"}'
+
+# the prescription image (binary: save it to a file)
+curl.exe -s http://localhost:8000/api/v1/reservations/2/prescription -H "Authorization: Bearer $token" -o prescription.png
+```
+
+A technician logs in the same way (`technician1@pharmassist.test`) and approves with
+`-d '{\"action\":\"approve\"}'`, or rejects with `-d '{\"action\":\"reject\",\"reason\":\"Unreadable prescription\"}'`.
+An assistant completes with `-d '{\"action\":\"complete\",\"claim_code\":\"PA-XXXXXXXX\"}'`.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

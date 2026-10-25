@@ -5,6 +5,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventorySyncController;
 use App\Http\Controllers\PrescriptionController;
+use App\Http\Controllers\ReservationController;
 use Illuminate\Support\Facades\Route;
 use PharmAssist\Common\Http\Envelope;
 
@@ -40,6 +41,22 @@ Route::prefix('api/v1')->group(function () {
         // Branch inventory feed (XML or JSON): 5 per minute per IP, counted only after the token and role checks.
         Route::post('/integrations/inventory/sync', [InventorySyncController::class, 'sync'])
             ->middleware(['role:branch_manager,ceo', 'throttle:sync']);
+
+        // Reservations. Roles are checked here; reservation-service re-checks role, branch and ownership itself.
+        // Rate limits count only requests that passed the token and role checks.
+        Route::post('/reservations', [ReservationController::class, 'store'])
+            ->middleware(['role:customer', 'throttle:reserve']);
+        Route::get('/reservations', [ReservationController::class, 'index'])
+            ->middleware('role:customer,pharmacy_technician,pharmacy_assistant,branch_manager,ceo');
+        Route::get('/reservations/{id}', [ReservationController::class, 'show'])
+            ->whereNumber('id')
+            ->middleware('role:customer,pharmacy_technician,pharmacy_assistant,branch_manager,ceo');
+        Route::patch('/reservations/{id}/status', [ReservationController::class, 'status'])
+            ->whereNumber('id')
+            ->middleware(['role:customer,pharmacy_technician,pharmacy_assistant,branch_manager', 'throttle:reservation-status']);
+        Route::get('/reservations/{id}/prescription', [ReservationController::class, 'prescription'])
+            ->whereNumber('id')
+            ->middleware('role:customer,pharmacy_technician,pharmacy_assistant,branch_manager,ceo');
 
         // Prescription image to text: 10 requests a minute per IP, counted only after the token and role checks pass.
         Route::post('/prescriptions/ocr', [PrescriptionController::class, 'ocr'])
