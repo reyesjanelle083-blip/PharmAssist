@@ -48,7 +48,15 @@ php artisan schedule:work
 ```
 Without it a reservation past its hold time stays "pending" or "approved" (the pages say that the hold time has passed).
 
-## 5. Stop / reset
+## 5. Prescription OCR says "could not be read" (unavailable)
+Reservations still work when OCR cannot run; the photo is kept and the pharmacist checks the original. To find out why, look at the
+newest rows of `integration_logs` in integration-service's database: `error_message` is `binary_not_found` (Tesseract not found),
+`timeout`, `nonzero_exit` or `circuit_open` (three failures in a row pause OCR for 60 seconds, so retry after a minute).
+Running the services by hand on Windows, `services/integration-service/.env` needs the full path, for example
+`TESSERACT_BIN="C:/Program Files/Tesseract-OCR/tesseract.exe"`. A `TESSERACT_BIN` that is already set in the terminal wins over that file,
+so do not put it in the root `.env` (the root file is for Docker) and restart the service from a terminal that does not have it set.
+
+## 6. Stop / reset
 ```
 docker compose down          # stop, keep database data
 docker compose down -v       # stop and DELETE the MySQL volume (schemas are recreated on next start)
