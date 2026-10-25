@@ -1,0 +1,173 @@
+/*
+ * The accessible theme, loaded by the "High contrast" button (html[data-contrast='high']): black, white and yellow.
+ * Text is at least 7:1, borders and controls at least 3:1 (AA and mostly AAA). The default look is the old PharmAssist look
+ * and is not touched by anything in this file. Old rules use !important and inline colours, so these rules do too.
+ */
+
+html[data-contrast='high'],
+html[data-contrast='high'] body {
+  background: #000 !important;
+  background-color: #000 !important;
+  color: #fff;
+}
+
+html[data-contrast='high'] a { color: #ffee00; }
+html[data-contrast='high'] h1,
+html[data-contrast='high'] h2,
+html[data-contrast='high'] h3,
+html[data-contrast='high'] h4,
+html[data-contrast='high'] h5,
+html[data-contrast='high'] h6,
+html[data-contrast='high'] p,
+html[data-contrast='high'] label,
+html[data-contrast='high'] small,
+html[data-contrast='high'] li,
+html[data-contrast='high'] dt,
+html[data-contrast='high'] dd {
+  color: #fff !important;
+}
+
+/* focus ring that works on black */
+html[data-contrast='high'] a:focus-visible,
+html[data-contrast='high'] button:focus-visible,
+html[data-contrast='high'] input:focus-visible,
+html[data-contrast='high'] select:focus-visible,
+html[data-contrast='high'] textarea:focus-visible,
+html[data-contrast='high'] [tabindex]:focus-visible {
+  outline: 3px solid #00ffff !important;
+  box-shadow: 0 0 0 5px #000;
+}
+
+/* ---- shell ---- */
+html[data-contrast='high'] .sidebar { background: #000 !important; border-right: 3px solid #fff; }
+html[data-contrast='high'] .sidebar .nav-links li:hover,
+html[data-contrast='high'] .sidebar .nav-links li .sub-menu { background: #000; }
+html[data-contrast='high'] .sidebar.close .nav-links li .sub-menu { border: 2px solid #fff; }
+html[data-contrast='high'] .sidebar .nav-links li i,
+html[data-contrast='high'] .sidebar .nav-links li a .link_name,
+html[data-contrast='high'] .sidebar .logo-details .logo_name,
+html[data-contrast='high'] .sidebar .profile-details .profile_name,
+html[data-contrast='high'] .sidebar .profile-details .job,
+html[data-contrast='high'] .sidebar .profile-details i { color: #ffee00 !important; }
+html[data-contrast='high'] .sidebar .nav-links li a.is-current i { background: #000; box-shadow: inset 4px 0 0 #ffee00; }
+html[data-contrast='high'] .sidebar .profile-details,
+html[data-contrast='high'] .sidebar.close .profile-details { background: #000; border-top: 3px solid #fff; }
+html[data-contrast='high'] .sidebar .profile-details img { background: #fff; }
+
+html[data-contrast='high'] .home-section,
+html[data-contrast='high'] .page-wrapper { background: #000 !important; }
+html[data-contrast='high'] .home-content { background: #000 !important; border-bottom: 3px solid #fff; }
+html[data-contrast='high'] .home-content .bx-menu,
+html[data-contrast='high'] .home-content .text,
+html[data-contrast='high'] .home-content a { color: #fff !important; }
+
+/* ---- home hero ---- */
+html[data-contrast='high'] .parallax { background-color: #000 !important; }
+html[data-contrast='high'] .parallax h1 { color: #ffee00 !important; }
+html[data-contrast='high'] .parallax .btn {
+  background-color: #ffee00 !important;
+  color: #000 !important;
+  border: 2px solid #fff;
+}
+
+/* ---- search panel, banner and cards ---- */
+html[data-contrast='high'] .global-filter,
+html[data-contrast='high'] .search-result-banner,
+html[data-contrast='high'] .no-results-message {
+  background: #000 !important;
+  border: 2px solid #fff;
+  box-shadow: none;
+  color: #fff;
+}
+html[data-contrast='high'] .global-filter-title,
+html[data-contrast='high'] .branch-title,
+html[data-contrast='high'] .search-result-banner h3 { color: #fff !important; }
+html[data-contrast='high'] .no-results-message i { color: #ffee00; }
+html[data-contrast='high'] .ps-bar { background: #000; border: 2px solid #fff; }
+html[data-contrast='high'] .ps-input { color: #fff; }
+html[data-contrast='high'] .ps-input::placeholder { color: #fff; opacity: 0.8; }
+html[data-contrast='high'] .ps-search-btn,
+html[data-contrast='high'] .filter-btn,
+html[data-contrast='high'] .toggle-all-btn,
+html[data-contrast='high'] .reserve-button,
+html[data-contrast='high'] .fab {
+  background: #ffee00 !important;
+  color: #000 !important;
+  border: 2px solid #fff;
+}
+html[data-contrast='high'] .reserve-button:hover:not(:disabled),
+html[data-contrast='high'] .fab:hover { background: #fff !important; }
+html[data-contrast='high'] .filter-status { background: #000; color: #fff; border: 2px solid #fff; }
+
+html[data-contrast='high'] .card {
+  background: #000 !important;
+  border: 2px solid #fff !important;
+  box-shadow: none !important;
+}
+html[data-contrast='high'] .card-image { background: #000; border-bottom: 2px solid #fff; }
+html[data-contrast='high'] .card-image i { color: #fff; }
+html[data-contrast='high'] .card-title,
+html[data-contrast='high'] .card-price,
+html[data-contrast='high'] .prescription-status,
+html[data-contrast='high'] .card-category { color: #fff !important; }
+html[data-contrast='high'] .card-status {
+  background: #000;
+  color: #ffee00;
+  border: 2px solid currentColor;
+}
+html[data-contrast='high'] .status-low-stock { color: #ffcf99; }
+
+/* ---- footer ---- */
+html[data-contrast='high'] .site-footer { background: #000; color: #fff; border-top: 3px solid #fff; }
+html[data-contrast='high'] .site-footer h6,
+html[data-contrast='high'] .site-footer p,
+html[data-contrast='high'] .site-footer a,
+html[data-contrast='high'] .site-footer .footer-links a,
+html[data-contrast='high'] .site-footer .copyright-text,
+html[data-contrast='high'] .site-footer .logo { color: #fff !important; text-decoration: underline; }
+html[data-contrast='high'] .site-footer hr { border-top-color: #fff; opacity: 1; }
+
+/* ---- login, register and verify pages ---- */
+html[data-contrast='high'] .legacy-auth,
+html[data-contrast='high'] .legacy-auth .login { background: #000 !important; color: #fff; }
+html[data-contrast='high'] .legacy-auth .login-title { color: #ffee00 !important; }
+html[data-contrast='high'] .legacy-auth .notice,
+html[data-contrast='high'] .legacy-auth .login a,
+html[data-contrast='high'] .legacy-auth .signup-link span,
+html[data-contrast='high'] .legacy-auth .signup-link a { color: #fff !important; }
+html[data-contrast='high'] .legacy-auth .signup-link a { color: #ffee00 !important; text-decoration: underline; }
+html[data-contrast='high'] .legacy-auth .input-fullname,
+html[data-contrast='high'] .legacy-auth .input-first_name,
+html[data-contrast='high'] .legacy-auth .input-last_name,
+html[data-contrast='high'] .legacy-auth .input-email,
+html[data-contrast='high'] .legacy-auth .input-username,
+html[data-contrast='high'] .legacy-auth .input-password { background: #000; border: 2px solid #fff; }
+html[data-contrast='high'] .legacy-auth input[type='text'],
+html[data-contrast='high'] .legacy-auth input[type='email'],
+html[data-contrast='high'] .legacy-auth input[type='password'] { color: #fff; }
+html[data-contrast='high'] .legacy-auth input::placeholder { color: #fff; opacity: 0.75; }
+html[data-contrast='high'] .legacy-auth .icon,
+html[data-contrast='high'] .legacy-auth .toggle-password-btn { color: #ffee00; }
+html[data-contrast='high'] .legacy-auth button[type='submit'],
+html[data-contrast='high'] .legacy-auth .login a.button-link {
+  background: #ffee00;
+  color: #000 !important;
+  border: 2px solid #fff;
+  text-decoration: none;
+}
+html[data-contrast='high'] .legacy-auth .background { background: #000; border-left: 3px solid #fff; }
+html[data-contrast='high'] .legacy-auth .background h1 { color: #fff !important; }
+html[data-contrast='high'] .legacy-auth .file-input-label { background: #000; border: 2px dashed #fff; color: #fff; }
+html[data-contrast='high'] .legacy-auth .file-name { color: #8dff9d; }
+html[data-contrast='high'] .legacy-auth #logo img { background: #fff; border-radius: 50%; }
+
+/* ---- notices and messages ---- */
+html[data-contrast='high'] .app-notice { background: #000; border: 2px solid currentColor; }
+html[data-contrast='high'] .app-notice--error { color: #ffb3b3; }
+html[data-contrast='high'] .app-notice--warning { color: #ffee00; }
+html[data-contrast='high'] .app-notice--info { color: #fff; }
+html[data-contrast='high'] .app-notice--success { color: #8dff9d; }
+html[data-contrast='high'] .app-notice p { color: inherit !important; }
+html[data-contrast='high'] .field-error { color: #ffb3b3 !important; }
+html[data-contrast='high'] .field-hint { color: #fff !important; }
+html[data-contrast='high'] .brand-logo-chip { background: #fff; }

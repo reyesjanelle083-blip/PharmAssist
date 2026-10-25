@@ -1,0 +1,117 @@
+/*
+ * COPIED from old/PharmAssist/plugins/footer.css
+ * Left out: the Google Fonts @import.
+ * Rules are unchanged; only what is listed above was left out.
+ */
+
+.site-footer {
+  background-color: #B5CFD8;
+  color: #4e6a7b;
+  padding: 50px 0 20px;
+  font-size: 15px;
+  line-height: 26px;
+  margin-top: 40px;
+}
+
+.site-footer h6 {
+  color: #4e6a7b;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+  letter-spacing: 1px;
+}
+
+.site-footer p {
+  color: #4e6a7b;
+  font-size: 15px;
+  text-align: justify;
+}
+
+.footer-links {
+  list-style: none;
+  padding-left: 0;
+}
+
+.footer-links li {
+  margin-bottom: 6px;
+}
+
+.footer-links a {
+  color: #4e6a7b;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: #2f4c5a;
+  text-decoration: underline;
+}
+
+.site-footer hr {
+  border-top: 1px solid rgba(78, 106, 123, 0.3);
+  margin: 25px 0;
+}
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  text-align: center;
+}
+
+.footer-bottom p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.copyright-text {
+  color: #4e6a7b;
+}
+
+.logo {
+  font-weight: bold;
+  color: #4e6a7b;
+}
+
+.social-icons {
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.social-icons li {
+  display: inline-block;
+}
+
+.social-icons a {
+  color: #4e6a7b;
+  background-color: #E8ECF1;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.social-icons a:hover {
+  background-color: #4e6a7b;
+  color: #fff;
+}
+
+@media (max-width: 767px) {
+  .footer-bottom {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .social-icons {
+    justify-content: center;
+  }
+}

@@ -1,4 +1,42 @@
-@import './styles/tokens.css';
-@import './styles/base.css';
-@import './styles/layout.css';
-@import './styles/components.css';
+/*
+ * The old PharmAssist look, restored. Order matters and follows the old pages: the shell and page stylesheets first,
+ * then Bootstrap (the old pages loaded it after them), then the icon fonts, the inline styles, and last the app's own glue.
+ */
+
+/* fonts, self-hosted (no Google Fonts) */
+@import '@fontsource/bricolage-grotesque/400.css';
+@import '@fontsource/bricolage-grotesque/500.css';
+@import '@fontsource/bricolage-grotesque/600.css';
+@import '@fontsource/bricolage-grotesque/700.css';
+@import '@fontsource/bricolage-grotesque/800.css';
+@import '@fontsource/tinos/400.css';
+@import '@fontsource/tinos/400-italic.css';
+@import '@fontsource/tinos/700.css';
+@import '@fontsource/tinos/700-italic.css';
+
+/* the old shell and page stylesheets (copied, see styles/legacy/README) */
+@import './styles/legacy/sidebar.css';
+@import './styles/legacy/medicines.css';
+@import './styles/legacy/footer.css';
+
+/* Bootstrap 5.3.8 CSS only (no JavaScript), as on the old pages */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+/* the icon fonts the old pages used: Boxicons, Bootstrap Icons, Font Awesome */
+@import 'boxicons/css/boxicons.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.min.css';
+@import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
+@import '@fortawesome/fontawesome-free/css/solid.min.css';
+@import '@fortawesome/fontawesome-free/css/regular.min.css';
+
+/* the old inline <style> blocks */
+@import './styles/legacy/footer-inline.css';
+@import './styles/legacy/homepage.css';
+@import './styles/legacy/homepage-inline.css';
+@import './styles/legacy/auth.css';
+@import './styles/legacy/auth-register.css';
+
+/* the app: accessibility, notices, clash fixes, the high contrast theme, phone rules */
+@import './styles/app.css';
+@import './styles/contrast.css';
+@import './styles/responsive.css';

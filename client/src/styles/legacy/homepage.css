@@ -1,0 +1,40 @@
+/*
+ * COPIED from old/PharmAssist/plugins/homepage.css
+ * Left out: the Google Fonts @import.
+ * Wrapped in .legacy-home (CSS nesting) so its h1 font rule does not leak into the login and register pages.
+ * Rules are unchanged; only what is listed above was left out.
+ */
+.legacy-home {
+  
+  .parallax {
+    width: 100%;
+    min-height: calc(100vh - 60px);
+    position: relative;
+  }
+  
+  .front-image {
+    max-width: 50% !important;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+  }
+  
+  h1, .text {
+    font-family: "Bricolage Grotesque", sans-serif !important;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+  }
+  
+  .web_logo {
+    width: 45px;
+    margin-left: 20%;
+  }
+  
+  @media (max-width: 768px) {
+    .front-image {
+      max-width: 100% !important;
+    }
+  }
+}

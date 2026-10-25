@@ -1,0 +1,137 @@
+/*
+ * The old stylesheets were not made for phones in the places below (a 30/70 login split, a 78 px sidebar that never gets
+ * smaller, a very large heading). These are the minimum rules so nothing is cut off or scrolls sideways at 360 px.
+ * Desktop widths are not touched.
+ */
+
+img,
+video {
+  max-width: 100%;
+}
+
+/* ---- login, register, verify: stack the form and the picture panel ---- */
+@media (max-width: 768px) {
+  .legacy-auth #login-page {
+    flex-direction: column;
+  }
+
+  .legacy-auth #login-page #logo {
+    position: static;
+    padding: 10px 15px 0;
+  }
+
+  .legacy-auth .login {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 20px 20px 30px;
+    overflow: visible;
+  }
+
+  .legacy-auth .background {
+    width: 100%;
+    height: auto;
+    min-height: 160px;
+    padding: 24px;
+    order: -1;
+    justify-content: center;
+  }
+
+  .legacy-auth .background h1 {
+    text-align: center;
+    max-width: none;
+    font-size: 1.6rem;
+  }
+}
+
+/* ---- the app shell on a phone ---- */
+@media (max-width: 576px) {
+  /* a narrower closed sidebar leaves room for the page (the open one overlays it, as before) */
+  .sidebar.close {
+    width: 56px;
+  }
+
+  .sidebar.close .nav-links li i {
+    min-width: 56px;
+  }
+
+  .sidebar.close .profile-details {
+    width: 56px;
+  }
+
+  .sidebar.close ~ .home-section {
+    left: 56px;
+    width: calc(100% - 56px);
+  }
+
+  .sidebar.close ~ .home-section .home-content {
+    left: 56px;
+    width: calc(100% - 56px);
+    padding: 0 10px;
+  }
+
+  .sidebar.close ~ .home-sections {
+    left: 56px !important;
+    width: calc(100% - 56px) !important;
+  }
+
+  .sidebar:not(.close) {
+    width: min(250px, 85vw);
+  }
+
+  .home-content {
+    padding: 0 10px;
+  }
+
+  .page-wrapper {
+    padding-bottom: 90px; /* room for the row of floating buttons */
+  }
+
+  .parallax {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    gap: 1rem !important;
+  }
+
+  .parallax h1.display-3 {
+    font-size: 2rem;
+    overflow-wrap: anywhere;
+  }
+
+  .legacy-home .branch-container {
+    padding: 0;
+  }
+
+  .site-footer .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  /* the floating buttons become a row at the bottom so they do not cover the page */
+  .floating-buttons {
+    flex-direction: row;
+    bottom: 10px;
+    right: 8px;
+    gap: 8px;
+  }
+
+  .fab {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .floating-buttons .fab i {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 420px) {
+  .legacy-home .global-filter {
+    padding: 14px;
+  }
+
+  .legacy-home .global-filter .search-actions > * {
+    flex: 1 1 100%;
+  }
+}

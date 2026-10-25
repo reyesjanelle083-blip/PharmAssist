@@ -1,11 +1,15 @@
-import { useEffect, useRef } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import logo from '../assets/pharmassist-logo.png'
-import { useAuth } from '../context/useAuth.js'
+import { useEffect, useRef, useState } from 'react'
+import { Link, Outlet, useLocation } from 'react-router-dom'
 import AccessibilityToolbar from './AccessibilityToolbar.jsx'
+import Footer from './Footer.jsx'
+import Sidebar from './Sidebar.jsx'
 
+/**
+ * The shell of the old pages: sidebar, top bar (home-content), page area (page-wrapper) and footer, with the same
+ * class names, so sidebar.css, homepage.css and footer.css apply as designed.
+ */
 export default function Layout() {
-  const { user, logout } = useAuth()
+  const [closed, setClosed] = useState(true) // the old sidebar starts as the narrow icon bar
   const location = useLocation()
   const main = useRef(null)
   const first = useRef(true)
@@ -20,69 +24,41 @@ export default function Layout() {
   }, [location.pathname])
 
   return (
-    <>
+    <div className="legacy-shell">
       <a className="skip-link" href="#main-content">
         Skip to main content
       </a>
+
+      <Sidebar closed={closed} />
+
+      <section className="home-section">
+        <header className="home-content d-flex align-items-center justify-content-between px-4">
+          <div className="d-flex align-items-center gap-2">
+            <button
+              type="button"
+              className="menu-toggle"
+              onClick={() => setClosed((value) => !value)}
+              aria-label={closed ? 'Open the menu' : 'Close the menu'}
+              aria-expanded={!closed}
+              aria-controls="site-sidebar"
+            >
+              <i className="bx bx-menu" style={{ fontSize: '1.8rem' }} aria-hidden="true"></i>
+            </button>
+            <span>
+              <Link to="/" style={{ textDecoration: 'none', color: 'white', fontSize: '1.5rem' }} className="text fw-semibold">
+                PharmAssist
+              </Link>
+            </span>
+          </div>
+        </header>
+
+        <main id="main-content" ref={main} tabIndex={-1} className="page-wrapper">
+          <Outlet />
+        </main>
+      </section>
+
+      <Footer />
       <AccessibilityToolbar />
-
-      <header className="site-header">
-        <div className="site-header__inner">
-          <Link to="/" className="brand">
-            <img className="brand__logo" src={logo} alt="" width="48" height="48" />
-            <span className="brand__name">PharmAssist</span>
-          </Link>
-
-          <nav aria-label="Main" className="main-nav">
-            <ul>
-              <li>
-                <NavLink to="/" end>
-                  Home
-                </NavLink>
-              </li>
-              {user ? (
-                <>
-                  <li className="main-nav__user">
-                    <span>
-                      <span className="visually-hidden">Logged in as </span>
-                      {user.first_name} {user.last_name}
-                    </span>
-                  </li>
-                  <li>
-                    <button type="button" className="button button--outline" onClick={logout}>
-                      Log out
-                    </button>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li>
-                    <NavLink to="/login">Log in</NavLink>
-                  </li>
-                  <li>
-                    <NavLink to="/register">Register</NavLink>
-                  </li>
-                </>
-              )}
-            </ul>
-          </nav>
-        </div>
-      </header>
-
-      <main id="main-content" ref={main} tabIndex={-1}>
-        <Outlet />
-      </main>
-
-      <footer className="site-footer">
-        <div className="site-footer__inner">
-          <p>
-            <strong>PharmAssist</strong> is a school project (Systems Integration and Architecture). It is not a real pharmacy service.
-          </p>
-          <p>
-            The information on this site is not medical advice. Ask a pharmacist or a doctor before you take any medicine.
-          </p>
-        </div>
-      </footer>
-    </>
+    </div>
   )
 }

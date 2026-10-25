@@ -1,0 +1,299 @@
+/*
+ * What the app adds around the old PharmAssist stylesheets (src/styles/legacy/). Nothing here changes the old default look:
+ *   - accessibility that is invisible by default (skip link, focus ring, hidden text, text size, readable font),
+ *   - the notice boxes (they reuse the old alert colours),
+ *   - the few places where the old stylesheets, written for separate PHP pages, clash inside one single page app.
+ */
+
+/* ---- text size (the toolbar's A+ / A-). Like the old zoom buttons it scales the page content. ---- */
+:root { --text-scale: 1; }
+:root[data-text-size='0'] { --text-scale: 1; }
+:root[data-text-size='1'] { --text-scale: 1.12; }
+:root[data-text-size='2'] { --text-scale: 1.25; }
+:root[data-text-size='3'] { --text-scale: 1.5; }
+:root[data-text-size='4'] { --text-scale: 1.75; }
+
+.page-wrapper,
+.legacy-auth .login {
+  zoom: var(--text-scale);
+}
+
+/* ---- readable font: a plainer typeface with more space between lines, letters and words. Icon fonts are left alone. ---- */
+html[data-font='readable'] *:not(i) {
+  font-family: Verdana, Tahoma, 'Trebuchet MS', 'Segoe UI', sans-serif !important;
+  letter-spacing: 0.04em;
+  word-spacing: 0.14em;
+}
+
+html[data-font='readable'] body {
+  line-height: 1.8;
+}
+
+/* ---- skip link: hidden until it gets keyboard focus ---- */
+.skip-link {
+  position: absolute;
+  left: 0.5rem;
+  top: -5rem;
+  z-index: 5000;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #2d3f50;
+  border-radius: 8px;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0.5rem;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- visible focus: only when the keyboard is used (inputs always match :focus-visible), so the mouse look is the old look ---- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #1a4fd6 !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px #ffffff;
+}
+
+/* on the blue-grey bars a white ring is the one that shows */
+.sidebar a:focus-visible,
+.sidebar button:focus-visible,
+.home-content a:focus-visible,
+.home-content button:focus-visible,
+.floating-buttons button:focus-visible {
+  outline-color: #ffffff !important;
+  box-shadow: 0 0 0 5px #2d3f50;
+}
+
+main:focus,
+.results-heading:focus {
+  outline: none !important;
+  box-shadow: none;
+}
+
+/* ---- the top bar's menu button: a <button> that looks like the old <i class="bx bx-menu"> ---- */
+.menu-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  margin: 0 5px 0 -8px;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.menu-toggle .bx-menu {
+  margin: 0;
+}
+
+/* the sidebar buttons and links that replace the old <i onclick> and <a href="login.php"> */
+.sidebar .profile-details button.logout {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: #fff;
+}
+
+.sidebar .profile-details button.logout i,
+.sidebar .profile-details a i {
+  color: #fff;
+  font-size: 24px;
+  min-width: 40px;
+  cursor: pointer;
+}
+
+.sidebar .nav-links li a.is-current .link_name {
+  font-weight: 700;
+}
+
+.sidebar .nav-links li a.is-current i {
+  background: #6c737e; /* the old hover colour marks the current page */
+}
+
+/* ---- floating accessibility buttons (the old zoom buttons, plus reset, contrast and font) ---- */
+.floating-buttons .fab i {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.fab[aria-pressed='true'] {
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 6px #2d3f50; /* "on" is shown by a ring, not by colour alone */
+}
+
+.floating-buttons .fab.fab-text {
+  font-size: 22px;
+}
+
+/* ---- notices (old alert colours) ---- */
+.app-notice {
+  margin: 0 0 15px;
+  padding: 12px 15px;
+  border: 1px solid;
+  border-radius: 5px;
+  font-size: 14px;
+  text-align: left;
+}
+
+.app-notice p {
+  margin: 0 0 6px;
+}
+
+.app-notice p:last-child {
+  margin-bottom: 0;
+}
+
+.app-notice--error { color: #721c24; background: #f8d7da; border-color: #f5c6cb; }
+.app-notice--warning { color: #856404; background: #fff3cd; border-color: #ffeeba; }
+.app-notice--info { color: #2d3f50; background: #e8ecf1; border-color: #b5cfd8; }
+.app-notice--success { color: #155724; background: #d4edda; border-color: #c3e6cb; }
+.app-notice__reference { font-size: 12px; }
+.alert-slot:empty { display: none; }
+
+.field-error {
+  margin: 0 0 6px 15px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #721c24;
+}
+
+.field-hint {
+  display: block;
+  margin: 4px 0 0 15px;
+  font-size: 12px;
+  color: #999;
+}
+
+/* ---- results area on the home page ---- */
+.legacy-home .search-results {
+  margin-top: 8px;
+}
+
+.legacy-home .results-heading {
+  margin: 0;
+}
+
+.legacy-home .branch-container {
+  padding: 0 20px;
+}
+
+.legacy-home .global-filter .search-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.legacy-home .global-filter .field-hint {
+  margin-left: 0;
+}
+
+.legacy-home .card-image i {
+  font-size: 4rem;
+  color: #b5cfd8;
+}
+
+.legacy-home .card .card-category i {
+  margin-right: 4px;
+}
+
+.legacy-home .estimated {
+  font-style: italic;
+}
+
+/* ---- where the old stylesheets, written for separate PHP pages, clash in one page app ---- */
+
+/* sidebar.css gives every element the Tinos font; the login and register pages never loaded it (they used plain sans-serif) */
+.legacy-auth,
+.legacy-auth *:not(i) {
+  font-family: sans-serif;
+}
+
+/* style.css makes every link a block (a login page rule): inside the shell and the forms that must not apply to the footer or sidebar */
+.legacy-auth .login .app-notice a,
+.legacy-auth .login .field-hint a {
+  display: inline;
+  font-size: inherit;
+}
+
+/* the floating buttons sit at the right edge: keep the picture panel's title clear of them */
+@media (min-width: 769px) {
+  .legacy-auth .background {
+    padding-right: 120px;
+  }
+}
+
+/* the login panel is the page's <main> */
+.legacy-auth main.login:focus {
+  outline: none !important;
+}
+
+.legacy-auth .toggle-password-btn {
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.legacy-auth .input-username:has(input[aria-invalid='true']),
+.legacy-auth .input-email:has(input[aria-invalid='true']),
+.legacy-auth .input-password:has(input[aria-invalid='true']),
+.legacy-auth .input-first_name:has(input[aria-invalid='true']),
+.legacy-auth .input-last_name:has(input[aria-invalid='true']) {
+  box-shadow: 0 0 0 2px #dc3545;
+}
+
+/* the hidden file input of the ID photo is reached with the keyboard: show the label as focused */
+.legacy-auth .file-input-wrapper:focus-within .file-input-label {
+  outline: 3px solid #1a4fd6;
+  outline-offset: 2px;
+}
+
+.legacy-auth .file-input-wrapper input[type='file'] {
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.legacy-auth .login .button-link {
+  display: block;
+  width: 100%;
+  border-radius: 25px;
+  padding: 10px;
+  background: #7393a7;
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  text-decoration: none;
+  margin: 8px 0;
+}
+
+/* a link styled like the old submit button (success pages) */
+.legacy-auth .login a.button-link {
+  color: #fff;
+}

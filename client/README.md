@@ -1,13 +1,16 @@
 # PharmAssist client
 
-React (Vite, JavaScript) single-page app, plain CSS. It talks only to the API gateway (`docs/openapi.yaml` is the contract).
+React (Vite, JavaScript) single-page app. It talks only to the API gateway (`docs/openapi.yaml` is the contract).
+
+The look is the old PharmAssist look: the old stylesheets are copied into `src/styles/legacy/` (see the README there) and the pages use the old
+markup and class names, with Bootstrap 5 CSS (no JavaScript) and the old icon fonts from npm. Fonts are self-hosted (`@fontsource`), no CDN.
 
 ## What is in it (step 8A)
 
 - Pages: Home (hero and medicine search), Log in, Register, Verify email, Not found, Forbidden (403), and a "coming soon" page for `/reserve`.
 - Search: `GET /availability` with the medicine name and, only when you press "Use my location", your coordinates. Results are cards in the order the gateway ranked them.
 - Auth: the token and user are kept in `sessionStorage` (cleared when the tab closes). `ProtectedRoute` needs a login, `RoleRoute` needs one of the given roles. A `401 UNAUTHENTICATED` or `TOKEN_EXPIRED` from any call ends the session and sends you to log in.
-- Accessibility toolbar on every page: text size (A-, A+, reset: 100, 112, 125, 150, 175 percent), high contrast, readable font. The choices are saved in `localStorage`. Skip link, visible focus, labelled fields, live regions for errors and results, 44 px touch targets, and it follows `prefers-color-scheme`, `prefers-contrast` and `prefers-reduced-motion`.
+- Accessibility buttons on every page, in the look of the old round zoom buttons (bottom right): larger and smaller text (5 steps, 100 to 175 percent, like the old zoom it scales the page content), reset, high contrast and readable font. The choices are saved in `localStorage`. The default look is the old look; **High contrast** switches to the accessible black, white and yellow theme (`styles/contrast.css`). Skip link, visible keyboard focus, labelled fields, live regions for errors and results, and it respects `prefers-reduced-motion`. The old default look has known contrast problems; they are listed in the paper's limitations and are not fixed in the default theme.
 - Every error shows a friendly sentence and a small "Reference: ..." line (the gateway's `X-Request-Id`) so a problem can be found in the gateway logs.
 
 ## Setup

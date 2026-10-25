@@ -16,6 +16,7 @@ function safeTarget(from) {
   return typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : '/'
 }
 
+/** login.php: title, notice, the rounded fields with icons, the eye button, the Sign in button and the sign up link. */
 export default function Login() {
   usePageTitle('Log in')
   const { login } = useAuth()
@@ -49,58 +50,78 @@ export default function Login() {
     }
   }
 
-  const serverFields = fieldErrors(error)
-  const errors = { ...serverFields, ...localErrors }
+  const errors = { ...fieldErrors(error), ...localErrors }
 
   return (
-    <div className="form-page">
-      <h1>Log in</h1>
+    <>
+      <h2 className="login-title">Login</h2>
+      <p className="notice">Enter your details to sign in</p>
+
       {notice ? (
-        <p className="notice notice--info" role="status">
+        <p className="app-notice app-notice--info" role="status">
           {notice}
         </p>
       ) : null}
 
-      <form onSubmit={submit} noValidate className="form" aria-busy={busy}>
+      <form className="form-login" onSubmit={submit} noValidate aria-busy={busy}>
         <ErrorMessage error={error}>
           {error?.code === 'EMAIL_NOT_VERIFIED' ? (
             <p>
-              <Link to="/verify-email">Verify your email</Link>
+              <Link to="/verify-email" style={{ display: 'inline', fontSize: 'inherit' }}>
+                Verify your email
+              </Link>
             </p>
           ) : null}
         </ErrorMessage>
 
-        <Field label="Email address" errors={errors.email}>
-          {(props) => <input {...props} type="email" name="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />}
+        <Field label="Email address" wrapperClass="input-email" icon="fa-solid fa-user" errors={errors.email}>
+          {(props) => (
+            <input {...props} type="email" name="email" autoComplete="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          )}
         </Field>
-        <Field label="Password" errors={errors.password}>
+
+        <Field
+          label="Password"
+          wrapperClass="input-password"
+          icon="fas fa-lock"
+          errors={errors.password}
+          after={
+            <button type="button" className="toggle-password-btn" onClick={() => setShowPassword((v) => !v)} aria-pressed={showPassword} aria-label="Show password">
+              <i className={showPassword ? 'far fa-eye-slash' : 'far fa-eye'} aria-hidden="true"></i>
+            </button>
+          }
+        >
           {(props) => (
             <input
               {...props}
               type={showPassword ? 'text' : 'password'}
               name="password"
               autoComplete="current-password"
+              placeholder="Enter your password"
+              style={{ paddingRight: 40 }}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           )}
         </Field>
 
-        <label className="checkbox">
-          <input type="checkbox" checked={showPassword} onChange={(e) => setShowPassword(e.target.checked)} />
-          <span>Show password</span>
-        </label>
-
-        <button type="submit" className="button button--block" disabled={busy}>
-          {busy ? 'Logging in...' : 'Log in'}
+        <button type="submit" disabled={busy}>
+          {busy ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
 
-      <p className="form-page__links">
-        New here? <Link to="/register">Create an account</Link>
-        <br />
-        Have a code from your email? <Link to="/verify-email">Verify your email</Link>
-      </p>
-    </div>
+      <div className="form-links">
+        <Link to="/verify-email">Have a code from your email? Verify your email</Link>
+      </div>
+
+      <div className="signup-link" style={{ textAlign: 'center', margin: '10px 0 0 0' }}>
+        <span style={{ fontSize: 12, color: '#666' }}>
+          Don&apos;t have an account?{' '}
+          <Link to="/register" style={{ display: 'inline', color: '#7393A7', textDecoration: 'none', fontSize: 12, margin: 0 }}>
+            Sign up here
+          </Link>
+        </span>
+      </div>
+    </>
   )
 }

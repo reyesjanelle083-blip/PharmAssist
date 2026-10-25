@@ -1,0 +1,465 @@
+/*
+ * COPIED from old/PharmAssist/plugins/medicines.css
+ * Taken: lines 1-224 (layout, cards, buttons), 271-388 (search banner, no-results, filter panel and buttons), 476-516 and 555-576 (the search bar, without the microphone button) and the card rules of the responsive media queries (lines 1905-2320).
+ * Left out: the text-to-speech, voice search, medicine scanner and branch filter styles (removed features, or not part of this step).
+ * Rules are unchanged; only what is listed above was left out.
+ */
+/* ═════════════════════════════════════════════════════════════════════════════
+   PHARMASEE - MEDICINES PAGE COMPLETE CSS
+   File: plugins/medicines.css
+   Updated: Layout Fix + OCR Feature + Responsive Design
+═════════════════════════════════════════════════════════════════════════════ */
+
+/* ═════════════════════════════════════════════════════════
+   LAYOUT & TYPOGRAPHY
+═════════════════════════════════════════════════════════ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Bricolage Grotesque", sans-serif;
+    background-color: #f8f9fa;
+    color: #2d3f50;
+}
+
+/* ═════════════════════════════════════════════════════════
+   BRANCH CONTAINER & HEADERS
+═════════════════════════════════════════════════════════ */
+
+.branch-container {
+    margin-bottom: 40px;
+    padding: 0;
+}
+
+.branch-header {
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.branch-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #2d3f50;
+    font-family: "Bricolage Grotesque", sans-serif;
+    margin: 0;
+    letter-spacing: -0.5px;
+}
+
+/* ═════════════════════════════════════════════════════════
+   CARDS CONTAINER - MAIN LAYOUT FIX
+═════════════════════════════════════════════════════════ */
+
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+/* ═════════════════════════════════════════════════════════
+   CARD STYLES
+═════════════════════════════════════════════════════════ */
+
+.card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.card.search-highlight {
+    animation: highlight-pulse 1.5s ease-in-out;
+    border: 3px solid #7393A7 !important;
+    box-shadow: 0 0 20px rgba(115, 147, 167, 0.6) !important;
+    transform: scale(1.02);
+    transition: transform 0.3s ease;
+}
+
+@keyframes highlight-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(115, 147, 167, 0.6); }
+    50%       { box-shadow: 0 0 30px rgba(115, 147, 167, 0.9); }
+}
+
+.card.hidden-by-search {
+    display: none !important;
+}
+
+/* ── Card Image ── */
+.card-image {
+    width: 100%;
+    height: 200px;
+    background: #f0f5f8;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-image img {
+    transform: scale(1.05);
+}
+
+/* ── Card Body ── */
+.card-body {
+    padding: 18px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2d3f50;
+    margin: 0 0 8px 0;
+    line-height: 1.3;
+    font-family: "Bricolage Grotesque", sans-serif;
+    min-height: 2.6em;
+}
+
+.prescription-status {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #7393A7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    font-family: "Bricolage Grotesque", sans-serif;
+}
+
+.card-category {
+    font-size: 0.85rem;
+    color: #8faab8;
+    margin-bottom: 10px;
+    font-family: "Bricolage Grotesque", sans-serif;
+}
+
+.card-status {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 12px;
+    width: fit-content;
+    font-family: "Bricolage Grotesque", sans-serif;
+}
+
+.status-available {
+    background: #d4e8f0;
+    color: #2d5a70;
+}
+
+.status-low-stock {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-unavailable {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.card-price {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #2d3f50;
+    margin: auto 0 12px 0;
+    font-family: "Bricolage Grotesque", sans-serif;
+}
+
+/* ═════════════════════════════════════════════════════════
+   BUTTONS
+═════════════════════════════════════════════════════════ */
+
+.reserve-button {
+    background: #7393A7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: "Bricolage Grotesque", sans-serif;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.reserve-button:hover:not(:disabled) {
+    background: #5d7a8e;
+    transform: translateY(-1px);
+}
+
+.reserve-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.reserve-button:disabled {
+    background: #b0c4cf;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+
+.search-result-banner {
+    background: linear-gradient(135deg, #7393A7 0%, #B5CFD8 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-banner h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.search-result-banner p {
+    margin: 10px 0 0 0;
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.no-results-message {
+    background: #f8f9fa;
+    border: 2px dashed #7393A7;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    margin: 30px 0;
+}
+
+.no-results-message i {
+    font-size: 3rem;
+    color: #7393A7;
+    margin-bottom: 15px;
+}
+
+
+.global-filter {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.global-filter-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2d3f50;
+    margin: 0 0 15px 0;
+}
+
+.branch-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.branch-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #F0F4F7;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.branch-toggle input[type="checkbox"] {
+    cursor: pointer;
+}
+
+.branch-toggle:hover {
+    background: #E0E7F1;
+}
+
+.branch-toggle.active {
+    background: #D9EAFD;
+    border-color: #7393A7;
+    color: #2d3f50;
+    font-weight: 600;
+}
+
+.filter-btn,
+.toggle-all-btn {
+    padding: 8px 16px;
+    background: #7393A7;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: "Bricolage Grotesque", sans-serif;
+    transition: background 0.2s ease;
+}
+
+.filter-btn:hover,
+.toggle-all-btn:hover {
+    background: #5d7a8e;
+}
+
+.filter-btn.active {
+    background: #27AE60;
+}
+
+.filter-status {
+    padding: 8px 16px;
+    background: #E8ECF1;
+    border-radius: 8px;
+    color: #7393A7;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* ═════════════════════════════════════════════════════════
+   SEARCH BAR & MIC BUTTON
+═════════════════════════════════════════════════════════ */
+
+.ps-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: #E8ECF1;
+    border: 2px solid #7393A7;
+    border-radius: 40px;
+    padding: 5px 5px 5px 16px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ps-bar:focus-within {
+    border-color: #B5CFD8;
+    box-shadow: 0 0 10px rgba(115, 147, 167, 0.3);
+}
+
+
+.ps-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    font-family: "Bricolage Grotesque", sans-serif;
+    color: #2d3f50;
+    outline: none;
+    min-width: 0;
+    padding: 5px 0;
+}
+
+.ps-input::placeholder {
+    color: #9AA6B2;
+    transition: opacity 0.2s;
+}
+
+.ps-search-btn {
+    width: 33px;
+    height: 33px;
+    border-radius: 50%;
+    border: none;
+    background: #7393A7;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.ps-search-btn:hover {
+    background: #5d7a8e;
+}
+
+.ps-search-btn:active {
+    transform: scale(0.93);
+}
+
+/* ---- the card rules of the responsive media queries (lines 1905-2320) ---- */
+@media (max-width: 1024px) {
+    .cards-container {
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+}
+
+@media (max-width: 768px) {
+    .cards-container {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
+        }
+    .branch-title {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+    .card-title {
+            font-size: 0.95rem;
+            min-height: auto;
+        }
+    .card-price {
+            font-size: 1.3rem;
+        }
+    .reserve-button {
+            padding: 9px 14px;
+            font-size: 0.9rem;
+        }
+}
+
+@media (max-width: 480px) {
+    .cards-container {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+    .branch-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+    .card-image {
+            height: 180px;
+        }
+    .card-body {
+            padding: 14px;
+        }
+    .card-title {
+            font-size: 0.9rem;
+        }
+    .card-price {
+            font-size: 1.2rem;
+        }
+}
+

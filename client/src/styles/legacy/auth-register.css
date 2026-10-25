@@ -1,0 +1,136 @@
+/*
+ * COPIED from old/PharmAssist/register.php (the <style> block, lines 325-452)
+ * Nested under .legacy-auth like auth.css.
+ */
+@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+.legacy-auth {
+          /* Custom scrollbar for the register panel (.login.register-container).
+             Avoid max-height < 100vh on this column: .background is 100vh, so a
+             shorter left column exposes the default white body as a bottom strip. */
+          .register-container::-webkit-scrollbar {
+              width: 6px;
+          }
+          .register-container::-webkit-scrollbar-track {
+              background: #f1f1f1;
+              border-radius: 10px;
+          }
+          .register-container::-webkit-scrollbar-thumb {
+              background: #7393A7;
+              border-radius: 10px;
+          }
+          .file-input-wrapper {
+              position: relative;
+              overflow: hidden;
+              display: inline-block;
+              width: 100%;
+          }
+          .file-input-wrapper input[type=file] {
+              position: absolute;
+              left: -9999px;
+          }
+          .file-input-label {
+              display: block;
+              padding: 12px 15px;
+              background-color: #f0f0f0;
+              border: 2px dashed #7393A7;
+              border-radius: 5px;
+              text-align: center;
+              cursor: pointer;
+              transition: all 0.3s ease;
+              color: #666;
+          }
+          .file-input-label:hover {
+              background-color: #e8f0f6;
+              border-color: #5f7a8d;
+          }
+          .file-name {
+              margin-top: 8px;
+              font-size: 12px;
+              color: #27ae60;
+              font-weight: 500;
+          }
+          .preview-container {
+              margin-top: 15px;
+              padding: 12px;
+              background-color: #f9f9f9;
+              border: 1px solid #e0e0e0;
+              border-radius: 8px;
+              display: none;
+              text-align: center;
+          }
+          .preview-container.show {
+              display: block;
+              animation: slideDown 0.3s ease;
+          }
+          
+          .preview-title {
+              font-size: 12px;
+              font-weight: 600;
+              color: #333;
+              margin-bottom: 10px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+          }
+          .preview-image {
+              max-width: 100%;
+              max-height: 300px;
+              border-radius: 6px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+              object-fit: contain;
+          }
+          .preview-pdf {
+              padding: 30px;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              border-radius: 6px;
+              color: white;
+              font-size: 14px;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          }
+          .preview-pdf i {
+              font-size: 48px;
+              display: block;
+              margin-bottom: 10px;
+          }
+          .remove-file-btn {
+              margin-top: 10px;
+              padding: 6px 12px;
+              background-color: #ff6b6b;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 12px;
+              transition: background-color 0.2s ease;
+          }
+          .remove-file-btn:hover {
+              background-color: #ff5252;
+          }
+          .password-strength {
+              margin-top: 6px;
+              font-size: 12px;
+              font-weight: 600;
+              line-height: 1.2;
+          }
+          .name-row {
+              width: 100%;
+              display: flex;
+              gap: 12px;
+          }
+          .name-row .name-col {
+              flex: 1;
+              min-width: 0;
+          }
+          .name-row label {
+              margin-left: 0;
+          }
+}

@@ -5,6 +5,7 @@ import ErrorMessage from '../components/ErrorMessage.jsx'
 import Field from '../components/Field.jsx'
 import { usePageTitle } from '../hooks/usePageTitle.js'
 
+/** Built from the old login page: same title, notice, rounded fields and button. */
 export default function VerifyEmail() {
   usePageTitle('Verify your email')
   const location = useLocation()
@@ -39,32 +40,32 @@ export default function VerifyEmail() {
 
   if (done) {
     return (
-      <div className="form-page">
-        <h1>Email verified</h1>
-        <div className="notice notice--success" role="status">
-          <p>Thank you. Your email address is confirmed.</p>
+      <>
+        <h2 className="login-title">Email verified</h2>
+        <p className="notice">Thank you. Your email address is confirmed.</p>
+        <div className="app-notice app-notice--success" role="status">
           <p>The pharmacy administrator still has to approve your account. You can log in once that has happened.</p>
         </div>
-        <p>
-          <Link className="button" to="/login">
-            Go to Log in
-          </Link>
-        </p>
-      </div>
+        <Link className="button-link" to="/login">
+          Go to Log in
+        </Link>
+      </>
     )
   }
 
   return (
-    <div className="form-page">
-      <h1>Verify your email</h1>
-      <p>Enter the email address you registered with and the 6-digit code we sent to it.</p>
+    <>
+      <h2 className="login-title">Verify your email</h2>
+      <p className="notice">Enter the email address you registered with and the 6-digit code we sent to it</p>
 
-      <form onSubmit={submit} noValidate className="form" aria-busy={busy}>
+      <form className="form-login" onSubmit={submit} noValidate aria-busy={busy}>
         <ErrorMessage error={error} />
-        <Field label="Email address" errors={errors.email}>
-          {(props) => <input {...props} type="email" name="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />}
+
+        <Field label="Email address" wrapperClass="input-email" icon="fa-solid fa-user" errors={errors.email}>
+          {(props) => <input {...props} type="email" name="email" autoComplete="email" placeholder="Enter your email" value={email} onChange={(e) => setEmail(e.target.value)} />}
         </Field>
-        <Field label="6-digit code" errors={errors.code}>
+
+        <Field label="6-digit code" wrapperClass="input-username" icon="fas fa-lock" errors={errors.code}>
           {(props) => (
             <input
               {...props}
@@ -74,19 +75,26 @@ export default function VerifyEmail() {
               pattern="[0-9]*"
               autoComplete="one-time-code"
               maxLength={6}
+              placeholder="Enter the 6 digits"
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
             />
           )}
         </Field>
-        <button type="submit" className="button button--block" disabled={busy}>
+
+        <button type="submit" disabled={busy}>
           {busy ? 'Checking...' : 'Verify email'}
         </button>
       </form>
 
-      <p className="form-page__links">
-        Not registered yet? <Link to="/register">Create an account</Link>
-      </p>
-    </div>
+      <div className="signup-link" style={{ textAlign: 'center', margin: '10px 0 0 0' }}>
+        <span style={{ fontSize: 12, color: '#666' }}>
+          Not registered yet?{' '}
+          <Link to="/register" style={{ display: 'inline', color: '#7393A7', textDecoration: 'none', fontSize: 12, margin: 0 }}>
+            Create an account
+          </Link>
+        </span>
+      </div>
+    </>
   )
 }

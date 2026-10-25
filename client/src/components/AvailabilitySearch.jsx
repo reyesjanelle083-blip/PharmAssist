@@ -13,6 +13,9 @@ const GEO_MESSAGES = {
 /**
  * The home page search. The location is read only when the button is pressed, lives only in this component's state and is
  * sent only with the search request: it is not kept in the page address, storage or any log.
+ *
+ * Markup follows the old medicines page: a white filter panel (global-filter) with the pill search bar (ps-bar), the green and
+ * blue-grey buttons (filter-btn, toggle-all-btn), then the search banner and the card grid (cards-container).
  */
 export default function AvailabilitySearch() {
   const inputId = useId()
@@ -77,7 +80,7 @@ export default function AvailabilitySearch() {
       if (details.lat || details.lng) {
         setOrigin(null)
         setGeoStatus('')
-        setState({ phase: 'error', message: 'Your location looks like it is outside the Philippines, so we cannot rank branches by distance. Please search again without it.', error })
+        setState({ phase: 'error', error, message: 'Your location looks like it is outside the Philippines, so we cannot rank branches by distance. Please search again without it.' })
         return
       }
       setState({ phase: 'error', error })
@@ -85,45 +88,57 @@ export default function AvailabilitySearch() {
   }
 
   return (
-    <section aria-labelledby="search-heading" className="search">
-      <h2 id="search-heading">Find a medicine</h2>
+    <section id="search" aria-labelledby="search-heading" className="branch-container">
+      <div className="branch-header">
+        <h2 id="search-heading" className="branch-title">
+          Find a medicine
+        </h2>
+      </div>
 
-      <form onSubmit={submit} className="search__form" noValidate>
-        <label htmlFor={inputId}>Medicine name (generic or brand)</label>
-        <input
-          id={inputId}
-          type="search"
-          name="q"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          maxLength={100}
-          autoComplete="off"
-          placeholder="For example: paracetamol or Biogesic"
-        />
-
-        <div className="search__actions">
-          {origin ? (
-            <button type="button" className="button button--outline" onClick={clearLocation}>
-              Stop using my location
-            </button>
-          ) : (
-            <button type="button" className="button button--outline" onClick={shareLocation} disabled={locating}>
-              {locating ? 'Finding location...' : 'Use my location'}
-            </button>
-          )}
-          <button type="submit" className="button" disabled={state.phase === 'loading'}>
-            {state.phase === 'loading' ? 'Searching...' : 'Search'}
+      <form onSubmit={submit} noValidate className="global-filter" style={{ marginTop: 0 }}>
+        <label htmlFor={inputId} className="global-filter-title">
+          Medicine name (generic or brand)
+        </label>
+        <div className="ps-bar">
+          <input
+            id={inputId}
+            className="ps-input"
+            type="search"
+            name="q"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            maxLength={100}
+            autoComplete="off"
+            placeholder="Search medicines..."
+          />
+          <button type="submit" className="ps-search-btn" aria-label="Search" disabled={state.phase === 'loading'}>
+            <i className="bi bi-search" aria-hidden="true"></i>
           </button>
         </div>
 
-        <p className="field__hint">Your location is sent only for this search, ranked by distance, and is not stored.</p>
-        <p className="search__geo" role="status">
-          {geoStatus}
-        </p>
+        <div className="search-actions">
+          {origin ? (
+            <button type="button" className="toggle-all-btn" onClick={clearLocation}>
+              <i className="bi bi-geo-alt-fill" aria-hidden="true"></i> Stop using my location
+            </button>
+          ) : (
+            <button type="button" className="toggle-all-btn" onClick={shareLocation} disabled={locating}>
+              <i className="bi bi-geo-alt" aria-hidden="true"></i> {locating ? 'Finding location...' : 'Use my location'}
+            </button>
+          )}
+          <button type="submit" className="filter-btn" style={{ backgroundColor: '#84B179' }} disabled={state.phase === 'loading'}>
+            {state.phase === 'loading' ? 'Searching...' : 'Search'}
+          </button>
+          <span className="filter-status" role="status">
+            {geoStatus || 'Location not shared'}
+          </span>
+        </div>
+
+        <p className="field-hint">Your location is sent only for this search, ranked by distance, and is not stored.</p>
       </form>
 
-      <div aria-live="polite" className="search__results">
-        {state.phase === 'loading' ? <p className="loading">Searching...</p> : null}
+      <div aria-live="polite" className="search-results">
+        {state.phase === 'loading' ? <p className="filter-status" style={{ display: 'inline-block' }}>Searching...</p> : null}
 
         {state.phase === 'error' ? <ErrorMessage error={state.error} message={state.message ?? friendlyMessage(state.error)} /> : <ErrorMessage />}
 
@@ -139,25 +154,37 @@ function Results({ q, items, warnings, usedLocation, headingRef }) {
 
   return (
     <>
-      <h3 ref={headingRef} tabIndex={-1} className="results__heading">
-        {empty ? `No results for "${q}"` : `${items.length} ${items.length === 1 ? 'result' : 'results'} for "${q}"`}
-        {!empty && usedLocation ? ', nearest first' : ''}
-      </h3>
-
-      {notes.map((note) => (
-        <p key={note.code} className={note.code === 'NO_STOCK_FOUND' ? 'notice notice--info' : 'notice notice--warning'}>
-          {note.text}
+      <div className="search-result-banner">
+        <h3 ref={headingRef} tabIndex={-1} className="results-heading">
+          Search Results for &quot;{q}&quot;
+        </h3>
+        <p>
+          {empty ? 'No results' : `${items.length} ${items.length === 1 ? 'result' : 'results'}`}
+          {!empty && usedLocation ? ', nearest first' : ''}
         </p>
-      ))}
+      </div>
 
-      {empty ? null : (
-        <ol className="results__list">
+      {notes
+        .filter((note) => !(empty && note.code === 'NO_STOCK_FOUND'))
+        .map((note) => (
+          <p key={note.code} className={note.code === 'ORIGIN_NOT_PROVIDED' ? 'app-notice app-notice--info' : 'app-notice app-notice--warning'}>
+            {note.text}
+          </p>
+        ))}
+
+      {empty ? (
+        <div className="no-results-message">
+          <i className="bi bi-search" aria-hidden="true"></i>
+          <h4>No medicines found</h4>
+          <p>{warningText('NO_STOCK_FOUND')}</p>
+          <p>Try searching with a different keyword.</p>
+        </div>
+      ) : (
+        <div className="cards-container" role="list">
           {items.map((item) => (
-            <li key={`${item.branch_id}-${item.medicine_id}`}>
-              <ResultCard item={item} headingLevel={4} />
-            </li>
+            <ResultCard key={`${item.branch_id}-${item.medicine_id}`} item={item} />
           ))}
-        </ol>
+        </div>
       )}
     </>
   )
