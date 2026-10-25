@@ -1,16 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
-import { friendlyMessage, getMedicineCategories } from '../api/index.js'
+import { useMemo, useState } from 'react'
+import { friendlyMessage } from '../api/index.js'
 import { useSearch } from '../context/useSearch.js'
+import { useCategoryOptions } from '../hooks/useCategoryOptions.js'
+import { RX_OPTIONS } from '../utils/catalog.js'
 import { warningText } from '../utils/warnings.js'
 import ErrorMessage from './ErrorMessage.jsx'
 import ResultCard from './ResultCard.jsx'
 import SelectField from './ui/SelectField.jsx'
 import { LOCATION_NOTE } from './TopSearch.jsx'
-
-const RX_OPTIONS = [
-  { value: 'false', label: 'No prescription needed' },
-  { value: 'true', label: 'Prescription required' },
-]
 
 const SORT_OPTIONS = [
   { value: 'nearest', label: 'Nearest first' },
@@ -28,21 +25,6 @@ function sortItems(items, sortBy) {
   if (sortBy === 'most_stock') return [...items].sort((a, b) => b.available_quantity - a.available_quantity)
   // 'nearest': without a shared location every travel_min is null, so this is a no-op (everything ties, order is kept)
   return [...items].sort((a, b) => (a.travel_min ?? Infinity) - (b.travel_min ?? Infinity))
-}
-
-/** The categories in the catalog, for the filter below. Optional: if this fails, the filter just offers "All categories". */
-function useCategoryOptions() {
-  const [categories, setCategories] = useState([])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    getMedicineCategories({ signal: controller.signal })
-      .then(({ data }) => setCategories(data.items ?? []))
-      .catch(() => {})
-    return () => controller.abort()
-  }, [])
-
-  return categories.map((name) => ({ value: name, label: name }))
 }
 
 /**

@@ -9,15 +9,11 @@ import PageHeader from '../components/ui/PageHeader.jsx'
 import StockBadge from '../components/ui/StockBadge.jsx'
 import { useSearch } from '../context/useSearch.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
+import { displayName } from '../utils/catalog.js'
 import { formatPeso, formatTravel } from '../utils/format.js'
 import NotFound from './NotFound.jsx'
 
 const PREVIEW_LIMIT = 3
-
-/** "Amoxicillin (Amoxil)", or just the generic name when there is no brand. Matches the name the availability search shows. */
-function displayName(medicine) {
-  return medicine.brand_name ? `${medicine.generic_name} (${medicine.brand_name})` : medicine.generic_name
-}
 
 export default function MedicineDetails() {
   const { id } = useParams()

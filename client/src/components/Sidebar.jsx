@@ -22,6 +22,7 @@ export default function Sidebar({ closed }) {
       <nav aria-label="Main">
         <ul className="nav-links">
           <Item to="/" end icon="bx bx-home" label="Home" />
+          <Item to="/medicines" end icon="bi bi-capsule" label="Medicines" />
           <Item to={{ pathname: '/', hash: '#branches' }} plain icon="bi bi-geo-alt" label="Branches" />
           <Item to="/guide" icon="bx bx-bulb" label="Guide" />
 
