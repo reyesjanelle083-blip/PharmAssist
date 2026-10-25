@@ -27,4 +27,27 @@ class MedicineController extends Controller
     {
         return Envelope::success((new MedicineResource($this->catalog->medicine($id)))->resolve());
     }
+
+    public function categories(): JsonResponse
+    {
+        return Envelope::success(['items' => $this->catalog->categories()]);
+    }
+
+    /**
+     * Plain-language guidance, from the medicine's own counseling_summary. Only text that is stored for the medicine is returned:
+     * how_to_use and warnings are not stored separately yet, so they are null (the contract allows that). An empty summary is null.
+     */
+    public function counseling(int $id): JsonResponse
+    {
+        $medicine = $this->catalog->medicine($id);
+        $summary = trim((string) $medicine->counseling_summary);
+
+        return Envelope::success([
+            'medicine_id' => $medicine->id,
+            'summary' => $summary === '' ? null : $summary,
+            'how_to_use' => null,
+            'warnings' => null,
+            'source' => 'internal',
+        ]);
+    }
 }

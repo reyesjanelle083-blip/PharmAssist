@@ -28,8 +28,11 @@ class AvailabilityController extends Controller
     public function index(Request $request): JsonResponse
     {
         $validator = Validator::make($request->query(), [
-            'medicine_id' => ['nullable', 'integer', 'min:1', 'max:2147483647', 'required_without:q'],
-            'q' => ['nullable', 'string', 'max:100', 'required_without:medicine_id'],
+            // a search needs a medicine id, a name or a category; rx (true or false) only narrows it down
+            'medicine_id' => ['nullable', 'integer', 'min:1', 'max:2147483647', 'required_without_all:q,category'],
+            'q' => ['nullable', 'string', 'max:100', 'required_without_all:medicine_id,category'],
+            'category' => ['nullable', 'string', 'max:100', 'required_without_all:medicine_id,q'],
+            'rx' => ['nullable', 'in:true,false,1,0'],
             // a plain decimal number inside the Philippines (latitude 4.5 to 21.5, longitude 116 to 127)
             'lat' => ['nullable', 'regex:/^-?\d{1,3}(\.\d{1,10})?$/', 'numeric', 'between:4.5,21.5', 'required_with:lng'],
             'lng' => ['nullable', 'regex:/^-?\d{1,3}(\.\d{1,10})?$/', 'numeric', 'between:116,127', 'required_with:lat'],
@@ -44,6 +47,8 @@ class AvailabilityController extends Controller
         $query = array_filter([
             'medicine_id' => $input['medicine_id'] ?? null,
             'q' => isset($input['q']) ? trim($input['q']) : null,
+            'category' => isset($input['category']) ? trim($input['category']) : null,
+            'rx' => isset($input['rx']) ? (in_array($input['rx'], ['true', '1'], true) ? 'true' : 'false') : null,
             'limit' => $input['limit'] ?? 10,
         ], fn ($v) => $v !== null && $v !== '');
         $inventory = $this->services->get('inventory', '/internal/v1/inventory/availability', $query);

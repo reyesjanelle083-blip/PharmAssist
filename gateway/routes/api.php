@@ -24,7 +24,9 @@ Route::prefix('api/v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
     Route::get('/medicines', [CatalogController::class, 'medicines']);
+    Route::get('/medicines/categories', [CatalogController::class, 'categories']);
     Route::get('/medicines/{id}', [CatalogController::class, 'medicine'])->whereNumber('id');
+    Route::get('/medicines/{id}/counseling', [CatalogController::class, 'counseling'])->whereNumber('id');
     Route::get('/branches', [CatalogController::class, 'branches']);
 
     // Stock + distance mashup (public: browsing needs no account). 60 per minute per IP.

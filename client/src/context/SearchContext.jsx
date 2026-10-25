@@ -18,6 +18,8 @@ export function SearchProvider({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('')
+  const [rx, setRx] = useState('') // '' | 'true' | 'false'
   const [origin, setOrigin] = useState(null) // { lat, lng } while shared
   const [geoStatus, setGeoStatus] = useState('')
   const [locating, setLocating] = useState(false)
@@ -54,26 +56,27 @@ export function SearchProvider({ children }) {
     setGeoStatus('Location removed. Results will not be ranked by distance.')
   }, [])
 
-  const submit = useCallback(
-    async (event) => {
-      event.preventDefault()
-      const q = query.trim()
-
-      // Results are shown on the home page: searching from another page takes you there.
-      if (location.pathname !== '/') navigate('/')
-
-      if (q === '') {
-        setState({ phase: 'error', message: 'Please type the name of a medicine to search.' })
-        return
-      }
-
+  // One request to inventory-service, shared by a typed search and a filter-only search (a category or rx alone).
+  const run = useCallback(
+    async ({ q, medicineId, label }) => {
       controller.current?.abort()
       controller.current = new AbortController()
       setState({ phase: 'loading' })
 
+      // An exact medicine_id lookup ignores category and rx on the backend, so they are left out here too.
+      const filters = medicineId ? {} : { category, rx: rx || undefined }
+
       try {
-        const { data, warnings } = await searchAvailability({ q, ...(origin ?? {}) }, { signal: controller.current.signal })
-        setState({ phase: 'done', q, items: data.items ?? [], warnings, usedLocation: origin !== null })
+        const { data, warnings } = await searchAvailability({ q, medicineId, ...filters, ...(origin ?? {}) }, { signal: controller.current.signal })
+        setState({
+          phase: 'done',
+          q: label,
+          category: medicineId ? '' : category,
+          rx: medicineId ? '' : rx,
+          items: data.items ?? [],
+          warnings,
+          usedLocation: origin !== null,
+        })
         // Let screen reader users hear that the results are there.
         requestAnimationFrame(() => resultsHeading.current?.focus())
       } catch (error) {
@@ -89,12 +92,57 @@ export function SearchProvider({ children }) {
         setState({ phase: 'error', error })
       }
     },
-    [query, origin, location.pathname, navigate],
+    [origin, category, rx],
+  )
+
+  const submit = useCallback(
+    (event) => {
+      event.preventDefault()
+      const q = query.trim()
+
+      // Results are shown on the home page: searching from another page takes you there.
+      if (location.pathname !== '/') navigate('/')
+
+      // A name, a category, or both: the gateway needs at least one. rx alone only narrows an existing search.
+      if (q === '' && category === '') {
+        setState({ phase: 'error', message: 'Please type the name of a medicine, or choose a category, to search.' })
+        return
+      }
+
+      run({ q, label: q })
+    },
+    [query, category, location.pathname, navigate, run],
+  )
+
+  /** From Medicine Details: look up where this exact medicine is in stock, reusing the same results area. */
+  const searchForMedicine = useCallback(
+    (medicineId, label) => {
+      if (location.pathname !== '/') navigate('/')
+      setQuery('')
+      run({ medicineId, label })
+    },
+    [location.pathname, navigate, run],
   )
 
   const value = useMemo(
-    () => ({ query, setQuery, origin, geoStatus, locating, state, shareLocation, clearLocation, submit, resultsHeading }),
-    [query, origin, geoStatus, locating, state, shareLocation, clearLocation, submit],
+    () => ({
+      query,
+      setQuery,
+      category,
+      setCategory,
+      rx,
+      setRx,
+      origin,
+      geoStatus,
+      locating,
+      state,
+      shareLocation,
+      clearLocation,
+      submit,
+      searchForMedicine,
+      resultsHeading,
+    }),
+    [query, category, rx, origin, geoStatus, locating, state, shareLocation, clearLocation, submit, searchForMedicine],
   )
 
   return <SearchContext.Provider value={value}>{children}</SearchContext.Provider>

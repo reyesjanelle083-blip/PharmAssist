@@ -22,6 +22,16 @@ class CatalogController extends Controller
         return $this->services->get('inventory', '/internal/v1/medicines/'.$id);
     }
 
+    public function categories(): JsonResponse
+    {
+        return $this->services->get('inventory', '/internal/v1/medicines/categories');
+    }
+
+    public function counseling(int $id): JsonResponse
+    {
+        return $this->services->get('inventory', '/internal/v1/medicines/'.$id.'/counseling');
+    }
+
     public function branches(): JsonResponse
     {
         return $this->services->get('inventory', '/internal/v1/branches');

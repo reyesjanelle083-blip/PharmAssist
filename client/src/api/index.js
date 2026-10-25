@@ -1,7 +1,7 @@
 export { ApiError } from './ApiError.js'
 export { login, register, verifyEmail, me } from './auth.js'
 export { searchAvailability } from './availability.js'
-export { getMedicines } from './medicines.js'
+export { getMedicine, getMedicineCategories, getMedicineCounseling, getMedicines } from './medicines.js'
 export { getBranches } from './branches.js'
 export { createReservation, listReservations, getReservation, cancelReservation, getPrescriptionBlob } from './reservations.js'
 export { friendlyMessage, fieldErrors, shortages } from './messages.js'

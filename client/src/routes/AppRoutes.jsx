@@ -7,6 +7,7 @@ import Forbidden from '../pages/Forbidden.jsx'
 import Guide from '../pages/Guide.jsx'
 import Home from '../pages/Home.jsx'
 import Login from '../pages/Login.jsx'
+import MedicineDetails from '../pages/MedicineDetails.jsx'
 import NotFound from '../pages/NotFound.jsx'
 import Privacy from '../pages/Privacy.jsx'
 import Register from '../pages/Register.jsx'
@@ -30,6 +31,7 @@ export default function AppRoutes() {
       {/* the old shell: sidebar, top bar, page, footer */}
       <Route element={<CustomerLayout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/medicines/:id" element={<MedicineDetails />} />
         <Route path="/guide" element={<Guide />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />

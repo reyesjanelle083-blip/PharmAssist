@@ -73,6 +73,47 @@ class InventoryRoutingTest extends TestCase
             && ! $r->hasHeader('X-User-Role') && ! $r->hasHeader('X-User-Branch') && ! $r->hasHeader('Authorization'));
     }
 
+    public function test_counseling_and_categories_are_public_and_go_to_the_matching_internal_routes(): void
+    {
+        $this->fakeInventory(['medicine_id' => 5, 'summary' => 'Take with food.', 'how_to_use' => null, 'warnings' => null, 'source' => 'internal']);
+
+        $this->getJson('/api/v1/medicines/5/counseling')->assertOk()->assertJsonPath('service', 'inventory-service')->assertJsonPath('data.summary', 'Take with food.');
+        $this->getJson('/api/v1/medicines/categories')->assertOk();
+
+        Http::assertSentCount(2);
+        Http::assertSent(fn (Request $r) => $r->url() === 'http://inventory.test/internal/v1/medicines/5/counseling'
+            && $r->header('X-Internal-Key') === [$this->internalKey] && ! $r->hasHeader('X-User-Id') && ! $r->hasHeader('Authorization'));
+        Http::assertSent(fn (Request $r) => $r->url() === 'http://inventory.test/internal/v1/medicines/categories');
+    }
+
+    public function test_counseling_for_an_unknown_medicine_relays_the_404_unchanged(): void
+    {
+        $body = $this->inventoryEnvelope(null, 404, ['code' => 'NOT_FOUND', 'message' => 'The requested resource was not found.', 'details' => null]);
+        Http::fake(['inventory.test/*' => Http::response($body, 404)]);
+
+        $this->assertSame($body, $this->getJson('/api/v1/medicines/9999/counseling')->assertStatus(404)->json());
+    }
+
+    public function test_counseling_with_a_non_numeric_id_never_reaches_the_service(): void
+    {
+        Http::fake();
+
+        $this->getJson('/api/v1/medicines/abc/counseling')->assertStatus(404)->assertJsonPath('service', 'gateway');
+        $this->getJson('/api/v1/medicines/1%2F..%2Fadmin/counseling')->assertStatus(404);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_counseling_reports_an_unavailable_inventory_service_cleanly(): void
+    {
+        Http::fake(['inventory.test/*' => fn () => throw new ConnectionException('cURL error 7: Failed to connect to inventory.test port 80')]);
+
+        $response = $this->getJson('/api/v1/medicines/5/counseling')->assertStatus(503);
+
+        $this->assertSame('gateway', $response->json('service'));
+        $this->assertStringNotContainsString('cURL', $response->getContent());
+    }
+
     public function test_downstream_errors_are_relayed_unchanged(): void
     {
         $body = $this->inventoryEnvelope(null, 404, ['code' => 'NOT_FOUND', 'message' => 'The requested resource was not found.', 'details' => null]);

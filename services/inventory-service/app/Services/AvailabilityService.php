@@ -20,7 +20,7 @@ class AvailabilityService
     public const MAX_LIMIT = 20;
 
     /**
-     * @param array{medicine_id?: ?int, q?: ?string, limit?: ?int} $filters
+     * @param array{medicine_id?: ?int, q?: ?string, category?: ?string, rx?: ?bool, limit?: ?int} $filters
      * @return list<array<string, mixed>>
      *
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException for an unknown medicine_id
@@ -81,15 +81,25 @@ class AvailabilityService
         }
 
         $q = trim((string) ($filters['q'] ?? ''));
-        if ($q === '') {
-            return [];
+        $category = trim((string) ($filters['category'] ?? ''));
+        if ($q === '' && $category === '') {
+            return []; // rx alone is not a search
         }
 
-        // "!" is the LIKE escape character so user input cannot act as a wildcard (works on MySQL and SQLite).
-        $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $q).'%';
+        $query = Medicine::query();
+        if ($q !== '') {
+            // "!" is the LIKE escape character so user input cannot act as a wildcard (works on MySQL and SQLite).
+            $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $q).'%';
+            $query->where(fn ($inner) => $inner->whereRaw("generic_name LIKE ? ESCAPE '!'", [$like])->orWhereRaw("brand_name LIKE ? ESCAPE '!'", [$like]));
+        }
+        if ($category !== '') {
+            $query->where('category', $category);
+        }
+        if (array_key_exists('rx', $filters) && $filters['rx'] !== null) {
+            $query->where('prescription_required', (bool) $filters['rx']);
+        }
 
-        return Medicine::query()
-            ->where(fn ($inner) => $inner->whereRaw("generic_name LIKE ? ESCAPE '!'", [$like])->orWhereRaw("brand_name LIKE ? ESCAPE '!'", [$like]))
+        return $query
             ->orderBy('generic_name')->orderBy('brand_name')->orderBy('id')
             ->limit(self::MAX_MEDICINES)
             ->pluck('id')

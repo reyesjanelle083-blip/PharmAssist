@@ -286,6 +286,17 @@ paths:
         '200': { description: Matching medicines., content: { application/json: { schema: { $ref: '#/components/schemas/MedicineListEnvelope' } } } }
         '422': { $ref: '#/components/responses/ValidationFailed' }
 
+  /medicines/categories:
+    get:
+      operationId: listMedicineCategories
+      tags: [catalog]
+      x-tier: 0
+      x-roles: [public]
+      security: []
+      summary: The distinct categories in the catalog, for the search filter
+      responses:
+        '200': { description: Categories, alphabetical., content: { application/json: { schema: { $ref: '#/components/schemas/CategoryListEnvelope' } } } }
+
   /medicines/{id}:
     get:
       operationId: getMedicine
@@ -307,8 +318,12 @@ paths:
       x-tier: 1
       x-roles: [public]
       security: []
-      summary: Plain-language guidance (internal data combined with openFDA)
-      description: If openFDA is unavailable the answer still returns 200 from internal data, `source` is `internal` and `warnings` contains `OPENFDA_UNAVAILABLE`.
+      summary: Plain-language counseling guidance stored with the medicine
+      description: |
+        Built from the medicine's own stored counseling text (inventory-service), not a medical reference. `summary` is the
+        medicine's `counseling_summary`, or null when none is stored; `how_to_use` and `warnings` are reserved for a future,
+        more structured version of this text and are currently always null. `source` is always `internal`. An unknown medicine
+        id is 404; an id with no stored text is still 200, with `summary: null`.
       parameters:
         - { $ref: '#/components/parameters/IdPath' }
       responses:
@@ -495,9 +510,10 @@ paths:
       security: []
       summary: Branches with free stock, ranked by travel time (mashup of inventory and OSRM)
       description: |
-        Needs `medicine_id` or `q` (a search by generic or brand name, at most 5 medicines). A row is listed only when the
-        branch is active, free stock (stock minus reserved) is above zero and the batch has not expired; stock counts and
-        reserved counts are never shown.
+        Needs at least one of `medicine_id`, `q` or `category` (a search by generic or brand name and/or category, at most 5
+        medicines). `rx` narrows an existing search by prescription requirement; it cannot be used alone. A row is listed only
+        when the branch is active, free stock (stock minus reserved) is above zero and the batch has not expired; stock counts
+        and reserved counts are never shown.
 
         With `lat` and `lng` (both or neither, inside the Philippines: latitude 4.5 to 21.5, longitude 116 to 127) every row gets
         `distance_km`, `travel_min` and `distance_source`, and the list is ranked by `travel_min`, then price, then medicine name,
@@ -510,8 +526,10 @@ paths:
         The coordinates are used for this request only: they are never stored, logged or echoed back.
         At most 60 requests per minute per IP.
       parameters:
-        - { name: medicine_id, in: query, description: 'Required unless q is given. An unknown id is 404.', schema: { type: integer, minimum: 1 } }
-        - { name: q, in: query, description: 'Required unless medicine_id is given.', schema: { type: string, minLength: 1, maxLength: 100 } }
+        - { name: medicine_id, in: query, description: 'Required unless q or category is given. An unknown id is 404.', schema: { type: integer, minimum: 1 } }
+        - { name: q, in: query, description: 'Required unless medicine_id or category is given.', schema: { type: string, minLength: 1, maxLength: 100 } }
+        - { name: category, in: query, description: 'Required unless medicine_id or q is given. Narrows or, alone, drives the search.', schema: { type: string, minLength: 1, maxLength: 100 } }
+        - { name: rx, in: query, description: 'Filter by prescription required. Only valid together with medicine_id, q or category.', schema: { type: boolean } }
         - { name: lat, in: query, description: 'Together with lng.', schema: { type: number, minimum: 4.5, maximum: 21.5 } }
         - { name: lng, in: query, description: 'Together with lat.', schema: { type: number, minimum: 116, maximum: 127 } }
         - { name: limit, in: query, description: Rows to return., schema: { type: integer, minimum: 1, maximum: 20, default: 10 } }
@@ -1045,10 +1063,10 @@ components:
       type: object
       properties:
         medicine_id: { type: integer }
-        summary: { type: string }
-        how_to_use: { type: string, nullable: true }
-        warnings: { type: string, nullable: true }
-        source: { type: string, enum: [openfda, internal] }
+        summary: { type: string, nullable: true, description: Null when no counseling text is stored for this medicine. }
+        how_to_use: { type: string, nullable: true, description: Reserved for a future structured version; currently always null. }
+        warnings: { type: string, nullable: true, description: Reserved for a future structured version; currently always null. }
+        source: { type: string, enum: [internal] }
     BranchInput:
       type: object
       required: [name, address, latitude, longitude]
@@ -1350,6 +1368,15 @@ components:
               properties:
                 items: { type: array, items: { $ref: '#/components/schemas/Medicine' } }
                 meta: { $ref: '#/components/schemas/PageMeta' }
+    CategoryListEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items: { type: array, items: { type: string }, example: ['Antibiotics', 'Pain Relievers'] }
     CounselingEnvelope:
       allOf:
         - $ref: '#/components/schemas/Envelope'

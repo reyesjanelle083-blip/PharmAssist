@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth.js'
 import { useCart } from '../context/useCart.js'
+import Button from './ui/Button.jsx'
 import { formatPeso, formatTravel } from '../utils/format.js'
 
 const STAFF_ROLES = ['pharmacy_technician', 'pharmacy_assistant', 'branch_manager', 'ceo']
@@ -59,6 +60,9 @@ export default function ResultCard({ item }) {
             Reserve <span className="visually-hidden">{item.medicine_name} at {item.branch_name}</span>
           </button>
         )}
+        <Button to={`/medicines/${item.medicine_id}`} block className="result-card-details-link">
+          View details <span className="visually-hidden">for {item.medicine_name}</span>
+        </Button>
       </div>
     </div>
   )

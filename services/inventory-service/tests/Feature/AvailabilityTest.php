@@ -222,6 +222,40 @@ class AvailabilityTest extends TestCase
         $this->find('q='.str_repeat('a', 100))->assertOk();
     }
 
+    public function test_category_and_prescription_filters_narrow_a_name_search_together(): void
+    {
+        $branch = $this->makeBranch('Alpha');
+        $biogesic = $this->makeMedicine('Paracetamol', 'Biogesic', 'Pain Relievers', false);
+        $bioflu = $this->makeMedicine('Neozep', 'Bioflu', 'Cold and Flu', false, '10mg', 'Tablet');
+        $mefenamic = $this->makeMedicine('Mefenamic Acid', 'Biomef', 'Pain Relievers', true);
+        foreach ([$biogesic, $bioflu, $mefenamic] as $medicine) {
+            $this->stock($branch, $medicine);
+        }
+
+        $ids = fn (string $query) => collect($this->find($query)->assertOk()->json('data.items'))->pluck('medicine_id')->sort()->values()->all();
+        $pain = rawurlencode('Pain Relievers');
+
+        $this->assertSame([$biogesic->id, $bioflu->id, $mefenamic->id], $ids('q=bio'));
+        $this->assertSame([$biogesic->id, $mefenamic->id], $ids('q=bio&category='.$pain));
+        $this->assertSame([$biogesic->id], $ids('q=bio&category='.$pain.'&rx=false'));
+        $this->assertSame([$mefenamic->id], $ids('q=bio&category='.$pain.'&rx=true'));
+        $this->assertSame([], $ids('q=bio&category=Antibiotics'));
+    }
+
+    public function test_a_category_alone_is_a_search_and_rx_alone_is_not(): void
+    {
+        $branch = $this->makeBranch('Alpha');
+        $pain = $this->makeMedicine('Ibuprofen', 'Advil', 'Pain Relievers', false, '200mg');
+        $other = $this->makeMedicine('Amoxicillin');
+        $this->stock($branch, $pain);
+        $this->stock($branch, $other);
+
+        $rows = $this->find('category='.rawurlencode('Pain Relievers'))->assertOk()->json('data.items');
+        $this->assertSame([$pain->id], collect($rows)->pluck('medicine_id')->all());
+        $this->find('rx=true')->assertStatus(422)->assertJsonPath('error.code', 'VALIDATION_FAILED');
+        $this->find('rx=maybe&q=a')->assertStatus(422);
+    }
+
     public function test_the_internal_key_is_required(): void
     {
         $medicine = $this->makeMedicine();

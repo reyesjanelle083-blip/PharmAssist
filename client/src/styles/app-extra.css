@@ -387,3 +387,111 @@ dialog.legacy-dialog::backdrop {
 .branch-map {
   zoom: calc(1 / var(--text-scale, 1));
 }
+
+/* ---- search filters (step: Medicine Search and Details), inside the .global-filter box ---- */
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 4px;
+}
+
+.search-filters .ui-field {
+  flex: 1 1 220px;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+/* a second action under Reserve on a result card, taking you to the full medicine details page */
+.result-card-details-link {
+  margin-top: 6px;
+}
+
+/* ---- medicine details page ---- */
+.medicine-details-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .medicine-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* the medicine info panel reuses the old search-result card look, without the hover lift or pointer cursor (it is not a link) */
+.medicine-details-card {
+  cursor: default;
+}
+
+.medicine-details-card:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.medicine-details-card .card-image {
+  height: 220px;
+  font-size: 3rem;
+  color: var(--pa-primary, #7393a7);
+}
+
+.medicine-facts {
+  margin: 10px 0 0;
+}
+
+.medicine-facts div {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  border-top: 1px solid var(--pa-border, #d4dde8);
+  font-size: 0.9rem;
+}
+
+.medicine-facts div:first-child {
+  border-top: none;
+}
+
+.medicine-facts dt {
+  flex: 0 0 120px;
+  color: var(--pa-text-muted, #6c737e);
+  font-weight: 600;
+}
+
+.medicine-facts dd {
+  margin: 0;
+  color: var(--pa-text, #42596f);
+}
+
+/* a plain card built only from the Phase 1 tokens, for new content that has no old-PharmAssist equivalent (counseling) */
+.pa-card {
+  background: var(--pa-surface);
+  border: 1px solid var(--pa-border);
+  border-radius: var(--pa-radius);
+  box-shadow: var(--pa-shadow-sm);
+  padding: 20px 24px;
+}
+
+.pa-card__header {
+  margin: 0 0 14px;
+}
+
+.pa-card__header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--pa-text);
+}
+
+.pa-card__header p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--pa-text-muted);
+}
+
+.pa-card__text {
+  margin: 0;
+  color: var(--pa-text);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}

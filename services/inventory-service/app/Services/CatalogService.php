@@ -46,6 +46,12 @@ class CatalogService
         return Medicine::findOrFail($id);
     }
 
+    /** The categories that exist in the catalog, for the search filter. */
+    public function categories(): array
+    {
+        return Medicine::query()->distinct()->orderBy('category')->pluck('category')->all();
+    }
+
     /** Public lists never include inactive branches. */
     public function activeBranches(): Collection
     {

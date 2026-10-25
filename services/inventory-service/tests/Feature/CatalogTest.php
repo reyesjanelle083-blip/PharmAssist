@@ -122,6 +122,49 @@ class CatalogTest extends TestCase
         $this->getJson('/internal/v1/branches/9999', $this->internal())->assertStatus(404);
     }
 
+    public function test_counseling_returns_the_stored_summary_with_the_contract_shape(): void
+    {
+        $medicine = $this->makeMedicine('Paracetamol', 'Biogesic', 'Pain Relievers', false);
+        $medicine->update(['counseling_summary' => 'Relieves mild pain and fever.']);
+
+        $this->getJson('/internal/v1/medicines/'.$medicine->id.'/counseling', $this->internal())
+            ->assertOk()
+            ->assertJsonPath('data.medicine_id', $medicine->id)
+            ->assertJsonPath('data.summary', 'Relieves mild pain and fever.')
+            ->assertJsonPath('data.how_to_use', null)
+            ->assertJsonPath('data.warnings', null)
+            ->assertJsonPath('data.source', 'internal');
+    }
+
+    public function test_counseling_is_null_not_an_error_when_the_medicine_has_no_text(): void
+    {
+        $none = $this->makeMedicine('Amoxicillin');
+        $none->update(['counseling_summary' => null]);
+        $blank = $this->makeMedicine('Ibuprofen', 'Advil', 'Pain Relievers', false, '200mg');
+        $blank->update(['counseling_summary' => '   ']);
+
+        $this->getJson('/internal/v1/medicines/'.$none->id.'/counseling', $this->internal())->assertOk()->assertJsonPath('data.summary', null);
+        $this->getJson('/internal/v1/medicines/'.$blank->id.'/counseling', $this->internal())->assertOk()->assertJsonPath('data.summary', null);
+    }
+
+    public function test_counseling_for_an_unknown_or_non_numeric_id_is_404_and_needs_the_internal_key(): void
+    {
+        $this->getJson('/internal/v1/medicines/9999/counseling', $this->internal())->assertStatus(404)->assertJsonPath('error.code', 'NOT_FOUND');
+        $this->getJson('/internal/v1/medicines/abc/counseling', $this->internal())->assertStatus(404);
+        $medicine = $this->makeMedicine();
+        $this->getJson('/internal/v1/medicines/'.$medicine->id.'/counseling')->assertStatus(401)->assertJsonPath('error.code', 'INVALID_INTERNAL_KEY');
+    }
+
+    public function test_categories_lists_each_category_once_in_order(): void
+    {
+        $this->makeMedicine('Amoxicillin', '', 'Antibiotics');
+        $this->makeMedicine('Ibuprofen', 'Advil', 'Pain Relievers', false, '200mg');
+        $this->makeMedicine('Mefenamic Acid', '', 'Pain Relievers');
+
+        $this->getJson('/internal/v1/medicines/categories', $this->internal())
+            ->assertOk()->assertJsonPath('data.items', ['Antibiotics', 'Pain Relievers']);
+    }
+
     public function test_inactive_branches_are_hidden_from_public_lists_and_detail(): void
     {
         $active = $this->makeBranch('Active Branch');

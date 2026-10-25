@@ -19,7 +19,9 @@ class GatewaySecurityTest extends TestCase
         'api/v1/auth/verify-email',
         'api/v1/auth/login',
         'api/v1/medicines',
+        'api/v1/medicines/categories',
         'api/v1/medicines/{id}',
+        'api/v1/medicines/{id}/counseling',
         'api/v1/branches',
         'api/v1/availability',
     ];

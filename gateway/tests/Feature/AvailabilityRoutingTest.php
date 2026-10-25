@@ -388,6 +388,26 @@ class AvailabilityRoutingTest extends TestCase
         $this->assertSame([$this->internalKey], $distance->header('X-Internal-Key'));
     }
 
+    public function test_category_and_prescription_filters_are_sent_to_inventory_and_rx_is_normalised(): void
+    {
+        $this->availability('q=bio&category=Pain%20Relievers&rx=1&lat=14.5995&lng=120.9842')->assertOk();
+        $this->availability('category=Pain%20Relievers&rx=false')->assertOk(); // a category alone is a search
+
+        parse_str((string) parse_url($this->inventoryCalls()[0]->url(), PHP_URL_QUERY), $first);
+        $this->assertSame(['q' => 'bio', 'category' => 'Pain Relievers', 'rx' => 'true', 'limit' => '10'], $first);
+        parse_str((string) parse_url($this->inventoryCalls()[1]->url(), PHP_URL_QUERY), $second);
+        $this->assertSame(['category' => 'Pain Relievers', 'rx' => 'false', 'limit' => '10'], $second);
+    }
+
+    public function test_a_prescription_filter_alone_or_with_a_bad_value_is_422_and_nothing_is_called(): void
+    {
+        foreach (['rx=true', 'rx=maybe&q=bio', 'category=', 'category='.str_repeat('a', 101), 'category[]=x'] as $query) {
+            $this->availability($query)->assertStatus(422)->assertJsonPath('error.code', 'VALIDATION_FAILED');
+        }
+
+        $this->assertSame([], $this->calls);
+    }
+
     public function test_the_default_limit_is_ten(): void
     {
         $this->availability('medicine_id=1')->assertOk();

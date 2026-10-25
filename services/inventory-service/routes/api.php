@@ -16,7 +16,9 @@ Route::middleware(InternalKey::class)->prefix('internal/v1')->group(function () 
 
     // Public catalog (no user identity needed).
     Route::get('/medicines', [MedicineController::class, 'index']);
+    Route::get('/medicines/categories', [MedicineController::class, 'categories']);
     Route::get('/medicines/{id}', [MedicineController::class, 'show'])->whereNumber('id');
+    Route::get('/medicines/{id}/counseling', [MedicineController::class, 'counseling'])->whereNumber('id');
     Route::get('/branches', [BranchController::class, 'index']);
     Route::get('/branches/{id}', [BranchController::class, 'show'])->whereNumber('id');
 
