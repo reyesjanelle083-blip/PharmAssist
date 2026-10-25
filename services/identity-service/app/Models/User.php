@@ -36,9 +36,12 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * The password column is named password_hash, not password.
-     */
+    /** The password column is named password_hash, not password. */
+    public function getAuthPasswordName(): string
+    {
+        return 'password_hash';
+    }
+
     public function getAuthPassword(): string
     {
         return $this->password_hash;

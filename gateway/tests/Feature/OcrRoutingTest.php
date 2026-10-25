@@ -236,7 +236,7 @@ class OcrRoutingTest extends TestCase
         $this->postJson('/api/v1/auth/login', ['email' => 'a@pharmassist.test', 'password' => 'x'])->assertOk();               // login
         $this->getJson('/api/v1/auth/me', $this->as('customer'))->assertOk();                                                 // me
 
-        $this->assertSame([20.0, 3.0, 3.0, 3.0, 3.0, 3.0], $spy->timeouts, 'OCR waits 20 s; every other route keeps 3 s');
+        $this->assertSame([20.0, 3.0, 3.0, 3.0, 10.0, 3.0], $spy->timeouts, 'OCR waits 20 s and login 10 s; every other route keeps 3 s');
     }
 
     public function test_the_ocr_timeout_comes_from_configuration(): void

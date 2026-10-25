@@ -142,6 +142,44 @@ class ServiceClientTest extends TestCase
         $this->assertSame(1, $calls, 'A failed POST must never be retried.');
     }
 
+    public function test_login_waits_for_the_configured_login_timeout_and_other_identity_routes_wait_three_seconds(): void
+    {
+        $spy = new class extends \App\Services\ServiceClient
+        {
+            /** @var list<float> */
+            public array $timeouts = [];
+
+            protected function pending(float $timeoutSeconds): \Illuminate\Http\Client\PendingRequest
+            {
+                $this->timeouts[] = $timeoutSeconds;
+
+                return parent::pending($timeoutSeconds);
+            }
+        };
+        $this->app->instance(\App\Services\ServiceClient::class, $spy);
+        Http::fake(['identity.test/*' => Http::response($this->downstream(['access_token' => 'x']), 200)]);
+
+        $this->login()->assertOk();
+        $this->assertSame([10.0], $spy->timeouts, 'login defaults to 10 s, not the shared 3 s');
+
+        $spy->timeouts = [];
+        config(['services.identity.login_timeout' => 6]);
+        $this->login()->assertOk();
+        $this->getJson('/api/v1/auth/me', $this->bearer($this->token(['sub' => '7', 'role' => 'customer', 'branch_id' => null])))->assertOk();
+        $this->assertSame([6.0, 3.0], $spy->timeouts);
+
+        $this->assertSame(10.0, (float) (include base_path('config/services.php'))['identity']['login_timeout']);
+    }
+
+    public function test_a_login_that_times_out_is_a_504_envelope_without_internals(): void
+    {
+        Http::fake(fn () => throw new ConnectionException('cURL error 28: Operation timed out after 10001 milliseconds'));
+
+        $raw = $this->login()->assertStatus(504)->assertJsonPath('error.code', 'UPSTREAM_TIMEOUT')->getContent();
+        $this->assertStringNotContainsString('cURL', $raw);
+        $this->assertStringNotContainsString('identity.test', $raw);
+    }
+
     public function test_timeout_returns_504(): void
     {
         Http::fake(fn () => throw new ConnectionException('cURL error 28: Operation timed out after 3001 milliseconds'));

@@ -39,7 +39,7 @@ class AuthController extends Controller
 
     public function login(Request $request): JsonResponse
     {
-        return $this->services->postJson('identity', '/internal/v1/auth/login', $request->only(['email', 'password']));
+        return $this->services->postJson('identity', '/internal/v1/auth/login', $request->only(['email', 'password']), (float) config('services.identity.login_timeout', 10));
     }
 
     public function me(Request $request): JsonResponse

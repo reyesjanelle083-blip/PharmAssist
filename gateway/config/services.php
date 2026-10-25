@@ -17,6 +17,9 @@ return [
     // Downstream PharmAssist services (base URLs come from the environment).
     'identity' => [
         'url' => env('IDENTITY_URL'),
+        // Seconds the gateway waits for POST /auth/login (every other identity route waits 3 s). Login checks a
+        // slow bcrypt hash and writes audit rows, and takes 1-2 s on a dev machine, so the shared 3 s left too little room.
+        'login_timeout' => (float) env('GATEWAY_LOGIN_TIMEOUT_SECONDS', 10),
     ],
 
     'inventory' => [

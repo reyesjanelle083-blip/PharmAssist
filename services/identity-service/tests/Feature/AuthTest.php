@@ -208,6 +208,32 @@ class AuthTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'login_success', 'actor_id' => $user->id]);
     }
 
+    public function test_the_password_lives_in_the_password_hash_column(): void
+    {
+        $user = $this->makeUser();
+
+        $this->assertSame('password_hash', $user->getAuthPasswordName());
+        $this->assertSame($user->password_hash, $user->getAuthPassword());
+        $this->assertTrue(Hash::check(self::PASSWORD, $user->getAuthPassword()));
+        $this->assertFalse(Hash::check('Wrong12345', $user->getAuthPassword()));
+    }
+
+    public function test_a_seeded_style_approved_customer_can_log_in_and_gets_a_customer_token(): void
+    {
+        $user = $this->makeUser([
+            'email' => 'customer.approved@pharmassist.test',
+            'role' => 'customer',
+            'branch_id' => null,
+        ]);
+
+        $response = $this->login(self::PASSWORD, 'customer.approved@pharmassist.test')->assertOk();
+
+        $claims = app(JwtIssuer::class)->decode($response->json('data.access_token'));
+        $this->assertSame((string) $user->id, $claims['sub']);
+        $this->assertSame('customer', $claims['role']);
+        $this->assertNull($claims['branch_id']);
+    }
+
     public function test_wrong_password_and_unknown_email_give_the_same_generic_401(): void
     {
         $this->makeUser();
