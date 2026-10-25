@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listReservations } from '../api/index.js'
 import ErrorMessage from '../components/ErrorMessage.jsx'
-import StatusChip from '../components/StatusChip.jsx'
+import Button from '../components/ui/Button.jsx'
+import EmptyState from '../components/ui/EmptyState.jsx'
+import LoadingState from '../components/ui/LoadingState.jsx'
+import StatusBadge from '../components/ui/StatusBadge.jsx'
 import { STATUS_OPTIONS } from '../utils/status.js'
 import { branchLabel, useBranchNames } from '../hooks/useBranchNames.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
@@ -66,20 +69,16 @@ export default function Reservations() {
         </div>
 
         <div aria-live="polite">
-          {phase === 'loading' ? <p className="waiting-text">Loading your reservations...</p> : null}
+          {phase === 'loading' ? <LoadingState>Loading your reservations...</LoadingState> : null}
           {phase === 'error' ? <ErrorMessage error={error} /> : <ErrorMessage />}
 
           {phase === 'done' && items.length === 0 ? (
-            <div className="notif-empty">
-              <i className="bi bi-folder2-open" aria-hidden="true"></i>
-              <p>
-                <strong>No reservations found</strong>
-              </p>
-              <p className="waiting-text">{status ? 'Try another status.' : 'Make a reservation to see it here!'}</p>
-              <Link to="/" className="btn-outline btn-outline-blue" style={{ display: 'inline-flex' }}>
-                Search medicines
-              </Link>
-            </div>
+            <EmptyState
+              title="No reservations found"
+              actions={<Button to="/">Search medicines</Button>}
+            >
+              {status ? 'Try another status.' : 'Make a reservation to see it here!'}
+            </EmptyState>
           ) : null}
         </div>
 
@@ -109,7 +108,7 @@ export default function Reservations() {
                     <td data-label="Total price">{formatPeso(row.total_price)}</td>
                     <td data-label="Expires">{formatDateTime(row.expires_at)}</td>
                     <td data-label="Status">
-                      <StatusChip status={row.status} />
+                      <StatusBadge status={row.status} />
                     </td>
                     <td data-label="Details">
                       <Link to={`/reservations/${row.id}`} className="btn-outline btn-outline-blue">

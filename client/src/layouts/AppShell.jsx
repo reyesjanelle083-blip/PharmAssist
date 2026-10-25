@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import AccessibilityToolbar from '../components/AccessibilityToolbar.jsx'
+import Footer from '../components/Footer.jsx'
+import TopSearch from '../components/TopSearch.jsx'
 import { SearchProvider } from '../context/SearchContext.jsx'
-import AccessibilityToolbar from './AccessibilityToolbar.jsx'
-import Footer from './Footer.jsx'
-import Sidebar from './Sidebar.jsx'
-import TopSearch from './TopSearch.jsx'
 
 /**
  * The shell of the old pages: sidebar, top bar (home-content) with the search bar, page area (page-wrapper) and footer, with the
  * same class names, so sidebar.css, homepage.css and footer.css apply as designed.
+ * The pieces both layouts share live here; each layout supplies its own sidebar through `renderSidebar(closed)`.
  */
-export default function Layout() {
+export default function AppShell({ renderSidebar }) {
   const [closed, setClosed] = useState(true) // the old sidebar starts as the narrow icon bar
   const location = useLocation()
   const main = useRef(null)
@@ -33,7 +33,7 @@ export default function Layout() {
           Skip to main content
         </a>
 
-        <Sidebar closed={closed} />
+        {renderSidebar(closed)}
 
         <section className="home-section">
           <header className="home-content d-flex align-items-center justify-content-between px-4">

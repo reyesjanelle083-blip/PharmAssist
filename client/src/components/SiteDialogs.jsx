@@ -1,9 +1,9 @@
 import { site, socialLinks } from '../config/site.js'
-import SiteDialog from './SiteDialog.jsx'
+import Modal from './ui/Modal.jsx'
 
 export function AboutDialog({ open, onClose, returnFocusRef }) {
   return (
-    <SiteDialog open={open} onClose={onClose} returnFocusRef={returnFocusRef} title="About Us">
+    <Modal open={open} onClose={onClose} returnFocusRef={returnFocusRef} title="About Us">
       <p>
         <strong>PharmAssist</strong> is an online medicine reservation system. You can search for a medicine, see which pharmacy branch has
         it in stock and how far away that branch is, and reserve it. You pick it up and pay at the branch.
@@ -26,7 +26,7 @@ export function AboutDialog({ open, onClose, returnFocusRef }) {
           The information on this site is <strong>not medical advice</strong>. Ask a pharmacist or a doctor before you take any medicine.
         </li>
       </ul>
-    </SiteDialog>
+    </Modal>
   )
 }
 
@@ -34,7 +34,7 @@ export function ContactDialog({ open, onClose, returnFocusRef }) {
   const social = socialLinks()
 
   return (
-    <SiteDialog open={open} onClose={onClose} returnFocusRef={returnFocusRef} title="Contact Us">
+    <Modal open={open} onClose={onClose} returnFocusRef={returnFocusRef} title="Contact Us">
       <p>This is a school project. You can reach the project team here:</p>
       <ul className="legacy-dialog__contact">
         {site.email ? (
@@ -61,6 +61,6 @@ export function ContactDialog({ open, onClose, returnFocusRef }) {
       <p>
         Please do not send medical questions or personal health information. For medical questions, ask a pharmacist or a doctor.
       </p>
-    </SiteDialog>
+    </Modal>
   )
 }

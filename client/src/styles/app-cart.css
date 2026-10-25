@@ -312,21 +312,6 @@
   padding: 0;
 }
 
-/* the old file has three status colours; the other three use the old palette too */
-.status-completed,
-.status-cancelled,
-.status-expired {
-  display: inline-block;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-.status-completed { color: #5b7a92; }
-.status-cancelled { color: #6c737e; }
-.status-expired { color: #856404; }
-
 /* ---- small screens ---- */
 @media (max-width: 940px) {
   .legacy-cart .summary-card {

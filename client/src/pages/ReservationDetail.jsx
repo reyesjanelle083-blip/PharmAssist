@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { cancelReservation, getPrescriptionBlob, getReservation } from '../api/index.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import ErrorMessage from '../components/ErrorMessage.jsx'
-import StatusChip from '../components/StatusChip.jsx'
+import Button from '../components/ui/Button.jsx'
+import LoadingState from '../components/ui/LoadingState.jsx'
+import PageHeader from '../components/ui/PageHeader.jsx'
+import StatusBadge from '../components/ui/StatusBadge.jsx'
 import Forbidden from './Forbidden.jsx'
 import NotFound from './NotFound.jsx'
 import { branchLabel, useBranchNames } from '../hooks/useBranchNames.js'
@@ -95,7 +98,7 @@ function Detail({ id }) {
     }
   }
 
-  if (state.phase === 'loading') return <p role="status" className="loading" style={{ padding: 20 }}>Loading the reservation...</p>
+  if (state.phase === 'loading') return <LoadingState>Loading the reservation...</LoadingState>
   if (state.phase === 'error') {
     if (state.error.status === 403) return <Forbidden />
     if (state.error.status === 404) return <NotFound />
@@ -103,9 +106,7 @@ function Detail({ id }) {
       <div className="legacy-cart">
         <div className="cart-wrapper">
           <ErrorMessage error={state.error} />
-          <Link className="btn-outline btn-outline-blue" to="/reservations">
-            Back to My Reservations
-          </Link>
+          <Button to="/reservations">Back to My Reservations</Button>
         </div>
       </div>
     )
@@ -117,26 +118,31 @@ function Detail({ id }) {
   return (
     <div className="legacy-cart legacy-notif">
       <div className="cart-wrapper">
-        <div className="page-header">
-          <div className="page-header-left">
-            <h1 ref={heading} tabIndex={-1}>
+        <PageHeader
+          headingRef={heading}
+          title={
+            <>
               Reservation <span className="code-display">{r.claim_code}</span>
-            </h1>
-            <p>
-              {branchLabel(names, r.branch_id)} &middot; <StatusChip status={r.status} />
-            </p>
-          </div>
-          <div className="header-actions">
-            <Link className="btn-outline btn-outline-blue" to="/reservations">
-              <i className="bi bi-arrow-left" aria-hidden="true"></i> My Reservations
-            </Link>
-            {CANCELLABLE.includes(r.status) ? (
-              <button type="button" ref={cancelButton} className="btn-outline btn-outline-red" onClick={() => setConfirm(true)} disabled={cancelling}>
-                <i className="bi bi-x-circle" aria-hidden="true"></i> {cancelling ? 'Cancelling...' : 'Cancel reservation'}
-              </button>
-            ) : null}
-          </div>
-        </div>
+            </>
+          }
+          subtitle={
+            <>
+              {branchLabel(names, r.branch_id)} &middot; <StatusBadge status={r.status} />
+            </>
+          }
+          actions={
+            <>
+              <Button to="/reservations">
+                <i className="bi bi-arrow-left" aria-hidden="true"></i> My Reservations
+              </Button>
+              {CANCELLABLE.includes(r.status) ? (
+                <Button variant="danger" ref={cancelButton} onClick={() => setConfirm(true)} disabled={cancelling}>
+                  <i className="bi bi-x-circle" aria-hidden="true"></i> {cancelling ? 'Cancelling...' : 'Cancel reservation'}
+                </Button>
+              ) : null}
+            </>
+          }
+        />
 
         <div aria-live="polite">
           {notice ? <p className="app-notice app-notice--success">{notice}</p> : null}
@@ -178,8 +184,8 @@ function Detail({ id }) {
                 {(r.history ?? []).map((h, i) => (
                   <li key={i}>
                     <strong>
-                      {h.from_status ? <><StatusChip status={h.from_status} /> to </> : 'Created as '}
-                      <StatusChip status={h.to_status} />
+                      {h.from_status ? <><StatusBadge status={h.from_status} /> to </> : 'Created as '}
+                      <StatusBadge status={h.to_status} />
                     </strong>
                     <span className="timeline-time">{formatDateTime(h.created_at)}</span>
                     {h.reason ? <span className="timeline-reason">Reason: {h.reason}</span> : null}
@@ -201,7 +207,7 @@ function Detail({ id }) {
                 <div>
                   <dt>Status</dt>
                   <dd>
-                    <StatusChip status={r.status} />
+                    <StatusBadge status={r.status} />
                   </dd>
                 </div>
                 <div>

@@ -3,9 +3,9 @@ import { useEffect, useId, useRef } from 'react'
 /**
  * A modal dialog built on the native <dialog> element: focus moves into it when it opens, Esc closes it, the page behind is inert,
  * and focus goes back to the button that opened it. It is named by its title. No Bootstrap JavaScript.
- * The look is the old guide modal (blue-grey header, white body, rounded corners).
+ * The look is the old guide modal (see .legacy-dialog in app-extra.css) (blue-grey header, white body, rounded corners).
  */
-export default function SiteDialog({ open, onClose, title, returnFocusRef, children }) {
+export default function Modal({ open, onClose, title, returnFocusRef, children }) {
   const dialog = useRef(null)
   const titleId = useId()
 

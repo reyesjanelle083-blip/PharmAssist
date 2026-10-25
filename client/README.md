@@ -51,9 +51,11 @@ Start the servers as described in `docs/RUNNING.md`.
 ```
 api/        Axios instance, envelope unwrapping, ApiError, error messages, one file per area
 context/    AuthContext (session) and AccessibilityContext (toolbar settings)
-components/ Layout, toolbar, search, result card, form field, error message, route guards
+components/ page pieces: toolbar, search, result card, error message, route guards, claim ticket
+components/ui/ the shared design-system pieces: Button, FormField, SelectField, Modal, StatusBadge, PageHeader, LoadingState, EmptyState, ErrorState
+layouts/    AppShell (the shared sidebar, top bar, page and footer), CustomerLayout, StaffLayout (foundation, not routed yet)
 pages/      one file per page
-styles/     tokens (colours, themes, text sizes), base, layout, components
+styles/     tokens.css (the --pa-* design tokens, normal and high contrast), ui.css (the shared components), the old stylesheets in legacy/, app and contrast rules
 assets/     the PharmAssist logo and mark, taken from the old site
 ```
 

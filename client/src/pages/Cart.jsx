@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { createReservation, friendlyMessage, shortages } from '../api/index.js'
 import ClaimTicket from '../components/ClaimTicket.jsx'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import ErrorMessage from '../components/ErrorMessage.jsx'
+import Button from '../components/ui/Button.jsx'
+import EmptyState from '../components/ui/EmptyState.jsx'
+import PageHeader from '../components/ui/PageHeader.jsx'
 import { MAX_QUANTITY } from '../context/cartContextObject.js'
 import { useCart } from '../context/useCart.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
@@ -119,22 +121,18 @@ export default function Cart() {
     return (
       <div className="legacy-cart">
         <div className="cart-wrapper">
-          <div className="page-header">
-            <div className="page-header-left">
-              <h1>Reservation Cart</h1>
-              <p>Your cart is empty</p>
-            </div>
-          </div>
-          <div className="empty-state">
-            <div className="empty-icon">
-              <i className="bi bi-cart" aria-hidden="true"></i>
-            </div>
-            <h2>Your cart is empty</h2>
-            <p>Search for a medicine and press Reserve to add it here.</p>
-            <Link className="btn-outline btn-outline-blue" to="/">
-              <i className="bi bi-search" aria-hidden="true"></i> Search medicines
-            </Link>
-          </div>
+          <PageHeader title="Reservation Cart" subtitle="Your cart is empty" />
+          <EmptyState
+            icon="bi bi-cart"
+            title="Your cart is empty"
+            actions={
+              <Button to="/">
+                <i className="bi bi-search" aria-hidden="true"></i> Search medicines
+              </Button>
+            }
+          >
+            Search for a medicine and press Reserve to add it here.
+          </EmptyState>
         </div>
       </div>
     )
@@ -143,22 +141,24 @@ export default function Cart() {
   return (
     <div className="legacy-cart">
       <div className="cart-wrapper">
-        <div className="page-header">
-          <div className="page-header-left">
-            <h1>Reservation Cart</h1>
-            <p aria-live="polite">
+        <PageHeader
+          title="Reservation Cart"
+          subtitle={
+            <span aria-live="polite">
               {cart.count} {cart.count === 1 ? 'item' : 'items'} in your cart &middot; {cart.branchName}
-            </p>
-          </div>
-          <div className="header-actions">
-            <Link className="btn-outline btn-outline-blue" to="/">
-              <i className="bi bi-plus-circle" aria-hidden="true"></i> Add More
-            </Link>
-            <button type="button" ref={clearButton} className="btn-outline btn-outline-red" onClick={() => setConfirmClear(true)} disabled={busy}>
-              <i className="bi bi-trash3" aria-hidden="true"></i> Clear Cart
-            </button>
-          </div>
-        </div>
+            </span>
+          }
+          actions={
+            <>
+              <Button to="/">
+                <i className="bi bi-plus-circle" aria-hidden="true"></i> Add More
+              </Button>
+              <Button variant="danger" ref={clearButton} onClick={() => setConfirmClear(true)} disabled={busy}>
+                <i className="bi bi-trash3" aria-hidden="true"></i> Clear Cart
+              </Button>
+            </>
+          }
+        />
 
         {cart.notice ? (
           <p className="app-notice app-notice--info" role="status">

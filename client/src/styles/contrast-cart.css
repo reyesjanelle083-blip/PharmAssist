@@ -160,13 +160,6 @@ html[data-contrast='high'] .legacy-notif .notif-filter select {
   border: 2px solid #fff;
 }
 
-html[data-contrast='high'] .status-pending { color: #ffee00; }
-html[data-contrast='high'] .status-approved,
-html[data-contrast='high'] .status-completed { color: #8dff9d; }
-html[data-contrast='high'] .status-rejected { color: #ffb3b3; }
-html[data-contrast='high'] .status-cancelled,
-html[data-contrast='high'] .status-expired { color: #fff; }
-
 html[data-contrast='high'] .legacy-notif .notif-container table,
 html[data-contrast='high'] .legacy-notif .notif-container tbody tr,
 html[data-contrast='high'] .legacy-notif .notif-container td {

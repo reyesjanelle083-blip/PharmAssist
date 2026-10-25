@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout.jsx'
-import Layout from '../components/Layout.jsx'
+import CustomerLayout from '../layouts/CustomerLayout.jsx'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import RoleRoute from '../components/RoleRoute.jsx'
 import Forbidden from '../pages/Forbidden.jsx'
@@ -28,7 +28,7 @@ export default function AppRoutes() {
       </Route>
 
       {/* the old shell: sidebar, top bar, page, footer */}
-      <Route element={<Layout />}>
+      <Route element={<CustomerLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/guide" element={<Guide />} />
         <Route path="/privacy" element={<Privacy />} />

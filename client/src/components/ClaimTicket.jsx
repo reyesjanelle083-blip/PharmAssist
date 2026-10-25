@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import StatusBadge from './ui/StatusBadge.jsx'
 import { Link } from 'react-router-dom'
 import { formatCents, formatDateTime, formatPeso, toCents } from '../utils/format.js'
 
@@ -65,7 +66,7 @@ export default function ClaimTicket({ reservation, branchName }) {
             <div>
               <dt>Status</dt>
               <dd>
-                <span className="status-pending">Pending</span>
+                <StatusBadge status="pending" />
               </dd>
             </div>
             <div>

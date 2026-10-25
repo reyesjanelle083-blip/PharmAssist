@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import LoadingState from '../components/ui/LoadingState.jsx'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { searchAvailability } from '../api/index.js'
 import ErrorMessage from '../components/ErrorMessage.jsx'
@@ -57,7 +58,7 @@ export default function ReserveRedirect() {
   }
 
   return (
-    <p role="status" className="loading" style={{ padding: 20 }}>
+    <LoadingState>
       {state.phase === 'added' ? (
         <>
           Your cart is ready. <Link to="/cart">Open the cart</Link>
@@ -65,6 +66,6 @@ export default function ReserveRedirect() {
       ) : (
         'Adding to your cart...'
       )}
-    </p>
+    </LoadingState>
   )
 }

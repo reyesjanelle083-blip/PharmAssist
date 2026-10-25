@@ -1,0 +1,78 @@
+/*
+ * PharmAssist design tokens. The values are the old PharmAssist ones (the palette of the old cart and notification pages and the
+ * old shell), named once so new components stop repeating hex codes. Prefixed --pa- so they never clash with the old stylesheets'
+ * own variables (--blue, --navy ...), which stay untouched inside their .legacy-* scopes.
+ * The High contrast theme redefines the same names below, so a component built on tokens gets both modes for free.
+ */
+:root {
+  /* colour */
+  --pa-bg: #e8ecf1;
+  --pa-surface: #ffffff;
+  --pa-border: #d4dde8;
+  --pa-text: #42596f;
+  --pa-text-muted: #6c737e;
+  --pa-primary: #7393a7;
+  --pa-primary-dark: #5e85a0;
+  --pa-primary-soft: #eef4f8;
+  --pa-primary-edge: #c3d4de;
+  --pa-on-primary: #ffffff;
+  --pa-danger: #c0392b;
+  --pa-danger-soft: #fdf2f1;
+  --pa-danger-edge: #e8c5c2;
+  --pa-success: #2e7d54;
+  --pa-success-soft: #edf7f1;
+  --pa-focus: #2d3f50;
+
+  /* status colours (the old ones; the status is always also written as a word) */
+  --pa-status-pending: #ffc107;
+  --pa-status-approved: #28a745;
+  --pa-status-completed: #5b7a92;
+  --pa-status-rejected: #dc3545;
+  --pa-status-cancelled: #6c737e;
+  --pa-status-expired: #856404;
+
+  /* shape and space */
+  --pa-radius: 12px;
+  --pa-radius-sm: 8px;
+  --pa-shadow-sm: 0 2px 8px rgba(45, 63, 80, 0.07);
+  --pa-shadow-md: 0 6px 20px rgba(45, 63, 80, 0.11);
+  --pa-space-1: 4px;
+  --pa-space-2: 8px;
+  --pa-space-3: 12px;
+  --pa-space-4: 16px;
+  --pa-space-5: 24px;
+  --pa-space-6: 40px;
+
+  /* type and touch target */
+  --pa-font: 'Bricolage Grotesque', sans-serif;
+  --pa-control-height: 44px;
+}
+
+html[data-contrast='high'] {
+  --pa-bg: #000000;
+  --pa-surface: #000000;
+  --pa-border: #ffffff;
+  --pa-text: #ffffff;
+  --pa-text-muted: #ffffff;
+  --pa-primary: #ffee00;
+  --pa-primary-dark: #ffee00;
+  --pa-primary-soft: #000000;
+  --pa-primary-edge: #ffffff;
+  --pa-on-primary: #000000;
+  --pa-danger: #ffb3b3;
+  --pa-danger-soft: #000000;
+  --pa-danger-edge: #ffb3b3;
+  --pa-success: #8dff9d;
+  --pa-success-soft: #000000;
+  --pa-focus: #ffee00;
+
+  --pa-status-pending: #ffee00;
+  --pa-status-approved: #8dff9d;
+  --pa-status-completed: #8dff9d;
+  --pa-status-rejected: #ffb3b3;
+  --pa-status-cancelled: #ffffff;
+  --pa-status-expired: #ffffff;
+
+  --pa-shadow-sm: none;
+  --pa-shadow-md: none;
+}

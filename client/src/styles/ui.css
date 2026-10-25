@@ -1,0 +1,229 @@
+/*
+ * Shared UI components (src/components/ui/). Built only on the tokens in tokens.css, so they work in normal and High contrast
+ * mode without extra rules. They match the look of the old cart and notification pages.
+ */
+
+/* ---- Button ---- */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: var(--pa-control-height);
+  padding: 8px 16px;
+  border: 1.5px solid transparent;
+  border-radius: var(--pa-radius-sm);
+  font-family: var(--pa-font);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.ui-btn:disabled,
+.ui-btn[aria-disabled='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.ui-btn--block {
+  width: 100%;
+}
+
+.ui-btn--primary {
+  background: var(--pa-primary);
+  color: var(--pa-on-primary);
+}
+
+.ui-btn--primary:hover {
+  background: var(--pa-primary-dark);
+  box-shadow: var(--pa-shadow-md);
+}
+
+.ui-btn--outline {
+  background: var(--pa-primary-soft);
+  color: var(--pa-primary-dark);
+  border-color: var(--pa-primary-edge);
+}
+
+.ui-btn--outline:hover {
+  color: var(--pa-text);
+  box-shadow: var(--pa-shadow-sm);
+}
+
+.ui-btn--danger {
+  background: var(--pa-danger-soft);
+  color: var(--pa-danger);
+  border-color: var(--pa-danger-edge);
+}
+
+html[data-contrast='high'] .ui-btn--primary,
+html[data-contrast='high'] .ui-btn--outline,
+html[data-contrast='high'] .ui-btn--danger {
+  border: 2px solid currentColor;
+}
+
+html[data-contrast='high'] .ui-btn--primary {
+  border-color: #ffffff;
+}
+
+/* ---- form controls (FormField, SelectField) ---- */
+.ui-field {
+  margin-bottom: var(--pa-space-3);
+}
+
+.ui-field__label {
+  display: block;
+  margin-bottom: var(--pa-space-1);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--pa-text);
+}
+
+.ui-field__control {
+  width: 100%;
+  min-height: var(--pa-control-height);
+  padding: 8px 12px;
+  border: 1px solid var(--pa-border);
+  border-radius: var(--pa-radius-sm);
+  background: var(--pa-surface);
+  color: var(--pa-text);
+  font-family: var(--pa-font);
+  font-size: 0.9rem;
+}
+
+textarea.ui-field__control {
+  min-height: 80px;
+}
+
+.ui-field__control[aria-invalid='true'] {
+  border-color: var(--pa-danger);
+}
+
+html[data-contrast='high'] .ui-field__control {
+  border-width: 2px;
+}
+
+.ui-field__hint,
+.ui-field__error {
+  display: block;
+  margin: var(--pa-space-1) 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.ui-field__hint {
+  color: var(--pa-text-muted);
+}
+
+.ui-field__error {
+  color: var(--pa-danger);
+  font-weight: 600;
+}
+
+/* ---- Loading, Empty and Error states ---- */
+.ui-state {
+  padding: var(--pa-space-5);
+  text-align: center;
+  color: var(--pa-text-muted);
+  font-size: 0.92rem;
+}
+
+.ui-state--loading {
+  padding: var(--pa-space-4) var(--pa-space-5);
+}
+
+.ui-state--empty {
+  padding: 60px var(--pa-space-6);
+  background: var(--pa-surface);
+  border: 1.5px dashed var(--pa-border);
+  border-radius: var(--pa-radius);
+}
+
+.ui-state__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--pa-space-3);
+  border-radius: 50%;
+  background: var(--pa-primary-soft);
+  color: var(--pa-primary-dark);
+  font-size: 1.7rem;
+}
+
+.ui-state__title {
+  margin: 0 0 var(--pa-space-1);
+  font-size: 1.2rem;
+  color: var(--pa-text);
+}
+
+.ui-state__text {
+  margin: 0 0 var(--pa-space-3);
+}
+
+.ui-state__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pa-space-2);
+  justify-content: center;
+}
+
+/* ---- PageHeader ---- */
+.ui-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pa-space-3);
+  margin-bottom: var(--pa-space-5);
+  padding: 20px 24px;
+  background: var(--pa-surface);
+  border: 1px solid var(--pa-border);
+  border-radius: var(--pa-radius);
+  box-shadow: var(--pa-shadow-sm);
+}
+
+.ui-page-header__title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--pa-text);
+}
+
+.ui-page-header__subtitle {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--pa-text-muted);
+}
+
+html[data-contrast='high'] .ui-page-header,
+html[data-contrast='high'] .ui-state--empty {
+  border-width: 2px;
+}
+
+/* ---- StatusBadge (the colour is never the only signal: the status is written out) ---- */
+.ui-status {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.ui-status--pending { color: var(--pa-status-pending); }
+.ui-status--approved { color: var(--pa-status-approved); }
+.ui-status--completed { color: var(--pa-status-completed); }
+.ui-status--rejected { color: var(--pa-status-rejected); }
+.ui-status--cancelled { color: var(--pa-status-cancelled); }
+.ui-status--expired { color: var(--pa-status-expired); }
+
+.ui-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
