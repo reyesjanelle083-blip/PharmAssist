@@ -63,6 +63,14 @@ function toApiError(error) {
 http.interceptors.response.use(
   (response) => {
     const body = response.data
+
+    // The one answer that is a file, not an envelope: an image asked for with responseType 'blob'.
+    if (response.config.responseType === 'blob' && body instanceof Blob && body.type.startsWith('image/')) {
+      return { blob: body, data: null, warnings: [], meta: null, requestId: headerValue(response.headers, 'x-request-id') }
+    }
+    if (body instanceof Blob) {
+      throw new ApiError({ status: response.status, code: 'BAD_UPSTREAM_RESPONSE', requestId: headerValue(response.headers, 'x-request-id') })
+    }
     if (!isEnvelope(body)) {
       throw new ApiError({ status: response.status, code: 'BAD_UPSTREAM_RESPONSE', requestId: headerValue(response.headers, 'x-request-id') })
     }
@@ -74,8 +82,17 @@ http.interceptors.response.use(
       requestId: body.request_id ?? null,
     }
   },
-  (error) => {
+  async (error) => {
     if (axios.isCancel(error)) return Promise.reject(error) // a search that was replaced by a newer one
+
+    // An error answer to a blob request is a blob holding the JSON envelope: read it so the code and message are not lost.
+    if (error.response?.data instanceof Blob) {
+      try {
+        error.response.data = JSON.parse(await error.response.data.text())
+      } catch {
+        // not JSON: handled as a non-envelope answer below
+      }
+    }
 
     const apiError = toApiError(error)
     if (apiError.status === 401 && (apiError.code === 'UNAUTHENTICATED' || apiError.code === 'TOKEN_EXPIRED')) {

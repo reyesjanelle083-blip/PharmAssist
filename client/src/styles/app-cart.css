@@ -1,0 +1,437 @@
+/*
+ * Step 8B: the cart, the claim ticket, My Reservations and the reservation detail. They are built on the old cart.php and
+ * user_notif.php styles (styles/legacy/cart.css and notifications.css); this file adds only what those pages did not have.
+ */
+
+.legacy-cart .cart-wrapper {
+  padding: 0 0 48px; /* the page area already leaves room under the top bar */
+}
+
+.legacy-cart h1,
+.legacy-cart h2 {
+  font-family: 'Bricolage Grotesque', sans-serif;
+}
+
+.legacy-cart .page-header-left h1 {
+  margin: 0;
+}
+
+.legacy-cart .header-actions {
+  flex-wrap: wrap;
+}
+
+/* the new controls are at least 44 px (the old stepper and remove button were 30 px) */
+.legacy-cart .btn-outline,
+.legacy-cart .submit-btn,
+.legacy-notif .btn-outline {
+  min-height: 44px;
+}
+
+.legacy-cart .qty-btn,
+.legacy-cart .remove-btn {
+  width: 44px;
+  height: 44px;
+}
+
+.legacy-cart .qty-display {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+}
+
+.legacy-cart .qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.legacy-cart .item-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  color: #b5cfd8;
+}
+
+.legacy-cart .item-name {
+  font-size: 0.97rem;
+  margin: 0 0 6px;
+}
+
+.legacy-cart .empty-state h2 {
+  font-size: 1.25rem;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.legacy-cart .summary-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.legacy-cart .pay-note {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--navy);
+  background: var(--blue-lt);
+  border: 1px solid var(--blue-mid);
+  border-radius: var(--radius-sm);
+}
+
+.legacy-cart .checkout-error:focus {
+  outline: none;
+}
+
+.legacy-cart .short-list {
+  margin: 6px 0 10px 18px;
+  padding: 0;
+}
+
+.legacy-cart .short-note {
+  margin-top: 8px;
+  font-weight: 700;
+  color: #721c24;
+}
+
+.legacy-cart .back-button {
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.legacy-cart .presc-preview {
+  margin-bottom: 10px;
+}
+
+.legacy-cart .presc-preview img,
+.legacy-cart .presc-photo {
+  display: block;
+  max-width: 100%;
+  max-height: 260px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.legacy-cart .form-field textarea {
+  min-height: 80px;
+}
+
+.legacy-cart .detail-notes {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* confirm dialogs (the old guide modal look, see .legacy-dialog) */
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.confirm-actions .confirm-button {
+  width: auto;
+  min-width: 140px;
+  min-height: 44px;
+  justify-content: center;
+}
+
+/* ---- the claim ticket ---- */
+.legacy-cart .claim-label {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.legacy-cart .claim-code {
+  margin: 6px 0 12px;
+  padding: 14px 10px;
+  font-family: monospace;
+  font-size: clamp(1.6rem, 7vw, 2.6rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: var(--navy);
+  background: var(--blue-lt);
+  border: 2px dashed var(--blue);
+  border-radius: var(--radius);
+  overflow-wrap: anywhere;
+}
+
+.legacy-cart .claim-code--small {
+  font-size: clamp(1.3rem, 5vw, 1.7rem);
+}
+
+.legacy-cart .claim-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.legacy-cart .claim-copy-status {
+  font-size: 0.85rem;
+  color: var(--slate);
+}
+
+.legacy-cart .claim-facts {
+  margin: 0 0 6px;
+  display: grid;
+  gap: 6px;
+}
+
+.legacy-cart .claim-facts div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  font-size: 0.9rem;
+}
+
+.legacy-cart .claim-facts dt {
+  color: var(--slate);
+}
+
+.legacy-cart .claim-facts dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.legacy-cart .claim-items {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.legacy-cart .claim-instruction {
+  margin: 12px 0 0;
+  font-size: 0.9rem;
+}
+
+.legacy-cart .ticket-page .summary-card {
+  position: static;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.legacy-cart .ticket-links {
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* ---- the status history ---- */
+.legacy-cart .timeline {
+  list-style: none;
+  margin: 0;
+  padding: 16px 20px;
+}
+
+.legacy-cart .timeline li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0 14px 14px;
+  border-left: 3px solid var(--blue);
+}
+
+.legacy-cart .timeline li:last-child {
+  padding-bottom: 0;
+}
+
+.legacy-cart .timeline-time,
+.legacy-cart .timeline-reason {
+  font-size: 0.85rem;
+  color: var(--slate);
+}
+
+/* ---- My Reservations (the old "Reservation Notifications" table) ---- */
+.legacy-notif .notif-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.legacy-notif .notif-filter label {
+  color: #6c737e;
+  font-weight: 600;
+  margin: 0;
+}
+
+.legacy-notif .notif-filter select {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #b5cfd8;
+  border-radius: 6px;
+  font-family: 'Bricolage Grotesque', sans-serif;
+}
+
+.legacy-notif .notif-empty {
+  padding: 40px 10px;
+  text-align: center;
+  color: #6c737e;
+}
+
+.legacy-notif .notif-empty i {
+  font-size: 2.4rem;
+  color: #9aa6b2;
+}
+
+.legacy-notif .notif-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.legacy-notif .btn-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.legacy-notif .code-display {
+  margin-top: 0;
+  padding: 0;
+}
+
+/* the old file has three status colours; the other three use the old palette too */
+.status-completed,
+.status-cancelled,
+.status-expired {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.status-completed { color: #5b7a92; }
+.status-cancelled { color: #6c737e; }
+.status-expired { color: #856404; }
+
+/* ---- small screens ---- */
+@media (max-width: 940px) {
+  .legacy-cart .summary-card {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .legacy-cart .cart-item {
+    flex-wrap: wrap;
+  }
+
+  .legacy-cart .item-meta {
+    gap: 8px;
+  }
+
+  .legacy-cart .item-line-total {
+    margin-left: 0;
+  }
+
+  .legacy-cart .page-header {
+    padding: 16px;
+  }
+
+  /* the reservation table becomes a stack of cards: no sideways scrolling on a phone */
+  .legacy-notif .notif-container {
+    padding: 14px;
+    overflow-x: visible;
+  }
+
+  .legacy-notif .reservation-table,
+  .legacy-notif .reservation-table tbody,
+  .legacy-notif .reservation-table tr,
+  .legacy-notif .reservation-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .legacy-notif .reservation-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .legacy-notif .reservation-table tr {
+    margin-bottom: 14px;
+    border: 1px solid #b5cfd8;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .legacy-notif .notif-container .reservation-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    text-align: right;
+  }
+
+  .legacy-notif .reservation-table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: #6c737e;
+    text-align: left;
+  }
+
+  .confirm-actions .confirm-button {
+    flex: 1 1 100%;
+  }
+}
+
+/* ---- printing the claim ticket: only the ticket is printed ---- */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .claim-ticket,
+  .claim-ticket * {
+    visibility: visible;
+  }
+
+  .claim-ticket {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none !important;
+    box-shadow: none !important;
+    border: 2px solid #000 !important;
+    zoom: 1 !important;
+  }
+
+  .claim-ticket .summary-head {
+    background: #fff !important;
+    border-bottom: 2px solid #000;
+  }
+
+  .claim-ticket * {
+    color: #000 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

@@ -14,6 +14,7 @@ markup and class names, with Bootstrap 5 CSS (no JavaScript) and the old icon fo
 - Polish step: the search bar is in the top bar (as on the old pages); a sidebar with Home, Branches, Guide and log in / out; About Us and Contact Us dialogs (native `<dialog>`); a branches section with an OpenStreetMap map (Leaflet 1.9.4 and react-leaflet 5.0.0, which needs React 19) and one card per branch; a carousel of our own "how it works" slides; the pages `/guide`, `/privacy` and `/terms`.
 - Contact details (email, optional phone and social links) are set in `src/config/site.js`. A phone line or a social icon shows only when its value is set.
 - The map is the only thing that loads from another server (the OpenStreetMap tile server). It is mentioned in the Privacy Notice.
+- Reservations (step 8B), customers only: **Cart** (`/cart`, kept in localStorage, one branch at a time, up to 10 items, never above the available quantity), the checkout step inside it (notes, prescription photo when needed, a fresh Idempotency-Key that is kept for retries), the **claim ticket** (large code, copy, print), **My Reservations** (`/reservations`, status filter and paging) and the reservation page (`/reservations/:id`, status history, prescription photo, Cancel). `/reserve?branch=&medicine=` adds that item to the cart. Staff and the CEO do not see these links.
 - Every error shows a friendly sentence and a small "Reference: ..." line (the gateway's `X-Request-Id`) so a problem can be found in the gateway logs.
 
 ## Setup
@@ -40,6 +41,7 @@ npm run lint      # oxlint
 |------------|---------|
 | Search (Home) | gateway (8000), inventory-service (8002) and MySQL with the inventory seed. integration-service (8004) is optional: without it distances are estimated by the gateway and the page shows "Distances are estimates right now" |
 | Log in, Register, Verify email | gateway (8000), identity-service (8001) and MySQL with the identity seed |
+| Cart, reservations, My Reservations | the above plus reservation-service (8003) with its migrations, and inventory-service (8002) for the stock holds |
 
 The gateway must allow the page's origin: `CORS_ALLOWED_ORIGINS` in `gateway/.env` has to include `http://localhost:5173`.
 Start the servers as described in `docs/RUNNING.md`.

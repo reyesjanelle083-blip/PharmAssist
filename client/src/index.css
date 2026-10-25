@@ -20,6 +20,8 @@
 @import './styles/legacy/branches.css';
 @import './styles/legacy/footer.css';
 @import './styles/legacy/carousel.css';
+@import './styles/legacy/cart.css';
+@import './styles/legacy/notifications.css';
 
 /* Bootstrap 5.3.8 CSS only (no JavaScript), as on the old pages */
 @import 'bootstrap/dist/css/bootstrap.min.css';
@@ -42,5 +44,7 @@
 /* the app: accessibility, notices, clash fixes, the high contrast theme, phone rules */
 @import './styles/app.css';
 @import './styles/app-extra.css';
+@import './styles/app-cart.css';
 @import './styles/contrast.css';
+@import './styles/contrast-cart.css';
 @import './styles/responsive.css';

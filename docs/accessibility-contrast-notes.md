@@ -26,6 +26,21 @@ Ratios are computed from the colours in the old stylesheets (WCAG relative lumin
 | Pill input background (non-text) | `#ededed` on white | 1.17 | 3 | fails |
 | Login title (24 px); floating button icons | `#7393A7` on white; white on `#7393A7` | 3.25 | 3 (large text, icons) | passes |
 
+Cart and reservation pages (step 8B, from the old cart and notification pages, colours unchanged):
+
+| Element | Colours | Ratio | Needs | Result |
+|---|---|---|---|---|
+| Status "Pending" (old colour) | `#ffc107` on white (1.37 on the striped rows) | 1.63 | 4.5 | fails |
+| Status "Approved" | `#28a745` on white | 3.13 | 4.5 | fails |
+| Status "Rejected" | `#dc3545` on white | 4.53 | 4.5 | passes |
+| Status "Completed", "Cancelled", "Expired" (same palette) | `#5b7a92`, `#6c737e`, `#856404` on white | 4.52, 4.78, 5.49 | 4.5 | pass |
+| Table header (white on blue-grey) | white on `#7393A7` | 3.25 | 4.5 | fails |
+| Order Summary header sub-text (white at 55% opacity) | about `#c7d4dd` on `#7393A7` | 2.15 | 4.5 | fails |
+| Rx and "No Rx needed" badges | `#c0392b` on `#fdf2f1`; `#2e7d54` on `#edf7f1` | 4.96; 4.59 | 4.5 | pass |
+
+The status is always written out as a word, so it never depends on colour alone. The new cart controls (quantity, remove, buttons) are 44 px
+high, slightly larger than the old 30 px ones.
+
 Also in the old design: no visible keyboard focus style (fixed in the new client without changing the mouse look), and the old form inputs are
 about 30 px tall, under the 44 px touch target recommended for this project.
 

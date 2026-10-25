@@ -1,0 +1,171 @@
+/*
+ * COPIED from old/PharmAssist/user_notif.php (the <style> block)
+ * Taken: the white container, header, success and error boxes, the table, the status colours, the code display and the responsive rule for the container.
+ * Left out: the text-to-speech bar and buttons, the guide modal and the floating buttons.
+ * Nested under .legacy-notif.
+ */
+.legacy-notif {
+  .notif-container {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #b5cfd8;
+        padding: 30px;
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+  
+      .notif-header {
+        text-align: center;
+        font-family: "Tinos", serif;
+        color: #6C737E;
+        margin-bottom: 25px;
+      }
+  
+      .notif-header h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+  
+      .notif-header p {
+        font-size: 0.95rem;
+      }
+  
+      .success-msg {
+        background: #d4edda;
+        color: #155724;
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #c3e6cb;
+        text-align: center;
+        font-weight: 600;
+      }
+  
+      .error-msg {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 12px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #f5c6cb;
+        text-align: center;
+        font-weight: 600;
+      }
+  
+      .notif-container table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+      }
+  
+      .notif-container th {
+        background-color: #7393A7;
+        color: white;
+        text-align: left;
+        padding: 12px;
+        font-weight: 600;
+      }
+  
+      .notif-container th:nth-child(1), 
+      .notif-container th:nth-child(3),  
+      .notif-container th:nth-child(4),  
+      .notif-container th:nth-child(5) { 
+        text-align: center;
+      }
+  
+      .notif-container td {
+        padding: 12px;
+        border-bottom: 1px solid #e8ecf1;
+        color: #333;
+        font-family: "Bricolage Grotesque", sans-serif;
+      }
+  
+      .notif-container td:nth-child(1),  
+      .notif-container td:nth-child(3), 
+      .notif-container td:nth-child(4),  
+      .notif-container td:nth-child(5) { 
+        text-align: center;
+      }
+  
+      .notif-container tbody tr:nth-child(even) {
+        background: #E8ECF1;
+      }
+  
+      .notif-container tbody tr:hover {
+        background: #B5CFD8;
+        transition: background 0.3s ease;
+      }
+  
+      .status-approved { 
+        color: #28a745; 
+        font-weight: bold; 
+        padding: 6px 16px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 0.9rem;
+      }
+      
+      .status-rejected { 
+        color: #dc3545; 
+        font-weight: bold; 
+        padding: 6px 16px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 0.9rem;
+      }
+      
+      .status-pending { 
+        color: #ffc107; 
+        font-weight: bold; 
+        padding: 6px 16px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 0.9rem;
+      }
+  
+      .code-display {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 16px;
+        font-weight: bold;
+        color: #7393A7;
+        display: inline-block;
+        margin-top: 5px;
+        letter-spacing: 1px;
+      }
+  
+      .rejection-reason {
+        color: #721c24;
+        font-style: italic;
+        padding: 6px 12px;
+        border-radius: 4px;
+        display: inline-block;
+        margin-top: 5px;
+      }
+  
+      .waiting-text {
+        color: #6C737E;
+        font-style: italic;
+      }
+  
+      @media (max-width: 768px) {
+        .notif-container {
+          padding: 15px;
+          overflow-x: auto;
+        }
+        
+        .notif-container table {
+          font-size: 0.85rem;
+        }
+        
+        .notif-container th,
+        .notif-container td {
+          padding: 8px;
+        }
+      }
+  
+}

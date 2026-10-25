@@ -2,6 +2,7 @@ import { Link, NavLink } from 'react-router-dom'
 import avatar from 'bootstrap-icons/icons/person-circle.svg'
 import mark from '../assets/pharmassist-mark.png'
 import { useAuth } from '../context/useAuth.js'
+import { useCart } from '../context/useCart.js'
 
 const ROLE_LABELS = {
   customer: 'Customer',
@@ -50,6 +51,7 @@ function Item({ to, icon, label, end, plain }) {
 /** The left bar of the old pages (same markup and class names as sidebar.php). */
 export default function Sidebar({ closed }) {
   const { user, logout } = useAuth()
+  const cart = useCart()
   const name = user ? `${user.first_name} ${user.last_name}` : 'Guest'
   const job = user ? ROLE_LABELS[user.role] ?? 'User' : 'Not logged in'
 
@@ -66,8 +68,16 @@ export default function Sidebar({ closed }) {
           <Item to={{ pathname: '/', hash: '#branches' }} plain icon="bi bi-geo-alt" label="Branches" />
           <Item to="/guide" icon="bx bx-bulb" label="Guide" />
 
+          {/* Customers only: the cart and their reservations. Staff and the CEO have their own pages (a later step). */}
+          {user?.role === 'customer' ? (
+            <>
+              <Item to="/cart" icon="bi bi-cart" label={cart.count > 0 ? `Cart (${cart.count})` : 'Cart'} />
+              <Item to="/reservations" icon="bi bi-card-list" label="My Reservations" />
+            </>
+          ) : null}
+
           {/*
-            Cart, Notification and Messages go here (the old sidebar had them) once those pages exist.
+            Notification and Messages go here (the old sidebar had them) once those pages exist.
             They are not linked yet: a link to a page that does not exist is worse than no link.
           */}
 

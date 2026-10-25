@@ -1,0 +1,178 @@
+/* High contrast for step 8B: cart, ticket, My Reservations, reservation detail (black, white, yellow). */
+
+html[data-contrast='high'] .legacy-cart,
+html[data-contrast='high'] .legacy-notif {
+  --bg: #000;
+  --surface: #000;
+  --border: #fff;
+  --navy: #fff;
+  --slate: #fff;
+  --slate-lt: #000;
+  --blue: #ffee00;
+  --blue-dk: #ffee00;
+  --blue-lt: #000;
+  --blue-mid: #fff;
+}
+
+html[data-contrast='high'] .legacy-cart .page-header,
+html[data-contrast='high'] .legacy-cart .cart-item,
+html[data-contrast='high'] .legacy-cart .empty-state,
+html[data-contrast='high'] .legacy-cart .summary-card,
+html[data-contrast='high'] .legacy-notif .notif-container {
+  background: #000;
+  border: 2px solid #fff;
+  box-shadow: none;
+}
+
+html[data-contrast='high'] .legacy-cart .summary-head {
+  background: #000;
+  border-bottom: 2px solid #fff;
+}
+
+html[data-contrast='high'] .legacy-cart .summary-head h2,
+html[data-contrast='high'] .legacy-cart .summary-head p,
+html[data-contrast='high'] .legacy-cart h1,
+html[data-contrast='high'] .legacy-cart h2,
+html[data-contrast='high'] .legacy-cart h3,
+html[data-contrast='high'] .legacy-cart .item-name,
+html[data-contrast='high'] .legacy-cart .bk-row,
+html[data-contrast='high'] .legacy-notif .notif-header h1,
+html[data-contrast='high'] .legacy-notif .notif-header p {
+  color: #fff !important;
+}
+
+html[data-contrast='high'] .legacy-cart .total-amt,
+html[data-contrast='high'] .legacy-cart .item-line-total {
+  color: #ffee00 !important;
+}
+
+html[data-contrast='high'] .legacy-cart .btn-outline,
+html[data-contrast='high'] .legacy-notif .btn-outline {
+  background: #000;
+  color: #ffee00;
+  border: 2px solid #ffee00;
+}
+
+html[data-contrast='high'] .legacy-cart .btn-outline-red {
+  color: #ffb3b3;
+  border-color: #ffb3b3;
+}
+
+html[data-contrast='high'] .legacy-cart .submit-btn {
+  background: #ffee00;
+  color: #000;
+  border: 2px solid #fff;
+}
+
+html[data-contrast='high'] .legacy-cart .qty-stepper {
+  background: #000;
+  border: 2px solid #fff;
+}
+
+html[data-contrast='high'] .legacy-cart .qty-btn,
+html[data-contrast='high'] .legacy-cart .qty-display {
+  background: #000;
+  color: #fff;
+}
+
+html[data-contrast='high'] .legacy-cart .remove-btn {
+  background: #000;
+  color: #ffb3b3;
+  border: 2px solid #ffb3b3;
+}
+
+html[data-contrast='high'] .legacy-cart .badge-rx-yes,
+html[data-contrast='high'] .legacy-cart .badge-rx-no {
+  background: #000;
+  border: 2px solid currentColor;
+}
+
+html[data-contrast='high'] .legacy-cart .badge-rx-yes { color: #ffcf99; }
+html[data-contrast='high'] .legacy-cart .badge-rx-no { color: #8dff9d; }
+
+html[data-contrast='high'] .legacy-cart .form-field input,
+html[data-contrast='high'] .legacy-cart .form-field textarea {
+  background: #000;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+html[data-contrast='high'] .legacy-cart .form-field label,
+html[data-contrast='high'] .legacy-cart .form-field small,
+html[data-contrast='high'] .legacy-cart .form-section-title,
+html[data-contrast='high'] .legacy-cart .claim-label,
+html[data-contrast='high'] .legacy-cart .claim-facts dt,
+html[data-contrast='high'] .legacy-cart .claim-facts dd,
+html[data-contrast='high'] .legacy-cart .meta-unit-price,
+html[data-contrast='high'] .legacy-cart .timeline-time,
+html[data-contrast='high'] .legacy-cart .timeline-reason,
+html[data-contrast='high'] .legacy-cart .claim-copy-status,
+html[data-contrast='high'] .legacy-cart .detail-notes,
+html[data-contrast='high'] .legacy-cart .empty-state p {
+  color: #fff !important;
+}
+
+html[data-contrast='high'] .legacy-cart .presc-upload-item,
+html[data-contrast='high'] .legacy-cart .pay-note {
+  background: #000;
+  border: 2px dashed #fff;
+  color: #fff;
+}
+
+html[data-contrast='high'] .legacy-cart .presc-upload-item label { color: #ffee00; }
+
+html[data-contrast='high'] .legacy-cart .claim-code {
+  background: #000;
+  color: #ffee00;
+  border: 3px dashed #ffee00;
+}
+
+html[data-contrast='high'] .legacy-cart .timeline li { border-left-color: #ffee00; }
+
+html[data-contrast='high'] .legacy-notif .notif-container th {
+  background: #000;
+  color: #ffee00;
+  border-bottom: 2px solid #fff;
+}
+
+html[data-contrast='high'] .legacy-notif .notif-container td {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+html[data-contrast='high'] .legacy-notif .notif-container tbody tr:nth-child(even),
+html[data-contrast='high'] .legacy-notif .notif-container tbody tr:hover {
+  background: #111;
+}
+
+html[data-contrast='high'] .legacy-notif .code-display { color: #ffee00; }
+
+html[data-contrast='high'] .legacy-notif .notif-filter label,
+html[data-contrast='high'] .legacy-notif .notif-empty,
+html[data-contrast='high'] .legacy-notif .waiting-text,
+html[data-contrast='high'] .legacy-notif .reservation-table td::before {
+  color: #fff;
+}
+
+html[data-contrast='high'] .legacy-notif .notif-filter select {
+  background: #000;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+html[data-contrast='high'] .status-pending { color: #ffee00; }
+html[data-contrast='high'] .status-approved,
+html[data-contrast='high'] .status-completed { color: #8dff9d; }
+html[data-contrast='high'] .status-rejected { color: #ffb3b3; }
+html[data-contrast='high'] .status-cancelled,
+html[data-contrast='high'] .status-expired { color: #fff; }
+
+html[data-contrast='high'] .legacy-notif .notif-container table,
+html[data-contrast='high'] .legacy-notif .notif-container tbody tr,
+html[data-contrast='high'] .legacy-notif .notif-container td {
+  background: #000;
+}
+
+html[data-contrast='high'] .legacy-notif .reservation-table tr {
+  border-color: #fff;
+}

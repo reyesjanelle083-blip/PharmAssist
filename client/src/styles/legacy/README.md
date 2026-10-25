@@ -14,6 +14,8 @@ are the old rules, unchanged. Each file starts with a comment that says where it
 | `branches.css` | `plugins/branches.css` | nothing (the whole file) |
 | `carousel.css` | `plugins/carousel.css` | the `@import` and the page-wide `*` and `body` rules; the old `.card` rules are prefixed with `.carousel-container` so they do not clash with the medicine cards |
 | `guide.css` | the `<style>` block in `guide.php`, lines 34-89 | the text-to-speech bar, floating buttons and guide modal; wrapped in `.legacy-guide` |
+| `cart.css` | the `<style>` block in `cart.php` | the "reserve by piece, 10 pieces or box" options, the text-to-speech buttons, the floating buttons and the guide modal; nested under `.legacy-cart` |
+| `notifications.css` | the `<style>` block in `user_notif.php` (the customer's "Reservation Notifications" page, used for My Reservations) | the text-to-speech bar, guide modal and floating buttons; nested under `.legacy-notif` |
 | `auth.css` | `plugins/style.css` (login and register) | nested in `.legacy-auth` (the pages shared one document with the shell); the hot-linked background photo URL was removed (the gradient stays) |
 | `auth-register.css` | the `<style>` block in `register.php` | nested in `.legacy-auth` |
 

@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AboutDialog, ContactDialog } from '../components/SiteDialogs.jsx'
-import BranchesSection from '../components/BranchesSection.jsx'
 import Carousel from '../components/Carousel.jsx'
 import SearchResults from '../components/SearchResults.jsx'
 import { usePageTitle } from '../hooks/usePageTitle.js'
+
+// The map library is large: it loads when the home page opens, not with the first page of the app.
+const BranchesSection = lazy(() => import('../components/BranchesSection.jsx'))
 
 /**
  * The old home page (homepage.php): the big "Reserve it now. Pick it up later." section with the About Us and Contact Us buttons,
@@ -71,7 +73,17 @@ export default function Home() {
       </div>
 
       <SearchResults />
-      <BranchesSection />
+      <Suspense
+        fallback={
+          <section id="branches" className="branches-section legacy-branches" aria-label="Our Branches">
+            <p className="filter-status" role="status" style={{ display: 'inline-block' }}>
+              Loading branches...
+            </p>
+          </section>
+        }
+      >
+        <BranchesSection />
+      </Suspense>
       <Carousel />
 
       <AboutDialog open={dialog === 'about'} onClose={() => setDialog(null)} returnFocusRef={aboutButton} />

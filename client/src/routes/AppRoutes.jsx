@@ -10,7 +10,10 @@ import Login from '../pages/Login.jsx'
 import NotFound from '../pages/NotFound.jsx'
 import Privacy from '../pages/Privacy.jsx'
 import Register from '../pages/Register.jsx'
-import ReserveComingSoon from '../pages/ReserveComingSoon.jsx'
+import Cart from '../pages/Cart.jsx'
+import ReservationDetail from '../pages/ReservationDetail.jsx'
+import Reservations from '../pages/Reservations.jsx'
+import ReserveRedirect from '../pages/ReserveRedirect.jsx'
 import Terms from '../pages/Terms.jsx'
 import VerifyEmail from '../pages/VerifyEmail.jsx'
 
@@ -35,7 +38,10 @@ export default function AppRoutes() {
         {/* needs a login, and then the customer role */}
         <Route element={<ProtectedRoute />}>
           <Route element={<RoleRoute roles={['customer']} />}>
-            <Route path="/reserve" element={<ReserveComingSoon />} />
+            <Route path="/reserve" element={<ReserveRedirect />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/reservations" element={<Reservations />} />
+            <Route path="/reservations/:id" element={<ReservationDetail />} />
           </Route>
         </Route>
 

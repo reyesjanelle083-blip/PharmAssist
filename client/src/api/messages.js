@@ -14,11 +14,18 @@ const FRIENDLY = {
   TOKEN_EXPIRED: 'Your session has ended. Please log in again.',
   FORBIDDEN: 'You do not have permission to do this.',
   NOT_FOUND: 'We could not find what you asked for.',
-  PAYLOAD_TOO_LARGE: 'That file is too large.',
+  PAYLOAD_TOO_LARGE: 'That file is too large. The prescription photo must be 4 MB or smaller.',
   UNSUPPORTED_MEDIA_TYPE: 'That kind of file is not supported.',
   SERVICE_UNAVAILABLE: 'The service is not available right now. Please try again in a few minutes.',
   UPSTREAM_TIMEOUT: 'The service took too long to answer. Please try again.',
   BAD_UPSTREAM_RESPONSE: 'The service sent an answer we could not use. Please try again in a few minutes.',
+  STOCK_INSUFFICIENT: 'There is not enough stock for some of the items in your cart. Please change the quantities below.',
+  PRESCRIPTION_REQUIRED: 'A photo of the prescription is needed for one or more of these medicines.',
+  DUPLICATE_REQUEST: 'This reservation was already sent, or it is still being processed. Please check My Reservations before you try again.',
+  IDEMPOTENCY_KEY_REQUIRED: 'The request could not be sent safely. Please try again.',
+  INVALID_TRANSITION: 'This reservation can no longer be changed. It may already be cancelled, completed or expired.',
+  RESERVATION_EXPIRED: 'This reservation has expired.',
+  HOLD_NOT_AVAILABLE: 'The stock held for this reservation is no longer available. Please ask the branch for help.',
   NETWORK_ERROR: 'We could not reach the server. Please check your internet connection and try again.',
 }
 
@@ -40,6 +47,15 @@ export function friendlyMessage(error) {
   }
 
   return FRIENDLY[code] ?? 'Something went wrong. Please try again.'
+}
+
+/** For STOCK_INSUFFICIENT: [{ medicineId, requested, available }] for the items that are short; anything else gives []. */
+export function shortages(error) {
+  const items = error?.code === 'STOCK_INSUFFICIENT' ? error.details?.items : null
+  if (!Array.isArray(items)) return []
+  return items
+    .filter((item) => item && item.sufficient === false)
+    .map((item) => ({ medicineId: Number(item.medicine_id), requested: Number(item.requested), available: Number(item.available) }))
 }
 
 /** Field messages for VALIDATION_FAILED: { fieldName: ['message', ...] }; anything else gives {}. */

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth.js'
+import { useCart } from '../context/useCart.js'
 import { formatPeso, formatTravel } from '../utils/format.js'
 
 const STAFF_ROLES = ['pharmacy_technician', 'pharmacy_assistant', 'branch_manager', 'ceo']
@@ -12,6 +13,7 @@ const LOW_STOCK_AT = 5
  */
 export default function ResultCard({ item }) {
   const { role } = useAuth()
+  const cart = useCart()
   const navigate = useNavigate()
 
   const travel = formatTravel(item.travel_min, item.distance_km)
@@ -21,7 +23,7 @@ export default function ResultCard({ item }) {
   const reservePath = `/reserve?branch=${item.branch_id}&medicine=${item.medicine_id}`
 
   function reserve() {
-    if (role === 'customer') navigate(reservePath)
+    if (role === 'customer') cart.add(item, { go: true }) // adds it and opens the cart (asks first when the cart is for another branch)
     else navigate('/login', { state: { notice: 'login_required', from: reservePath } }) // a guest logs in first
   }
 
