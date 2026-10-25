@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { cancelReservation, getPrescriptionBlob, getReservation } from '../api/index.js'
+import { cancelReservation, getReservation } from '../api/index.js'
 import ConfirmDialog from '../components/ConfirmDialog.jsx'
 import ErrorMessage from '../components/ErrorMessage.jsx'
+import PrescriptionPhoto from '../components/PrescriptionPhoto.jsx'
 import Button from '../components/ui/Button.jsx'
 import LoadingState from '../components/ui/LoadingState.jsx'
 import PageHeader from '../components/ui/PageHeader.jsx'
@@ -16,36 +17,6 @@ import { formatCents, formatDateTime, formatPeso, toCents } from '../utils/forma
 import { isActiveStatus, STATUS_HELP, STATUS_LABELS } from '../utils/status.js'
 
 const CANCELLABLE = ['pending', 'approved']
-
-/** The prescription photo, fetched with the login (never a URL with a token), shown from an object URL that is released again. */
-function PrescriptionPhoto({ id }) {
-  const [state, setState] = useState({ phase: 'loading' })
-
-  useEffect(() => {
-    const controller = new AbortController()
-    let url = null
-    getPrescriptionBlob(id, { signal: controller.signal })
-      .then((blob) => {
-        url = URL.createObjectURL(blob)
-        setState({ phase: 'done', url })
-      })
-      .catch((error) => {
-        if (error?.name !== 'CanceledError') setState({ phase: 'error', error })
-      })
-    return () => {
-      controller.abort()
-      if (url) URL.revokeObjectURL(url)
-    }
-  }, [id])
-
-  return (
-    <div aria-live="polite">
-      {state.phase === 'loading' ? <p className="waiting-text">Loading the prescription photo...</p> : null}
-      {state.phase === 'error' ? <ErrorMessage error={state.error} /> : null}
-      {state.phase === 'done' ? <img className="presc-photo" src={state.url} alt="The prescription photo you added to this reservation" /> : null}
-    </div>
-  )
-}
 
 /**
  * One reservation: the items, the claim code, the notes and expiry, the status history as a timeline, the prescription photo, and

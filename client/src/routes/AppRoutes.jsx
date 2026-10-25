@@ -1,6 +1,13 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout.jsx'
 import CustomerLayout from '../layouts/CustomerLayout.jsx'
+import StaffLayout from '../layouts/StaffLayout.jsx'
+import { STAFF_ROLES } from '../utils/staff.js'
+import StaffInventory from '../pages/staff/StaffInventory.jsx'
+import StaffPrescriptions from '../pages/staff/StaffPrescriptions.jsx'
+import StaffReservationDetail from '../pages/staff/StaffReservationDetail.jsx'
+import StaffReservations from '../pages/staff/StaffReservations.jsx'
+import StaffStockAlerts from '../pages/staff/StaffStockAlerts.jsx'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import RoleRoute from '../components/RoleRoute.jsx'
 import Forbidden from '../pages/Forbidden.jsx'
@@ -48,6 +55,21 @@ export default function AppRoutes() {
         </Route>
 
         <Route path="*" element={<NotFound />} />
+      </Route>
+
+      {/* the staff portal: needs a login and a staff role (or the CEO); the backend still decides what each role may do */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<RoleRoute roles={STAFF_ROLES} />}>
+          <Route path="/staff" element={<StaffLayout />}>
+            <Route index element={<Navigate to="/staff/reservations" replace />} />
+            <Route path="reservations" element={<StaffReservations />} />
+            <Route path="reservations/:id" element={<StaffReservationDetail />} />
+            <Route path="prescriptions" element={<StaffPrescriptions />} />
+            <Route path="inventory" element={<StaffInventory />} />
+            <Route path="stock-alerts" element={<StaffStockAlerts />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Route>
       </Route>
     </Routes>
   )

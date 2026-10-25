@@ -5,6 +5,7 @@ import ErrorMessage from '../components/ErrorMessage.jsx'
 import Field from '../components/Field.jsx'
 import { useAuth } from '../context/useAuth.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
+import { isStaffRole } from '../utils/staff.js'
 
 const NOTICES = {
   session_expired: 'Your session has ended. Please log in again.',
@@ -12,8 +13,8 @@ const NOTICES = {
 }
 
 /** Only paths inside this app are followed after logging in. */
-function safeTarget(from) {
-  return typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : '/'
+function safeTarget(from, fallback = '/') {
+  return typeof from === 'string' && from.startsWith('/') && !from.startsWith('//') ? from : fallback
 }
 
 /** login.php: title, notice, the rounded fields with icons, the eye button, the Sign in button and the sign up link. */
@@ -42,8 +43,8 @@ export default function Login() {
 
     setBusy(true)
     try {
-      await login(email.trim(), password)
-      navigate(safeTarget(location.state?.from), { replace: true })
+      const user = await login(email.trim(), password)
+      navigate(safeTarget(location.state?.from, isStaffRole(user?.role) ? '/staff' : '/'), { replace: true })
     } catch (caught) {
       setError(caught)
       setBusy(false)

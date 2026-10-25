@@ -35,8 +35,8 @@ export function createReservation({ branchId, items, notes, prescription }, idem
   )
 }
 
-export function listReservations({ status, page, perPage } = {}, { signal } = {}) {
-  return http.get('/reservations', { params: { status: status || undefined, page, per_page: perPage }, signal })
+export function listReservations({ status, page, perPage, branchId } = {}, { signal } = {}) {
+  return http.get('/reservations', { params: { status: status || undefined, page, per_page: perPage, branch_id: branchId || undefined }, signal })
 }
 
 export function getReservation(id, { signal } = {}) {
@@ -55,4 +55,16 @@ export function cancelReservation(id, reason) {
 export async function getPrescriptionBlob(id, { signal } = {}) {
   const { blob } = await http.get(`/reservations/${id}/prescription`, { responseType: 'blob', signal })
   return blob
+}
+
+/**
+ * PATCH /reservations/{id}/status for staff: approve, reject (reason required) or complete (the customer's claim code required).
+ * The backend decides who may do it; a refused one comes back as 403, a wrong state as 409, a wrong code as 422.
+ */
+export function changeReservationStatus(id, { action, reason, claimCode }) {
+  return http.patch(`/reservations/${id}/status`, {
+    action,
+    ...(reason ? { reason } : {}),
+    ...(claimCode ? { claim_code: claimCode } : {}),
+  })
 }

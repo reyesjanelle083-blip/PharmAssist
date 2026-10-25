@@ -1,52 +1,9 @@
-import { Link, NavLink } from 'react-router-dom'
 import avatar from 'bootstrap-icons/icons/person-circle.svg'
 import mark from '../assets/pharmassist-mark.png'
 import { useAuth } from '../context/useAuth.js'
 import { useCart } from '../context/useCart.js'
-
-const ROLE_LABELS = {
-  customer: 'Customer',
-  pharmacy_technician: 'Pharmacy Technician',
-  pharmacy_assistant: 'Pharmacy Assistant',
-  branch_manager: 'Branch Manager',
-  ceo: 'CEO',
-}
-
-/** The little name tag that shows when the bar is closed (mouse only, so it is hidden from keyboards and screen readers). */
-function Tag({ label, to = '#' }) {
-  return (
-    <ul className="sub-menu blank" aria-hidden="true">
-      <li>
-        <a className="link_name" href={to} tabIndex={-1}>
-          {label}
-        </a>
-      </li>
-    </ul>
-  )
-}
-
-/** One entry of the old sidebar: icon, link name, and the name tag. */
-function Item({ to, icon, label, end, plain }) {
-  const content = (
-    <>
-      <i className={icon} aria-hidden="true"></i>
-      <span className="link_name">{label}</span>
-    </>
-  )
-
-  return (
-    <li>
-      {plain ? (
-        <Link to={to}>{content}</Link>
-      ) : (
-        <NavLink to={to} end={end} className={({ isActive }) => (isActive ? 'is-current' : undefined)}>
-          {content}
-        </NavLink>
-      )}
-      <Tag label={label} to={typeof to === 'string' ? to : '#'} />
-    </li>
-  )
-}
+import { isStaffRole, ROLE_LABELS } from '../utils/staff.js'
+import { Item, Tag } from './SidebarParts.jsx'
 
 /** The left bar of the old pages (same markup and class names as sidebar.php). */
 export default function Sidebar({ closed }) {
@@ -68,13 +25,15 @@ export default function Sidebar({ closed }) {
           <Item to={{ pathname: '/', hash: '#branches' }} plain icon="bi bi-geo-alt" label="Branches" />
           <Item to="/guide" icon="bx bx-bulb" label="Guide" />
 
-          {/* Customers only: the cart and their reservations. Staff and the CEO have their own pages (a later step). */}
+          {/* Customers only: the cart and their reservations. Staff and the CEO have the staff portal. */}
           {user?.role === 'customer' ? (
             <>
               <Item to="/cart" icon="bi bi-cart" label={cart.count > 0 ? `Cart (${cart.count})` : 'Cart'} />
               <Item to="/reservations" icon="bi bi-card-list" label="My Reservations" />
             </>
           ) : null}
+
+          {isStaffRole(user?.role) ? <Item to="/staff" icon="bi bi-clipboard2-pulse" label="Staff portal" /> : null}
 
           {/*
             Notification and Messages go here (the old sidebar had them) once those pages exist.
