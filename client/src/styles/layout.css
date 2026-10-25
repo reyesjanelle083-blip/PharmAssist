@@ -1,0 +1,235 @@
+/* ---- accessibility toolbar ---- */
+.a11y-bar {
+  background: var(--surface-alt);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.a11y-toolbar {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.a11y-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.a11y-button {
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0.25rem 0.9rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--heading);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.a11y-button:hover:not(:disabled) {
+  border-color: var(--brand);
+}
+
+.a11y-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* "On" is shown by a tick and a filled button, not by colour alone */
+.a11y-button[aria-pressed='true'] {
+  background: var(--brand);
+  color: var(--on-brand);
+  border-color: var(--brand);
+}
+
+.a11y-button[aria-pressed='true']::before {
+  content: '\2713\00a0';
+}
+
+.a11y-size {
+  min-width: 3.5rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ---- header ---- */
+.site-header {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.site-header__inner {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: var(--tap);
+  text-decoration: none;
+  color: var(--heading);
+}
+
+.brand__logo {
+  width: 3rem;
+  height: 3rem;
+  padding: 0.15rem;
+  object-fit: contain;
+  background: #ffffff; /* the logo is on white: keep it readable in dark and high contrast modes */
+  border-radius: 50%;
+}
+
+.brand__name {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.main-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+
+.main-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 0.9rem;
+  color: var(--heading);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+.main-nav a:hover {
+  border-bottom-color: var(--brand-decor);
+}
+
+/* The current page is marked with a thick underline, not by colour alone */
+.main-nav a[aria-current='page'] {
+  border-bottom-color: var(--brand);
+}
+
+.main-nav__user {
+  padding: 0 0.5rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+/* ---- page area ---- */
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.25rem 1rem 3rem;
+}
+
+/* ---- hero (the old home page's big title and soft blue band) ---- */
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem 1.25rem;
+  overflow: hidden;
+  color: var(--hero-text);
+  background: linear-gradient(60deg, var(--hero-from), var(--hero-to));
+  border-radius: var(--radius-card);
+}
+
+:root[data-contrast='high'] .hero {
+  border: 2px solid #ffffff;
+}
+
+.hero__mark {
+  display: none;
+  width: 7rem;
+  height: 7rem;
+  flex: none;
+  object-fit: contain;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.hero h1 {
+  color: var(--hero-text);
+  font-size: 1.9rem;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.hero p {
+  margin: 0;
+  max-width: 40rem;
+}
+
+@media (min-width: 40rem) {
+  .hero__mark {
+    display: block;
+  }
+
+  .hero h1 {
+    font-size: 2.25rem;
+  }
+}
+
+/* ---- forms pages ---- */
+.form-page {
+  max-width: 34rem;
+  margin: 0 auto;
+}
+
+.form-page__links {
+  margin-top: 1.5rem;
+  line-height: 2;
+}
+
+/* ---- footer (the old pale blue band) ---- */
+.site-footer {
+  margin-top: 2rem;
+  background: var(--footer-bg);
+  color: var(--footer-text);
+}
+
+:root[data-contrast='high'] .site-footer {
+  border-top: 2px solid #ffffff;
+}
+
+.site-footer__inner {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  font-size: 0.9375rem;
+}
+
+.site-footer__inner p {
+  margin: 0 0 0.5rem;
+}
+
+.site-footer__inner p:last-child {
+  margin-bottom: 0;
+}

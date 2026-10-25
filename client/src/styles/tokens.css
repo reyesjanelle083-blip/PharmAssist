@@ -1,0 +1,169 @@
+/*
+ * Design tokens. The look follows the old PharmAssist site: the blue-grey brand (#7393A7), the pale blue (#B5CFD8) footer
+ * and bands, the light #f6faff page, rounded cards (14 px) and pill-shaped buttons and fields.
+ *
+ * Contrast changes against the old UI (WCAG AA needs 4.5:1 for text, 3:1 for borders and focus):
+ *   - the old button/title colour #7393A7 is only 3.25:1 with white, so buttons, links and headings use the darker #46606f (6.6:1);
+ *     #7393A7 stays for decoration only (hero band, borders of cards).
+ *   - the old footer text #4e6a7b on #B5CFD8 is only 3.5:1, so the footer text is #2f4350 (7+:1).
+ * The old site had no visible focus style: the new one is a 3 px ring.
+ */
+
+:root {
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-heading: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --line-height: 1.55;
+  --letter-spacing: normal;
+  --word-spacing: normal;
+  --text-scale: 1;
+
+  --bg: #f6faff;
+  --surface: #ffffff;
+  --surface-alt: #e8ecf1;
+  --text: #1f2d3a;
+  --text-muted: #4a5b68;
+  --heading: #2d3f50;
+
+  --brand: #46606f;
+  --brand-hover: #35495a;
+  --brand-decor: #7393a7;
+  --brand-soft: #b5cfd8;
+  --on-brand: #ffffff;
+  --link: #3a5a70;
+
+  --border: #6b8798;
+  --border-soft: #cdd8df;
+  --focus: #1a4fd6;
+  --focus-halo: #ffffff;
+
+  --danger: #a4262c;
+  --danger-bg: #fdecea;
+  --warning: #5c4300;
+  --warning-bg: #fff4d6;
+  --info: #2d3f50;
+  --info-bg: #e8ecf1;
+  --success: #1d5c37;
+  --success-bg: #e3f4ea;
+  --rx: #7a2e0e;
+  --rx-bg: #ffe8dc;
+  --low: #7a4b00;
+  --low-bg: #fff1cc;
+
+  --header-bg: #ffffff;
+  --footer-bg: #b5cfd8;
+  --footer-text: #2f4350;
+  --hero-from: rgba(181, 207, 216, 0.55);
+  --hero-to: rgba(115, 147, 167, 0.9);
+  --hero-text: #14232d;
+
+  --radius-card: 14px;
+  --radius-pill: 25px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.12);
+  --tap: 2.75rem; /* 44 px at the default size, and it grows with the text size */
+}
+
+/* Dark mode follows the system unless high contrast is on. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-contrast='high']) {
+    --bg: #101a22;
+    --surface: #18252f;
+    --surface-alt: #1f303c;
+    --text: #e6eef3;
+    --text-muted: #a9bcc9;
+    --heading: #f1f6f9;
+
+    --brand: #9fc1d3;
+    --brand-hover: #b9d4e2;
+    --on-brand: #101a22;
+    --link: #9fc1d3;
+    --brand-decor: #6f8797;
+
+    --border: #8aa1b0;
+    --border-soft: #2f4351;
+    --focus: #ffd24a;
+    --focus-halo: #101a22;
+
+    --danger: #ff9b9b;
+    --danger-bg: #3a1d20;
+    --warning: #ffe29a;
+    --warning-bg: #3b3012;
+    --info: #e6eef3;
+    --info-bg: #1f303c;
+    --success: #9be3b6;
+    --success-bg: #14301f;
+    --rx: #ffc7a8;
+    --rx-bg: #44221a;
+    --low: #ffd98a;
+    --low-bg: #3b2d0c;
+
+    --header-bg: #18252f;
+    --footer-bg: #1d2e3a;
+    --footer-text: #cfe0ea;
+    --hero-from: rgba(31, 48, 60, 0.9);
+    --hero-to: rgba(70, 96, 111, 0.9);
+    --hero-text: #f1f6f9;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* The high contrast toggle: black and white with yellow, strong borders. */
+:root[data-contrast='high'] {
+  --bg: #000000;
+  --surface: #000000;
+  --surface-alt: #000000;
+  --text: #ffffff;
+  --text-muted: #ffffff;
+  --heading: #ffffff;
+
+  --brand: #ffee00;
+  --brand-hover: #ffffff;
+  --on-brand: #000000;
+  --link: #ffee00;
+  --brand-decor: #ffffff;
+  --brand-soft: #000000;
+
+  --border: #ffffff;
+  --border-soft: #ffffff;
+  --focus: #00ffff;
+  --focus-halo: #000000;
+
+  --danger: #ffb3b3;
+  --danger-bg: #000000;
+  --warning: #ffee00;
+  --warning-bg: #000000;
+  --info: #ffffff;
+  --info-bg: #000000;
+  --success: #8dff9d;
+  --success-bg: #000000;
+  --rx: #ffcf99;
+  --rx-bg: #000000;
+  --low: #ffee00;
+  --low-bg: #000000;
+
+  --header-bg: #000000;
+  --footer-bg: #000000;
+  --footer-text: #ffffff;
+  --hero-from: #000000;
+  --hero-to: #000000;
+  --hero-text: #ffffff;
+  --shadow: none;
+  --shadow-hover: none;
+}
+
+/* Text size: the root font size changes, everything is in rem, so the whole page scales. */
+:root[data-text-size='0'] { --text-scale: 1; }
+:root[data-text-size='1'] { --text-scale: 1.12; }
+:root[data-text-size='2'] { --text-scale: 1.25; }
+:root[data-text-size='3'] { --text-scale: 1.5; }
+:root[data-text-size='4'] { --text-scale: 1.75; }
+
+/* Readable font: a plainer typeface with more space between lines, letters and words. */
+:root[data-font='readable'] {
+  --font-body: Verdana, Tahoma, 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --font-heading: Verdana, Tahoma, 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --line-height: 1.85;
+  --letter-spacing: 0.04em;
+  --word-spacing: 0.14em;
+}

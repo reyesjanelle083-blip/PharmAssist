@@ -1,0 +1,287 @@
+/* ---- buttons (pill shaped, like the old site) ---- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: var(--tap);
+  padding: 0.5rem 1.4rem;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  color: var(--on-brand);
+  background: var(--brand);
+  border: 2px solid var(--brand);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--brand-hover);
+  border-color: var(--brand-hover);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button--outline {
+  color: var(--brand);
+  background: transparent;
+}
+
+.button--outline:hover:not(:disabled) {
+  color: var(--on-brand);
+}
+
+.button--block {
+  width: 100%;
+}
+
+/* ---- forms (pill shaped fields, with a border that is easy to see) ---- */
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field label,
+.search__form > label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.field input,
+.search__form input[type='search'] {
+  display: block;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0.5rem 1rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-pill);
+}
+
+.field input[type='file'] {
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-card);
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--danger);
+  border-width: 3px;
+}
+
+.field__hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+}
+
+.field__error {
+  margin: 0.35rem 0 0;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.field__error::before {
+  content: 'Problem: ';
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: var(--tap);
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 1.5rem;
+  height: 1.5rem;
+  accent-color: var(--brand);
+}
+
+/* ---- notices (never colour alone: each has a heading word via the icon text) ---- */
+.notice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid currentColor;
+  border-left-width: 8px;
+  border-radius: 8px;
+}
+
+.notice p:last-child,
+.notice ol:last-child {
+  margin-bottom: 0;
+}
+
+.notice--error { color: var(--danger); background: var(--danger-bg); }
+.notice--warning { color: var(--warning); background: var(--warning-bg); }
+.notice--info { color: var(--info); background: var(--info-bg); }
+.notice--success { color: var(--success); background: var(--success-bg); }
+
+.notice__text { margin: 0 0 0.5rem; font-weight: 600; }
+.notice__reference { margin: 0.25rem 0 0; font-size: 0.9375rem; font-weight: 400; }
+.notice--error .notice__text::before { content: 'Error: '; }
+.notice--warning::before { content: 'Please note: '; font-weight: 700; }
+.alert-slot:empty { display: none; }
+
+/* ---- search ---- */
+.search {
+  margin-bottom: 2rem;
+}
+
+.search__form {
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+}
+
+:root[data-contrast='high'] .search__form,
+:root[data-contrast='high'] .card {
+  border: 2px solid #ffffff;
+}
+
+.search__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.search__actions .button {
+  flex: 1 1 12rem;
+}
+
+.search__geo {
+  margin: 0;
+  min-height: 1.5rem;
+  font-weight: 600;
+}
+
+.search__results {
+  margin-top: 1.5rem;
+}
+
+.loading {
+  font-weight: 600;
+}
+
+.results__heading {
+  margin-top: 0.5rem;
+}
+
+.results__list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 1.25rem;
+}
+
+/* ---- result cards (the old medicine card: white, 14 px corners, soft shadow) ---- */
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-3px);
+}
+
+.card__body {
+  flex: 1;
+  padding: 1.1rem;
+}
+
+.card__title {
+  margin-bottom: 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.card__meta {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+}
+
+.card__branch {
+  margin: 0.75rem 0;
+}
+
+.card__facts {
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.card__facts div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+}
+
+.card__facts dt {
+  color: var(--text-muted);
+}
+
+.card__facts dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.card__price {
+  font-size: 1.2rem;
+  color: var(--heading);
+}
+
+.card__estimated {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.card__actions {
+  padding: 0 1.1rem 1.1rem;
+}
+
+.card__actions .button {
+  width: 100%;
+}
+
+/* ---- badges: text labels, readable without colour ---- */
+.badge {
+  display: inline-block;
+  margin: 0 0 0.5rem;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  border: 2px solid currentColor;
+  border-radius: var(--radius-pill);
+}
+
+.badge--rx { color: var(--rx); background: var(--rx-bg); }
+.badge--low { margin: 0 0 0 0.35rem; color: var(--low); background: var(--low-bg); }
+
+.form-summary {
+  margin-bottom: 0.5rem;
+}
