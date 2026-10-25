@@ -6,6 +6,8 @@ use App\Exceptions\ApiException;
 use App\Models\IdempotencyKey;
 use App\Models\Reservation;
 use App\Models\ReservationStatusHistory;
+use App\Support\ReservationAccess;
+use App\Support\ReservationPresenter;
 use App\Support\UserContext;
 use Carbon\Carbon;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -87,15 +89,13 @@ class ReservationService
         $reservation = Reservation::with(['items', 'history'])->find($id)
             ?? throw new ApiException('NOT_FOUND', 'The requested resource was not found.', 404);
 
-        $allowed = $reservation->user_id === $user->id
-            || $user->role === 'ceo'
-            || ($user->hasRole(['pharmacy_technician', 'pharmacy_assistant', 'branch_manager']) && $user->branchId === $reservation->branch_id);
+        $allowed = ReservationAccess::canView($user, $reservation);
 
         if (! $allowed) {
             throw new ApiException('FORBIDDEN', 'You are not allowed to perform this action.', 403);
         }
 
-        return $this->present($reservation, true);
+        return ReservationPresenter::detail($reservation, true);
     }
 
     // ------------------------------------------------------------------ the create flow
@@ -191,7 +191,7 @@ class ReservationService
             throw new ApiException('INTERNAL_ERROR', 'An unexpected error occurred.', 500);
         }
 
-        return [201, $this->present($reservation->load(['items']), false)];
+        return [201, ReservationPresenter::detail($reservation->load(['items']), false)];
     }
 
     /**
@@ -335,46 +335,5 @@ class ReservationService
         } catch (Throwable) {
             Log::error('Stock hold could not be released', ['request_id' => $requestId, 'reservation_ref' => $holdRef, 'attempts' => 1]);
         }
-    }
-
-    // ------------------------------------------------------------------ presentation
-
-    /**
-     * Never includes prescription_path.
-     *
-     * @return array<string, mixed>
-     */
-    private function present(Reservation $reservation, bool $withHistory): array
-    {
-        $data = [
-            'id' => $reservation->id,
-            'claim_code' => $reservation->claim_code,
-            'user_id' => $reservation->user_id,
-            'branch_id' => $reservation->branch_id,
-            'status' => $reservation->status,
-            'prescription_uploaded' => $reservation->prescription_path !== null,
-            'ocr_text' => $reservation->ocr_text,
-            'ocr_status' => $reservation->ocr_status,
-            'items' => $reservation->items->map(fn ($i) => [
-                'medicine_id' => $i->medicine_id,
-                'medicine_name' => $i->medicine_name,
-                'unit_price' => (string) $i->unit_price,
-                'quantity' => $i->quantity,
-            ])->all(),
-            'notes' => $reservation->notes,
-            'expires_at' => $reservation->expires_at->toIso8601String(),
-            'created_at' => $reservation->created_at->toIso8601String(),
-        ];
-
-        if ($withHistory) {
-            $data['history'] = $reservation->history->map(fn ($h) => [
-                'from_status' => $h->from_status,
-                'to_status' => $h->to_status,
-                'reason' => $h->reason,
-                'created_at' => $h->created_at->toIso8601String(),
-            ])->all();
-        }
-
-        return $data;
     }
 }

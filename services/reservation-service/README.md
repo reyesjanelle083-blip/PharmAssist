@@ -4,8 +4,8 @@ Owns `reservation_db`. A customer reserves medicines at one branch; this service
 inventory-service and stores the reservation. Laravel 12, port **8003**. Every route is internal
 (`X-Internal-Key` required); the public routes will be added to the gateway in a later step.
 
-Step 6A covers creating and reading a reservation. Not built yet: approve, reject, cancel, complete, expiry,
-notifications, the gateway routes, and prescription OCR.
+Built so far: creating a reservation (6A), status changes, auto-expiry, the list and the prescription image (6B).
+Not built yet: notifications, the gateway routes, and prescription OCR.
 
 ## Tables (`reservation_db`)
 
@@ -34,7 +34,10 @@ The service checks them itself again. Missing or malformed identity headers are 
 | Method | Path | Who | Answer |
 |--------|------|-----|--------|
 | POST | `/internal/v1/reservations` | `customer` only (else 403) | 201 the reservation |
+| GET | `/internal/v1/reservations` | every role, scoped (see below) | 200 `{items, meta}` |
 | GET | `/internal/v1/reservations/{id}` | the owner, staff (`pharmacy_technician`, `pharmacy_assistant`, `branch_manager`) of the same branch, `ceo` | 200 the reservation with `history`; any other caller 403; unknown id 404 |
+| PATCH | `/internal/v1/reservations/{id}/status` | see the table below | 200 the updated reservation |
+| GET | `/internal/v1/reservations/{id}/prescription` | owner, same-branch staff, `ceo` | 200 the image; others 403; no file 404 |
 
 ### POST /reservations
 
@@ -95,6 +98,81 @@ inventory-service's own expiry job (`inventory:expire-holds`) when it passes its
 - The same key with a different request is `409 DUPLICATE_REQUEST`.
 - The same key while the first request is still running is `409 DUPLICATE_REQUEST` with `details.reason = in_progress`.
 - A request that **fails** (stock shortage, unknown medicine, missing prescription, timeout, ...) removes its key row, so the client can retry with the same key. Requests refused before the row is written (401, 403, 400, 422 form validation) never use up a key.
+
+## Status changes (step 6B)
+
+```
+                  approve                  complete (claim code)
+   pending ------------------> approved ------------------------> completed
+      |  \                        |
+      |   \ reject (reason)       | cancel (owner)
+      |    `---------> rejected   |
+      | cancel (owner)            |
+      `---------> cancelled <-----'
+   pending or approved --(expires_at passed, automatic)--> expired
+```
+
+`completed`, `rejected`, `cancelled` and `expired` are final.
+
+| Action | From | To | Who | Stock in inventory-service |
+|--------|------|----|-----|----------------------------|
+| `approve` | pending | approved | `pharmacy_technician` or `branch_manager` of the reservation's branch | nothing |
+| `reject` (`reason` required) | pending | rejected | `pharmacy_technician` or `branch_manager` of the branch | hold released |
+| `cancel` | pending, approved | cancelled | the owning `customer` only | hold released |
+| `complete` (`claim_code` required) | approved | completed | `pharmacy_technician`, `pharmacy_assistant` or `branch_manager` of the branch | hold committed (stock leaves the shelf) |
+| expiry | pending, approved | expired | the system (`reservations:expire`) | hold released |
+
+The CEO cannot change a status. Wrong role, wrong branch, or not the owner is `403`. A move that is not in the table
+(including repeating an action that already succeeded) is `409 INVALID_TRANSITION` with `error.details.current_status`.
+Body: `{action, reason?, claim_code?}`; `reason` is at most 255 characters (the history column).
+
+Other answers:
+
+| Answer | When |
+|--------|------|
+| `422 INVALID_CLAIM_CODE` | the code does not match (compared with `hash_equals` after trimming and upper-casing); the right code is never revealed |
+| `409 RESERVATION_EXPIRED` | `complete` after `expires_at` |
+| `409 HOLD_NOT_AVAILABLE` | inventory-service says the hold cannot take this action (for example commit on a released or expired hold, release on a committed one); logged |
+| `503`, `504`, `502` | inventory-service unreachable, too slow, or not answering with an envelope (as in 6A). **Nothing is changed**, so the same request can be repeated |
+| `500 INTERNAL_ERROR` | the status could not be saved after inventory-service had already acted; a `critical` log entry holds the `request_id` and the reservation id. **Repeat the same request**: it repairs itself |
+
+How an action runs: (1) read the reservation under `lockForUpdate` and validate the move; (2) call inventory-service,
+outside any DB transaction; (3) in one transaction update the status with the guard `WHERE status = <expected>` and write
+the `reservation_status_history` row (from, to, `actor_id`, reason, `request_id`). If another request changed the status in
+between, the guard fails and the answer is `409 INVALID_TRANSITION`. Repeating after a crash works because release is
+idempotent in inventory-service and a commit that finds the holds already `committed` (`INVALID_HOLD_STATE`) counts as done.
+
+## Auto-expiry
+
+```
+php artisan reservations:expire
+```
+
+Finds `pending` and `approved` reservations whose `expires_at` is in the past (50 at a time), releases each hold
+(inventory-service answers 200 when it is already released or expired), and sets `expired` with a history row
+(`actor_id` null, reason `auto-expiry`). It is safe to run any number of times; one failing reservation is logged and
+does not stop the others (the command then exits with code 1 and the failed ones are retried on the next run).
+
+It is scheduled **every minute** in `routes/console.php`. **The scheduler must be running** or nothing expires:
+
+```
+php artisan schedule:work
+```
+
+(In production use one cron entry: `* * * * * php artisan schedule:run`.) inventory-service has its own
+`inventory:expire-holds` job as a second line of defence for holds nobody released.
+
+## List and prescription image
+
+`GET /reservations?status=&page=&per_page=&branch_id=`: newest first, `per_page` 1 to 50 (default 20), `meta` as in the
+other services (`page`, `per_page`, `total`, `last_page`). A customer sees only their own reservations, staff only their branch
+(`X-User-Branch`; a `branch_id` in the query is ignored), the CEO everything (optionally one `branch_id`). Each entry has `id`,
+`claim_code`, `status`, `branch_id`, `expires_at`, `created_at`, `item_count` (number of lines) and `total_price`. It never contains the
+prescription path or OCR text.
+
+`GET /reservations/{id}/prescription` streams the private file. The content type is detected from the file itself (png or jpeg;
+anything else is 404), with `Content-Disposition: inline; filename=prescription.<ext>`, `X-Content-Type-Options: nosniff` and
+`Cache-Control: private, no-store`. The stored path and file name are never exposed.
 
 ## Environment variables
 

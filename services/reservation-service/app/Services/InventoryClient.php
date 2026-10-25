@@ -58,6 +58,17 @@ class InventoryClient
         }
     }
 
+    /**
+     * Reservation completed: stock leaves the shelf. Not idempotent on the inventory side: committing holds that are
+     * already committed answers 409 INVALID_HOLD_STATE (details.statuses), which the caller interprets.
+     *
+     * @throws ApiException
+     */
+    public function commit(string $reservationRef): void
+    {
+        $this->data($this->send('post', '/internal/v1/stock/holds/'.rawurlencode($reservationRef).'/commit'));
+    }
+
     // ------------------------------------------------------------------ internals
 
     /** @param array<string, mixed> $json */

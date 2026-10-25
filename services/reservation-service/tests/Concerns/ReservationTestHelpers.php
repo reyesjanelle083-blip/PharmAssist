@@ -36,6 +36,18 @@ trait ReservationTestHelpers
     /** How many release calls fail (connection error) before one succeeds. PHP_INT_MAX = always fail. */
     protected int $releaseFailures = 0;
 
+    /** What release answers: ok | committed (409 INVALID_HOLD_STATE) | not_found | timeout | down | garbage */
+    protected string $releaseMode = 'ok';
+
+    /** What commit answers: ok | already_committed | released (409, other state) | not_found | timeout | down | garbage */
+    protected string $commitMode = 'ok';
+
+    /** Hold references whose release always fails with a connection error (to test that one failure does not stop the rest). @var list<string> */
+    protected array $failReleaseFor = [];
+
+    /** Runs when a commit or release arrives, before it is answered (simulates something else happening meanwhile). */
+    protected ?\Closure $onInventoryCall = null;
+
     protected function setUpReservation(): void
     {
         config([
@@ -128,7 +140,35 @@ trait ReservationTestHelpers
                 return Http::response($this->envelope(['id' => $id, 'generic_name' => "Med {$id}", 'prescription_required' => $this->medicines[$id]['rx']]));
             }
 
+            if (str_ends_with($url, '/commit')) {
+                ($this->onInventoryCall)?->__invoke('commit', $url);
+
+                return match ($this->commitMode) {
+                    'down' => throw new ConnectionException('cURL error 7: Failed to connect to inventory.test'),
+                    'timeout' => throw new ConnectionException('cURL error 28: Operation timed out after 3001 milliseconds'),
+                    'garbage' => Http::response('<html>boom</html>', 200),
+                    'not_found' => Http::response($this->envelope(null, 404, ['code' => 'NOT_FOUND', 'message' => 'The requested resource was not found.', 'details' => null]), 404),
+                    'already_committed' => Http::response($this->envelope(null, 409, ['code' => 'INVALID_HOLD_STATE', 'message' => 'x', 'details' => ['statuses' => [11 => 'committed', 12 => 'committed']]]), 409),
+                    'released' => Http::response($this->envelope(null, 409, ['code' => 'INVALID_HOLD_STATE', 'message' => 'x', 'details' => ['statuses' => [11 => 'released', 12 => 'expired']]]), 409),
+                    default => Http::response($this->envelope(['status' => 'committed'])),
+                };
+            }
+
             if (str_ends_with($url, '/release')) {
+                ($this->onInventoryCall)?->__invoke('release', $url);
+
+                foreach ($this->failReleaseFor as $ref) {
+                    if (str_contains($url, $ref)) {
+                        throw new ConnectionException('cURL error 7: Failed to connect to inventory.test');
+                    }
+                }
+                switch ($this->releaseMode) {
+                    case 'down': throw new ConnectionException('cURL error 7: Failed to connect to inventory.test');
+                    case 'timeout': throw new ConnectionException('cURL error 28: Operation timed out after 3001 milliseconds');
+                    case 'garbage': return Http::response('<html>boom</html>', 200);
+                    case 'not_found': return Http::response($this->envelope(null, 404, ['code' => 'NOT_FOUND', 'message' => 'The requested resource was not found.', 'details' => null]), 404);
+                    case 'committed': return Http::response($this->envelope(null, 409, ['code' => 'INVALID_HOLD_STATE', 'message' => 'x', 'details' => ['statuses' => [11 => 'committed']]]), 409);
+                }
                 if ($failedReleases < $this->releaseFailures) {
                     $failedReleases++;
                     throw new ConnectionException('cURL error 7: Failed to connect to inventory.test');
@@ -171,16 +211,16 @@ trait ReservationTestHelpers
         });
     }
 
-    protected function makeReservation(int $userId = 7, int $branchId = 1, string $code = 'PA-AAAAAAAA'): Reservation
+    protected function makeReservation(int $userId = 7, int $branchId = 1, string $code = 'PA-AAAAAAAA', string $status = 'pending', ?\Illuminate\Support\Carbon $expiresAt = null): Reservation
     {
         $reservation = Reservation::create([
             'claim_code' => $code,
             'user_id' => $userId,
             'branch_id' => $branchId,
-            'status' => 'pending',
+            'status' => $status,
             'ocr_status' => 'not_required',
             'hold_ref' => (string) \Illuminate\Support\Str::uuid(),
-            'expires_at' => now()->addHours(48),
+            'expires_at' => $expiresAt ?? now()->addHours(48),
         ]);
         $reservation->items()->create(['medicine_id' => 1, 'medicine_name' => 'Med 1', 'unit_price' => '12.50', 'quantity' => 2]);
         $reservation->history()->create(['from_status' => null, 'to_status' => 'pending', 'actor_id' => $userId, 'request_id' => 'r-1', 'created_at' => now()]);

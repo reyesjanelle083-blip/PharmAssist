@@ -522,9 +522,11 @@ paths:
         and queues notifications. A prescription image is required when any item needs a prescription and
         optional otherwise; if sent, OCR runs and the response carries `ocr_text` and `ocr_status`.
         If OCR is unavailable the reservation still succeeds with `ocr_status: unavailable` and a warning.
-        Replaying the same `Idempotency-Key` and body returns the original reservation (200);
-        the same key with a different body is 409 `DUPLICATE_REQUEST`.
-        Other 409: `STOCK_INSUFFICIENT` (details.available).
+        Replaying the same `Idempotency-Key` and body returns the stored answer with the ORIGINAL status code (201)
+        and creates nothing new; the same key with a different body is 409 `DUPLICATE_REQUEST`. A request that failed
+        does not use up its key. Other 409: `STOCK_INSUFFICIENT` (`details.items[]`). A missing `Idempotency-Key` is
+        400 `IDEMPOTENCY_KEY_REQUIRED`. 422 `PRESCRIPTION_REQUIRED` when an item needs a prescription and no image was sent.
+        An unknown medicine or one not stocked at the branch is 404; inventory-service unreachable is 503, too slow is 504.
       parameters:
         - { $ref: '#/components/parameters/IdempotencyKey' }
       requestBody:
@@ -558,27 +560,37 @@ paths:
                   items: { $ref: '#/components/schemas/ReservationItemInput' }
                 notes: { type: string, maxLength: 500 }
       responses:
-        '201': { description: Created. Contains the claim code and expiry., content: { application/json: { schema: { $ref: '#/components/schemas/ReservationEnvelope' } } } }
-        '200': { description: Idempotent replay of an earlier request., content: { application/json: { schema: { $ref: '#/components/schemas/ReservationEnvelope' } } } }
+        '201': { description: 'Created, or the stored answer of an earlier identical request (same Idempotency-Key and body). Contains the claim code and expiry.', content: { application/json: { schema: { $ref: '#/components/schemas/ReservationEnvelope' } } } }
+        '400':
+          description: The `Idempotency-Key` header is missing (`IDEMPOTENCY_KEY_REQUIRED`) or the body is malformed (`MALFORMED_REQUEST`).
+          content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
         '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '504': { $ref: '#/components/responses/GatewayTimeout' }
     get:
       operationId: listReservations
       tags: [reservations]
       x-tier: 0
       x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager, ceo]
       summary: List reservations (customer - own, staff - own branch, CEO - all)
+      description: |
+        Newest first. A customer sees only their own reservations, staff only those of the branch in their token, the CEO
+        all (and may narrow with `branch_id`; for everyone else `branch_id` is ignored). Entries are summaries: no prescription
+        path, no OCR text. `item_count` is the number of lines and `total_price` is the sum of `unit_price` x `quantity`.
       parameters:
         - { name: status, in: query, schema: { $ref: '#/components/schemas/ReservationStatus' } }
         - { $ref: '#/components/parameters/Page' }
-        - { $ref: '#/components/parameters/PerPage' }
+        - { name: per_page, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: branch_id, in: query, description: CEO only., schema: { type: integer, minimum: 1 } }
       responses:
         '200': { description: Reservations., content: { application/json: { schema: { $ref: '#/components/schemas/ReservationListEnvelope' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
 
   /reservations/{id}:
     get:
@@ -603,9 +615,22 @@ paths:
       x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager]
       summary: Change reservation status
       description: |
-        `cancel` - owning customer; `approve` and `reject` - technician or manager of the branch (staff review the
-        prescription image and `ocr_text` first); `complete` (needs the correct `claim_code`) - technician, assistant or manager.
-        Invalid moves return 409 `INVALID_TRANSITION`. Reject, cancel and expiry release the held stock; complete commits it.
+        | action | from | to | who | stock |
+        |--------|------|----|-----|-------|
+        | `approve` | pending | approved | technician or manager of the branch | none |
+        | `reject` (reason required) | pending | rejected | technician or manager of the branch | released |
+        | `cancel` | pending, approved | cancelled | the owning customer only | released |
+        | `complete` (`claim_code` required) | approved | completed | technician, assistant or manager of the branch | committed |
+
+        The CEO cannot change a status. Wrong role, wrong branch or not the owner is 403. Any move not in the table is
+        409 `INVALID_TRANSITION` with `error.details.current_status`; repeating an action that already succeeded is such a 409.
+        A wrong claim code (compared after trimming, ignoring case) is 422 `INVALID_CLAIM_CODE` and never reveals the right
+        one. Completing after `expires_at` is 409 `RESERVATION_EXPIRED`. If the stock hold cannot take the action (for example
+        it was already released) the answer is 409 `HOLD_NOT_AVAILABLE`. If inventory-service is unreachable the answer is
+        503, 504 or 502 and nothing is changed, so the same request can simply be repeated.
+
+        `pending` and `approved` reservations whose `expires_at` has passed are expired automatically every minute
+        (stock released, history reason `auto-expiry`).
       parameters:
         - { $ref: '#/components/parameters/IdPath' }
       requestBody:
@@ -617,15 +642,19 @@ paths:
               required: [action]
               properties:
                 action: { type: string, enum: [approve, reject, cancel, complete] }
-                reason: { type: string, maxLength: 500, description: Required for reject. }
-                claim_code: { type: string, description: Required for complete. }
+                reason: { type: string, maxLength: 255, description: Required for reject. Stored in the status history. }
+                claim_code: { type: string, maxLength: 32, description: Required for complete. }
       responses:
-        '200': { description: Updated reservation., content: { application/json: { schema: { $ref: '#/components/schemas/ReservationEnvelope' } } } }
+        '200': { description: 'Updated reservation, with `history`.', content: { application/json: { schema: { $ref: '#/components/schemas/ReservationEnvelope' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+        '500': { $ref: '#/components/responses/InternalError' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
+        '504': { $ref: '#/components/responses/GatewayTimeout' }
 
   /reservations/{id}/prescription:
     get:
@@ -634,11 +663,19 @@ paths:
       x-tier: 0
       x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager]
       summary: Stream the stored prescription image (private, never a public URL)
+      description: |
+        Allowed for the owner, staff of the same branch and the CEO; anyone else is 403. A reservation without an image is 404.
+        The content type comes from the detected file type (png or jpeg), the file name is always `prescription.<ext>`,
+        and the response carries `X-Content-Type-Options: nosniff` and `Cache-Control: private, no-store`.
       parameters:
         - { $ref: '#/components/parameters/IdPath' }
       responses:
         '200':
           description: The image file (the only non-envelope success response).
+          headers:
+            Content-Disposition: { schema: { type: string, example: 'inline; filename=prescription.png' } }
+            X-Content-Type-Options: { schema: { type: string, example: nosniff } }
+            Cache-Control: { schema: { type: string, example: 'private, no-store' } }
           content:
             image/jpeg: { schema: { type: string, format: binary } }
             image/png: { schema: { type: string, format: binary } }
@@ -892,7 +929,7 @@ components:
       description: Record does not exist (`NOT_FOUND`).
       content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
     Conflict:
-      description: 'State or uniqueness conflict (`CONFLICT`, `STOCK_INSUFFICIENT`, `DUPLICATE_REQUEST`, `INVALID_TRANSITION`, `STALE_VERSION`).'
+      description: 'State or uniqueness conflict (`CONFLICT`, `STOCK_INSUFFICIENT`, `DUPLICATE_REQUEST`, `INVALID_TRANSITION`, `RESERVATION_EXPIRED`, `HOLD_NOT_AVAILABLE`, `STALE_VERSION`). `INVALID_TRANSITION` carries `details.current_status`.'
       content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
     Gone:
       description: Code or token expired or already used (`CODE_EXPIRED`, `TOKEN_EXPIRED`).
@@ -904,7 +941,16 @@ components:
       description: Unsupported content or file type (`UNSUPPORTED_MEDIA_TYPE`).
       content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
     ValidationFailed:
-      description: Invalid input (`VALIDATION_FAILED`); `error.details` maps field names to messages.
+      description: Invalid input (`VALIDATION_FAILED`, `PRESCRIPTION_REQUIRED`, `INVALID_CLAIM_CODE`); for `VALIDATION_FAILED` `error.details` maps field names to messages.
+      content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
+    InternalError:
+      description: Unexpected failure (`INTERNAL_ERROR`). After a reservation status change that failed to save, repeating the same request repairs it.
+      content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
+    BadGateway:
+      description: A service returned something unexpected (`BAD_UPSTREAM_RESPONSE`).
+      content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
+    GatewayTimeout:
+      description: A service took too long (`UPSTREAM_TIMEOUT`); critical steps fail closed.
       content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
     TooManyRequests:
       description: Rate limit hit (`TOO_MANY_REQUESTS`).
@@ -1088,6 +1134,21 @@ components:
     OcrStatus:
       type: string
       enum: [success, low_confidence, unavailable]
+    ReservationOcrStatus:
+      type: string
+      enum: [not_required, not_processed, success, low_confidence, unavailable]
+      description: '`not_required` when no item needs a prescription, `not_processed` when one does and OCR has not run yet.'
+    ReservationSummary:
+      type: object
+      properties:
+        id: { type: integer }
+        claim_code: { type: string, example: PA-7K3Q9X2M }
+        status: { $ref: '#/components/schemas/ReservationStatus' }
+        branch_id: { type: integer }
+        expires_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        item_count: { type: integer, description: Number of lines. }
+        total_price: { type: string, example: '49.00' }
     Reservation:
       type: object
       properties:
@@ -1098,7 +1159,7 @@ components:
         status: { $ref: '#/components/schemas/ReservationStatus' }
         prescription_uploaded: { type: boolean }
         ocr_text: { type: string, nullable: true, description: 'Text read from the prescription image; a reading aid, not verification.' }
-        ocr_status: { type: string, nullable: true, enum: [success, low_confidence, unavailable, null], description: Null when no image was sent. }
+        ocr_status: { $ref: '#/components/schemas/ReservationOcrStatus' }
         items: { type: array, items: { $ref: '#/components/schemas/ReservationItem' } }
         notes: { type: string, nullable: true }
         expires_at: { type: string, format: date-time }
@@ -1340,7 +1401,7 @@ components:
             data:
               type: object
               properties:
-                items: { type: array, items: { $ref: '#/components/schemas/Reservation' } }
+                items: { type: array, items: { $ref: '#/components/schemas/ReservationSummary' } }
                 meta: { $ref: '#/components/schemas/PageMeta' }
     NotificationEnvelope:
       allOf:
