@@ -1,0 +1,1832 @@
+/* =========================================================
+   PHARMASSIST FINAL HOME
+========================================================= */
+
+.final-home {
+  --home-max: 1450px;
+}
+
+
+/* =========================================================
+   SHARED HOME SECTION
+========================================================= */
+
+.home-section-block {
+  width: min(
+    var(--home-max),
+    calc(100% - 56px)
+  );
+
+  margin:
+    0 auto 68px;
+
+  scroll-margin-top: 90px;
+}
+
+.home-section-heading {
+  margin-bottom: 24px;
+
+  text-align: center;
+}
+
+.home-section-heading > span {
+  display: inline-block;
+
+  margin-bottom: 7px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.76rem;
+  font-weight: 800;
+
+  letter-spacing: 0.13em;
+
+  text-transform: uppercase;
+}
+
+.home-section-heading h2 {
+  margin: 0;
+
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size:
+    clamp(
+      1.8rem,
+      3vw,
+      2.5rem
+    );
+
+  font-weight: 800;
+
+  line-height: 1.15;
+}
+
+.home-section-heading p {
+  max-width: 720px;
+
+  margin:
+    10px auto 0;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 1rem;
+
+  line-height: 1.55;
+}
+
+.home-section-heading--split {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 30px;
+
+  text-align: left;
+}
+
+.home-section-heading--split p {
+  margin-left: 0;
+}
+
+.home-section-view-all {
+  flex: 0 0 auto;
+
+  gap: 8px;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.home-hero {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.08fr)
+    minmax(380px, 0.92fr);
+
+  align-items: center;
+
+  gap: clamp(
+    30px,
+    5vw,
+    75px
+  );
+
+  width: min(
+    var(--home-max),
+    calc(100% - 56px)
+  );
+
+  min-height: 590px;
+
+  margin:
+    22px auto 64px;
+
+  padding:
+    clamp(
+      38px,
+      5vw,
+      72px
+    );
+
+  overflow: hidden;
+
+  position: relative;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff 0%,
+      #f8fbfd 58%,
+      #e3eef4 100%
+    );
+
+  border:
+    1px solid
+    var(--pa-final-border);
+
+  border-radius: 28px;
+
+  box-shadow:
+    0 18px 50px
+    rgba(
+      49,
+      70,
+      90,
+      0.11
+    );
+}
+
+.home-hero::before {
+  content: '';
+
+  position: absolute;
+
+  width: 460px;
+  height: 460px;
+
+  right: -190px;
+  top: -230px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      90,
+      123,
+      144,
+      0.08
+    );
+}
+
+.home-hero::after {
+  content: '';
+
+  position: absolute;
+
+  width: 230px;
+  height: 230px;
+
+  left: -120px;
+  bottom: -120px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      181,
+      207,
+      216,
+      0.22
+    );
+}
+
+.home-hero__content,
+.home-hero__visual {
+  position: relative;
+
+  z-index: 1;
+}
+
+.home-hero__eyebrow {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 16px;
+
+  padding:
+    8px 12px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  background:
+    var(--pa-final-pale);
+
+  border:
+    1px solid #d9e5ec;
+
+  border-radius: 999px;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.home-hero h1 {
+  max-width: 760px;
+
+  margin: 0;
+
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size:
+    clamp(
+      2.6rem,
+      5vw,
+      5.1rem
+    );
+
+  font-weight: 800;
+
+  letter-spacing:
+    -0.045em;
+
+  line-height: 0.98;
+}
+
+.home-hero h1 span {
+  color:
+    var(--pa-final-brand);
+}
+
+.home-hero__lead {
+  max-width: 680px;
+
+  margin:
+    24px 0 0;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size:
+    clamp(
+      1rem,
+      1.4vw,
+      1.15rem
+    );
+
+  line-height: 1.7;
+}
+
+.home-hero__actions {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 12px;
+
+  margin-top: 28px;
+}
+
+.home-hero__primary,
+.home-hero__secondary {
+  min-width: 180px;
+
+  gap: 9px;
+
+  border-radius:
+    13px !important;
+}
+
+.home-hero__small-actions {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 20px;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 0.88rem;
+}
+
+.home-hero__small-actions button {
+  padding: 0;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  background: transparent;
+
+  border: 0;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.home-hero__small-actions button:hover {
+  text-decoration: underline;
+}
+
+
+/* hero visual */
+
+.home-hero__visual {
+  min-height: 420px;
+
+  display: grid;
+
+  place-items: center;
+}
+
+.home-hero__visual-card {
+  width:
+    min(
+      100%,
+      410px
+    );
+
+  padding: 28px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    );
+
+  border:
+    1px solid
+    #d3e0e8;
+
+  border-radius: 24px;
+
+  box-shadow:
+    0 20px 45px
+    rgba(
+      49,
+      70,
+      90,
+      0.14
+    );
+
+  backdrop-filter:
+    blur(8px);
+}
+
+.home-flow-step {
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+}
+
+.home-flow-step__icon {
+  display: grid;
+
+  flex: 0 0 auto;
+
+  width: 52px;
+  height: 52px;
+
+  place-items: center;
+
+  color: #ffffff;
+
+  background:
+    var(--pa-final-brand);
+
+  border-radius: 15px;
+
+  font-size: 1.2rem;
+}
+
+.home-flow-step div {
+  min-width: 0;
+}
+
+.home-flow-step strong {
+  display: block;
+
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 1rem;
+}
+
+.home-flow-step span:not(
+  .home-flow-step__icon
+) {
+  display: block;
+
+  margin-top: 2px;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 0.85rem;
+}
+
+.home-flow-line {
+  width: 2px;
+  height: 24px;
+
+  margin:
+    5px 0
+    5px 25px;
+
+  background:
+    #d8e4eb;
+}
+
+.home-hero__floating {
+  position: absolute;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  padding:
+    11px 14px;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    #d6e2e9;
+
+  border-radius: 14px;
+
+  box-shadow:
+    var(--pa-final-shadow);
+}
+
+.home-hero__floating > i {
+  color:
+    var(--pa-final-brand);
+
+  font-size: 1.15rem;
+}
+
+.home-hero__floating strong {
+  display: block;
+
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.82rem;
+}
+
+.home-hero__floating span {
+  display: block;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 0.72rem;
+}
+
+.home-hero__floating--stock {
+  left: 0;
+  top: 18%;
+}
+
+.home-hero__floating--rx {
+  right: -5px;
+  bottom: 16%;
+}
+
+
+/* =========================================================
+   MEDICINE OVERVIEW
+========================================================= */
+
+.home-medicine-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 18px;
+}
+
+.home-medicine-card {
+  display: grid;
+
+  grid-template-columns:
+    118px
+    minmax(
+      0,
+      1fr
+    );
+
+  min-height: 220px;
+
+  overflow: hidden;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    var(--pa-final-border);
+
+  border-radius: 18px;
+
+  box-shadow:
+    var(--pa-final-shadow);
+
+  transition:
+    transform
+      0.18s ease,
+    box-shadow
+      0.18s ease;
+}
+
+.home-medicine-card:hover {
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    var(
+      --pa-final-shadow-hover
+    );
+}
+
+.home-medicine-card__visual {
+  display: grid;
+
+  place-items: center;
+
+  background:
+    linear-gradient(
+      145deg,
+      var(--pa-final-pale),
+      #dceaf1
+    );
+}
+
+.home-medicine-card__visual > i {
+  color:
+    var(--pa-final-brand);
+
+  font-size: 2.8rem;
+}
+
+.home-medicine-card__visual img {
+  width: 100%;
+  height: 100%;
+
+  max-height: 220px;
+
+  padding: 12px;
+
+  object-fit: contain;
+}
+
+.home-medicine-card__body {
+  display: flex;
+
+  flex-direction: column;
+
+  min-width: 0;
+
+  padding: 17px;
+}
+
+.home-medicine-card__badges {
+  margin-bottom: 8px;
+}
+
+.home-rx-pill {
+  display: inline-flex;
+
+  padding:
+    5px 8px;
+
+  border-radius: 999px;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.home-rx-pill--required {
+  color: #843b35;
+
+  background: #fff0ee;
+
+  border:
+    1px solid #edcac6;
+}
+
+.home-rx-pill--otc {
+  color: #2d674a;
+
+  background: #eef8f2;
+
+  border:
+    1px solid #cfe6d7;
+}
+
+.home-medicine-card h3 {
+  margin:
+    0 0 5px;
+
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 1rem;
+  font-weight: 700;
+
+  line-height: 1.3;
+}
+
+.home-medicine-card__meta,
+.home-medicine-card__category {
+  margin: 0;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 0.78rem;
+
+  line-height: 1.4;
+}
+
+.home-medicine-card__category {
+  margin-top: 3px;
+}
+
+.home-medicine-card__stock {
+  display: flex;
+
+  align-items:
+    flex-start;
+
+  gap: 7px;
+
+  margin-top: 10px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  font-size: 0.78rem;
+}
+
+.home-medicine-card__stock i {
+  margin-top: 1px;
+}
+
+.home-medicine-card__actions {
+  display: flex;
+
+  align-items: stretch;
+
+  gap: 7px;
+
+  margin-top: auto;
+  padding-top: 13px;
+}
+
+.home-medicine-card__actions > button,
+.home-medicine-card__actions > a {
+  min-height: 40px;
+
+  border-radius: 10px !important;
+}
+
+.home-medicine-card__actions > button {
+  flex: 1;
+
+  padding:
+    8px 10px;
+
+  color: #ffffff;
+
+  background:
+    var(--pa-final-brand-dark);
+
+  border: 1px solid
+    var(--pa-final-brand-dark);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.home-medicine-card__actions > button:hover {
+  background:
+    var(--pa-final-brand-deep);
+}
+
+
+/* =========================================================
+   HOME SEARCH SECTION
+========================================================= */
+
+.final-home #search {
+  width: min(
+    var(--home-max),
+    calc(100% - 56px)
+  );
+
+  margin:
+    0 auto 68px;
+}
+
+.final-home #search .branch-header {
+  margin-bottom: 18px;
+}
+
+.final-home #search .branch-title {
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size:
+    clamp(
+      1.8rem,
+      3vw,
+      2.4rem
+    );
+
+  font-weight: 800;
+}
+
+.final-home #search .global-filter {
+  padding: 22px;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    var(--pa-final-border);
+
+  border-radius: 18px;
+
+  box-shadow:
+    var(--pa-final-shadow);
+}
+
+.final-home #search .global-filter-title {
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.98rem;
+}
+
+.final-home #search .search-filters {
+  gap: 14px;
+}
+
+.final-home #search .filter-status {
+  display: inline-flex;
+
+  align-items: center;
+
+  min-height: 35px;
+
+  padding:
+    7px 11px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  background:
+    var(--pa-final-pale);
+
+  border-radius: 9px;
+}
+
+
+/* =========================================================
+   BRANCHES
+========================================================= */
+
+.home-branch-map-wrap {
+  margin-bottom: 28px;
+
+  overflow: hidden;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    var(--pa-final-border);
+
+  border-radius: 20px;
+
+  box-shadow:
+    var(--pa-final-shadow);
+}
+
+.home-branch-map-head {
+  display: flex;
+
+  align-items: center;
+  justify-content:
+    space-between;
+
+  gap: 20px;
+
+  padding:
+    16px 18px;
+
+  border-bottom:
+    1px solid
+    #e0e8ed;
+}
+
+.home-branch-map-head span {
+  display: block;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 0.76rem;
+
+  text-transform:
+    uppercase;
+
+  letter-spacing:
+    0.08em;
+}
+
+.home-branch-map-head strong {
+  display: block;
+
+  margin-top: 2px;
+
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+}
+
+.home-map-hint {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  padding:
+    7px 10px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  background:
+    var(--pa-final-pale);
+
+  border-radius: 9px;
+
+  font-size: 0.8rem;
+}
+
+.home-branch-map {
+  height: 380px;
+}
+
+.home-map-note {
+  margin: 0;
+
+  padding:
+    10px 16px;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 0.76rem;
+}
+
+.home-branch-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 18px;
+}
+
+.home-branch-card {
+  display: flex;
+
+  flex-direction: column;
+
+  min-height: 290px;
+
+  padding: 20px;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    var(--pa-final-border);
+
+  border-radius: 18px;
+
+  box-shadow:
+    var(--pa-final-shadow);
+
+  transition:
+    border-color
+      0.18s ease,
+    transform
+      0.18s ease,
+    box-shadow
+      0.18s ease;
+}
+
+.home-branch-card:hover {
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    var(
+      --pa-final-shadow-hover
+    );
+}
+
+.home-branch-card--selected {
+  border-color:
+    var(--pa-final-brand);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      90,
+      123,
+      144,
+      0.12
+    );
+}
+
+.home-branch-card__top {
+  display: flex;
+
+  align-items: center;
+  justify-content:
+    space-between;
+
+  gap: 10px;
+}
+
+.home-branch-pill {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding:
+    6px 9px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  background:
+    var(--pa-final-pale);
+
+  border-radius: 999px;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.home-branch-selected {
+  color:
+    var(--pa-final-success);
+
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.home-branch-card h3 {
+  margin:
+    15px 0 14px;
+
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.home-branch-details {
+  display: grid;
+
+  gap: 10px;
+
+  margin-bottom: 18px;
+}
+
+.home-branch-details > div {
+  display: flex;
+
+  align-items:
+    flex-start;
+
+  gap: 10px;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 0.86rem;
+
+  line-height: 1.45;
+}
+
+.home-branch-details i {
+  flex: 0 0 auto;
+
+  margin-top: 2px;
+
+  color:
+    var(--pa-final-brand);
+}
+
+.home-branch-actions {
+  display: grid;
+
+  gap: 8px;
+
+  margin-top: auto;
+}
+
+.home-branch-action {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 42px;
+
+  padding:
+    8px 12px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    #cbd9e2;
+
+  border-radius: 11px;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  text-align: center;
+
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+.home-branch-action:hover {
+  color:
+    var(--pa-final-brand-deep);
+
+  background:
+    var(--pa-final-pale);
+
+  text-decoration: none;
+}
+
+.home-branch-action--primary {
+  color: #ffffff;
+
+  background:
+    var(--pa-final-brand-dark);
+
+  border-color:
+    var(--pa-final-brand-dark);
+}
+
+.home-branch-action--primary:hover {
+  color: #ffffff;
+
+  background:
+    var(--pa-final-brand-deep);
+}
+
+.home-map-popup {
+  display: grid;
+
+  gap: 4px;
+
+  min-width: 180px;
+}
+
+.home-map-popup strong {
+  color:
+    var(--pa-final-text);
+}
+
+
+/* =========================================================
+   CAROUSEL
+========================================================= */
+
+.home-carousel {
+  display: grid;
+
+  grid-template-columns:
+    minmax(
+      300px,
+      0.82fr
+    )
+    minmax(
+      0,
+      1.18fr
+    );
+
+  min-height: 430px;
+
+  overflow: hidden;
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    var(--pa-final-border);
+
+  border-radius: 24px;
+
+  box-shadow:
+    var(--pa-final-shadow);
+}
+
+.home-carousel__art {
+  position: relative;
+
+  display: grid;
+
+  place-items: center;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      var(--pa-final-brand),
+      var(--pa-final-brand-deep)
+    );
+}
+
+.home-carousel__icon {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  width: 132px;
+  height: 132px;
+
+  place-items: center;
+
+  color:
+    var(--pa-final-brand-deep);
+
+  background:
+    #ffffff;
+
+  border-radius: 35px;
+
+  box-shadow:
+    0 18px 42px
+    rgba(
+      0,
+      0,
+      0,
+      0.16
+    );
+
+  transform:
+    rotate(-5deg);
+
+  font-size: 3.3rem;
+}
+
+.home-carousel__rings span {
+  position: absolute;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.22
+    );
+
+  border-radius: 50%;
+}
+
+.home-carousel__rings span:nth-child(1) {
+  width: 180px;
+  height: 180px;
+
+  left: -50px;
+  top: 30px;
+}
+
+.home-carousel__rings span:nth-child(2) {
+  width: 280px;
+  height: 280px;
+
+  right: -120px;
+  bottom: -100px;
+}
+
+.home-carousel__rings span:nth-child(3) {
+  width: 100px;
+  height: 100px;
+
+  right: 30px;
+  top: 35px;
+}
+
+.home-carousel__number {
+  position: absolute;
+
+  left: 24px;
+  bottom: 20px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.28
+    );
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 4.6rem;
+  font-weight: 800;
+}
+
+.home-carousel__content {
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  padding:
+    clamp(
+      35px,
+      5vw,
+      68px
+    );
+}
+
+.home-carousel__eyebrow {
+  margin-bottom: 10px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.78rem;
+  font-weight: 800;
+
+  letter-spacing:
+    0.11em;
+
+  text-transform: uppercase;
+}
+
+.home-carousel__content h3 {
+  max-width: 650px;
+
+  margin: 0;
+
+  color:
+    var(--pa-final-text);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size:
+    clamp(
+      1.7rem,
+      3vw,
+      2.6rem
+    );
+
+  font-weight: 800;
+
+  line-height: 1.15;
+}
+
+.home-carousel__content > p {
+  max-width: 650px;
+
+  margin:
+    17px 0 0;
+
+  color:
+    var(--pa-final-muted);
+
+  font-size: 1rem;
+
+  line-height: 1.65;
+}
+
+.home-carousel__link {
+  display: inline-flex;
+
+  align-items: center;
+
+  align-self: flex-start;
+
+  gap: 8px;
+
+  margin-top: 22px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-weight: 700;
+
+  text-decoration: none;
+}
+
+.home-carousel__link:hover {
+  color:
+    var(--pa-final-brand-deep);
+
+  text-decoration: underline;
+}
+
+.home-carousel__controls {
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-top: 34px;
+}
+
+.home-carousel__nav,
+.home-carousel__pause {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 42px;
+  height: 42px;
+
+  color:
+    var(--pa-final-brand-dark);
+
+  background:
+    var(--pa-final-pale);
+
+  border:
+    1px solid
+    #d3e0e8;
+
+  border-radius: 11px;
+
+  cursor: pointer;
+}
+
+.home-carousel__pause {
+  gap: 6px;
+
+  width: auto;
+
+  padding:
+    0 12px;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.home-carousel__dots {
+  display: flex;
+
+  align-items: center;
+
+  gap: 6px;
+}
+
+.home-carousel__dot {
+  width: 8px;
+  height: 8px;
+
+  padding: 0;
+
+  background:
+    #c7d4dc;
+
+  border: 0;
+
+  border-radius: 999px;
+
+  cursor: pointer;
+
+  transition:
+    width 0.16s ease,
+    background-color
+      0.16s ease;
+}
+
+.home-carousel__dot--active {
+  width: 24px;
+
+  background:
+    var(--pa-final-brand);
+}
+
+
+/* =========================================================
+   COMMON MESSAGES
+========================================================= */
+
+.home-overview-loading,
+.home-overview-message {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 9px;
+
+  min-height: 90px;
+
+  padding: 18px;
+
+  color:
+    var(--pa-final-muted);
+
+  background:
+    #ffffff;
+
+  border:
+    1px solid
+    var(--pa-final-border);
+
+  border-radius: 16px;
+}
+
+
+/* =========================================================
+   HIGH CONTRAST
+========================================================= */
+
+html[data-contrast='high']
+.home-hero,
+html[data-contrast='high']
+.home-medicine-card,
+html[data-contrast='high']
+.home-branch-map-wrap,
+html[data-contrast='high']
+.home-branch-card,
+html[data-contrast='high']
+.home-carousel,
+html[data-contrast='high']
+.final-home #search .global-filter {
+  color: #ffffff !important;
+
+  background: #000000 !important;
+
+  border-color: #ffffff !important;
+}
+
+html[data-contrast='high']
+.home-hero__visual-card,
+html[data-contrast='high']
+.home-hero__floating,
+html[data-contrast='high']
+.home-medicine-card__visual {
+  background: #000000 !important;
+
+  border:
+    2px solid #ffffff !important;
+}
+
+html[data-contrast='high']
+.home-section-heading h2,
+html[data-contrast='high']
+.home-hero h1,
+html[data-contrast='high']
+.home-medicine-card h3,
+html[data-contrast='high']
+.home-branch-card h3,
+html[data-contrast='high']
+.home-carousel__content h3 {
+  color: #ffffff !important;
+}
+
+html[data-contrast='high']
+.home-branch-action,
+html[data-contrast='high']
+.home-carousel__nav,
+html[data-contrast='high']
+.home-carousel__pause {
+  color: #ffee00 !important;
+
+  background: #000000 !important;
+
+  border-color:
+    #ffffff !important;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (
+  max-width: 1150px
+) {
+  .home-hero {
+    grid-template-columns:
+      1fr
+      minmax(
+        340px,
+        0.8fr
+      );
+  }
+
+  .home-medicine-grid,
+  .home-branch-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+}
+
+
+/* =========================================================
+   SMALL TABLET
+========================================================= */
+
+@media (
+  max-width: 880px
+) {
+  .home-hero {
+    grid-template-columns:
+      1fr;
+
+    min-height: auto;
+  }
+
+  .home-hero__visual {
+    min-height: 390px;
+  }
+
+  .home-carousel {
+    grid-template-columns:
+      1fr;
+  }
+
+  .home-carousel__art {
+    min-height: 260px;
+  }
+
+  .home-section-heading--split {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (
+  max-width: 650px
+) {
+  .home-section-block,
+  .final-home #search,
+  .home-hero {
+    width:
+      calc(100% - 22px);
+  }
+
+  .home-section-block,
+  .final-home #search {
+    margin-bottom: 45px;
+  }
+
+  .home-hero {
+    margin-top: 10px;
+
+    margin-bottom: 46px;
+
+    padding:
+      28px 20px;
+
+    border-radius: 20px;
+  }
+
+  .home-hero h1 {
+    font-size:
+      clamp(
+        2.2rem,
+        12vw,
+        3.4rem
+      );
+  }
+
+  .home-hero__actions {
+    flex-direction: column;
+  }
+
+  .home-hero__actions > * {
+    width: 100%;
+  }
+
+  .home-hero__small-actions {
+    flex-wrap: wrap;
+  }
+
+  .home-hero__visual {
+    min-height: auto;
+
+    padding-top: 25px;
+  }
+
+  .home-hero__visual-card {
+    padding: 20px;
+  }
+
+  .home-hero__floating {
+    display: none;
+  }
+
+  .home-medicine-grid,
+  .home-branch-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .home-medicine-card {
+    grid-template-columns:
+      88px
+      minmax(
+        0,
+        1fr
+      );
+
+    min-height: 210px;
+  }
+
+  .home-medicine-card__actions {
+    flex-direction: column;
+  }
+
+  .home-medicine-card__actions > * {
+    width: 100%;
+  }
+
+  .home-branch-map-head {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .home-branch-map {
+    height: 330px;
+  }
+
+  .home-carousel__art {
+    min-height: 225px;
+  }
+
+  .home-carousel__icon {
+    width: 100px;
+    height: 100px;
+
+    border-radius: 27px;
+
+    font-size: 2.5rem;
+  }
+
+  .home-carousel__content {
+    padding: 26px 20px;
+  }
+
+  .home-carousel__controls {
+    margin-top: 25px;
+  }
+}

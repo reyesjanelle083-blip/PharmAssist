@@ -1,59 +1,402 @@
-/**
- * The prescription photo field of the checkout form (JPG or PNG, up to 4 MB): a preview with a remove button once a
- * photo is chosen, the file input, help text, an error line, and a reading of the photo as it comes in (`ocr`, a
- * {phase: 'idle'|'loading'|'done'|'error', text?, status?} from Cart.jsx's own call to POST /prescriptions/ocr - a
- * preview only; the authoritative reading happens again, on its own, when the reservation is actually created).
- * Otherwise purely presentational: the parent owns the file and any validation error.
- */
-export default function PrescriptionUploader({ preview, fileError, busy, ocr, onChoose, onRemove }) {
+function confidencePercent(confidence) {
+  if (
+    confidence === null ||
+    confidence === undefined ||
+    confidence === ''
+  ) {
+    return null
+  }
+
+  const number = Number(confidence)
+
+  if (!Number.isFinite(number)) {
+    return null
+  }
+
+  const normalized =
+    number <= 1
+      ? number * 100
+      : number
+
+  return Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(normalized),
+    ),
+  )
+}
+
+export default function PrescriptionUploader({
+  preview,
+  fileError,
+  busy,
+  ocr,
+  onChoose,
+  onRemove,
+  onRetry,
+}) {
+  const confidence =
+    confidencePercent(
+      ocr?.confidence,
+    )
+
+  const hasText =
+    ocr?.phase === 'done' &&
+    Boolean(ocr?.text?.trim())
+
+  const unavailable =
+    ocr?.phase === 'error' ||
+    (
+      ocr?.phase === 'done' &&
+      !hasText
+    )
+
   return (
-    <div className="presc-upload-item">
-      <label htmlFor="cart-prescription">Prescription photo (JPG or PNG, up to 4 MB) *</label>
-      {preview ? (
-        <div className="presc-preview">
-          <img src={preview} alt="Preview of the prescription photo you chose" />
-          <button type="button" className="btn-outline btn-outline-red" onClick={onRemove} disabled={busy}>
-            <i className="bi bi-x-circle" aria-hidden="true"></i> Remove photo
-          </button>
+    <section
+      className="checkout-prescription"
+      aria-labelledby="prescription-heading"
+    >
+      <div className="checkout-section-heading">
+        <span className="checkout-section-heading__icon">
+          <i
+            className="bi bi-file-earmark-medical"
+            aria-hidden="true"
+          ></i>
+        </span>
+
+        <div>
+          <span>Required</span>
+
+          <h2 id="prescription-heading">
+            Prescription
+          </h2>
+
+          <p>
+            Upload a clear JPG or PNG photo.
+            PharmAssist will try to read the image,
+            while branch staff will still verify the
+            original prescription.
+          </p>
         </div>
-      ) : null}
-      <input
-        id="cart-prescription"
-        type="file"
-        accept="image/jpeg,image/png"
-        onChange={onChoose}
-        aria-describedby="cart-prescription-help cart-prescription-error"
-        aria-invalid={fileError ? 'true' : undefined}
-        disabled={busy}
-      />
-      <small id="cart-prescription-help">
-        A pharmacist will check your prescription. The photo is stored privately and only you and the branch staff can see it.
-      </small>
-      <p id="cart-prescription-error" className="field-error" style={{ marginLeft: 0 }} role="alert">
-        {fileError}
-      </p>
+      </div>
 
-      {ocr?.phase === 'loading' ? (
-        <p className="field-hint" role="status">
-          Reading your photo...
-        </p>
-      ) : null}
+      <div className="checkout-prescription__grid">
+        <div className="checkout-prescription__photo">
+          <div className="checkout-prescription__panel-head">
+            <div>
+              <span>Original prescription</span>
+              <strong>Uploaded photo</strong>
+            </div>
 
-      {ocr?.phase === 'done' && ocr.text ? (
-        <div aria-live="polite">
-          <p className="field-hint">What we read from your photo (check it matches before you continue):</p>
-          <p className="detail-notes">{ocr.text}</p>
-          {ocr.status === 'low_confidence' ? (
-            <p className="field-hint">This may not be fully accurate: a blurry or angled photo is harder to read. You can still continue; the pharmacist checks the original.</p>
+            {preview ? (
+              <span className="checkout-status-pill checkout-status-pill--success">
+                <i
+                  className="bi bi-check-circle-fill"
+                  aria-hidden="true"
+                ></i>
+                Photo ready
+              </span>
+            ) : null}
+          </div>
+
+          {preview ? (
+            <div className="checkout-prescription__image">
+              <img
+                src={preview}
+                alt="Preview of the prescription photo you chose"
+              />
+            </div>
+          ) : (
+            <div className="checkout-prescription__empty">
+              <i
+                className="bi bi-image"
+                aria-hidden="true"
+              ></i>
+
+              <strong>
+                No prescription photo yet
+              </strong>
+
+              <p>
+                Choose a clear image with readable
+                medicine and dosage information.
+              </p>
+            </div>
+          )}
+
+          <div className="checkout-prescription__photo-actions">
+            <label
+              htmlFor="cart-prescription"
+              className="checkout-upload-button"
+            >
+              <i
+                className="bi bi-upload"
+                aria-hidden="true"
+              ></i>
+
+              {preview
+                ? 'Choose another photo'
+                : 'Choose photo'}
+            </label>
+
+            {preview ? (
+              <button
+                type="button"
+                className="checkout-remove-photo"
+                onClick={onRemove}
+                disabled={busy}
+              >
+                <i
+                  className="bi bi-trash3"
+                  aria-hidden="true"
+                ></i>
+                Remove
+              </button>
+            ) : null}
+          </div>
+
+          <input
+            id="cart-prescription"
+            className="checkout-hidden-file"
+            type="file"
+            accept="image/jpeg,image/png"
+            onChange={onChoose}
+            aria-describedby="cart-prescription-help cart-prescription-error"
+            aria-invalid={
+              fileError
+                ? 'true'
+                : undefined
+            }
+            disabled={busy}
+          />
+
+          <p
+            id="cart-prescription-help"
+            className="checkout-prescription__privacy"
+          >
+            <i
+              className="bi bi-lock-fill"
+              aria-hidden="true"
+            ></i>
+
+            The image is stored privately and can
+            only be viewed by you and authorized
+            pharmacy staff.
+          </p>
+
+          {fileError ? (
+            <p
+              id="cart-prescription-error"
+              className="checkout-prescription__error"
+              role="alert"
+            >
+              <i
+                className="bi bi-exclamation-circle-fill"
+                aria-hidden="true"
+              ></i>
+
+              {fileError}
+            </p>
           ) : null}
         </div>
-      ) : null}
 
-      {(ocr?.phase === 'error' || (ocr?.phase === 'done' && !ocr.text)) ? (
-        <p className="field-hint" role="status">
-          We could not automatically read this photo right now. That is fine: you can still continue, and the pharmacist will check the original.
-        </p>
-      ) : null}
-    </div>
+        <div className="checkout-prescription__ocr">
+          <div className="checkout-prescription__panel-head">
+            <div>
+              <span>Automatic reading</span>
+              <strong>OCR result</strong>
+            </div>
+
+            {ocr?.phase === 'loading' ? (
+              <span className="checkout-status-pill checkout-status-pill--reading">
+                Reading...
+              </span>
+            ) : null}
+
+            {hasText ? (
+              <span
+                className={
+                  ocr.status === 'low_confidence'
+                    ? 'checkout-status-pill checkout-status-pill--warning'
+                    : 'checkout-status-pill checkout-status-pill--success'
+                }
+              >
+                <i
+                  className={
+                    ocr.status === 'low_confidence'
+                      ? 'bi bi-exclamation-circle-fill'
+                      : 'bi bi-check-circle-fill'
+                  }
+                  aria-hidden="true"
+                ></i>
+
+                {ocr.status === 'low_confidence'
+                  ? 'Low confidence'
+                  : 'Text detected'}
+              </span>
+            ) : null}
+          </div>
+
+          {!preview ? (
+            <div className="checkout-prescription__empty">
+              <i
+                className="bi bi-text-paragraph"
+                aria-hidden="true"
+              ></i>
+
+              <strong>
+                Waiting for a photo
+              </strong>
+
+              <p>
+                OCR output will appear here after
+                you upload a prescription.
+              </p>
+            </div>
+          ) : null}
+
+          {ocr?.phase === 'loading' ? (
+            <div
+              className="checkout-ocr-loading"
+              role="status"
+            >
+              <span>
+                <i
+                  className="bi bi-arrow-repeat"
+                  aria-hidden="true"
+                ></i>
+              </span>
+
+              <strong>
+                Reading the prescription...
+              </strong>
+
+              <p>
+                Extracting readable text from your
+                uploaded image.
+              </p>
+            </div>
+          ) : null}
+
+          {hasText ? (
+            <div
+              className="checkout-ocr-result"
+              aria-live="polite"
+            >
+              {confidence !== null ? (
+                <div className="checkout-ocr-confidence">
+                  <div>
+                    <span>
+                      OCR confidence
+                    </span>
+
+                    <strong>
+                      {confidence}%
+                    </strong>
+                  </div>
+
+                  <div
+                    className="checkout-ocr-confidence__track"
+                    aria-hidden="true"
+                  >
+                    <span
+                      style={{
+                        width: `${confidence}%`,
+                      }}
+                    ></span>
+                  </div>
+                </div>
+              ) : null}
+
+              <span className="checkout-ocr-result__label">
+                Text read from the photo
+              </span>
+
+              <pre>
+                {ocr.text}
+              </pre>
+
+              <div
+                className={
+                  ocr.status === 'low_confidence'
+                    ? 'checkout-ocr-note checkout-ocr-note--warning'
+                    : 'checkout-ocr-note'
+                }
+              >
+                <i
+                  className={
+                    ocr.status === 'low_confidence'
+                      ? 'bi bi-exclamation-triangle-fill'
+                      : 'bi bi-info-circle-fill'
+                  }
+                  aria-hidden="true"
+                ></i>
+
+                <p>
+                  {ocr.status === 'low_confidence'
+                    ? 'Some words may be inaccurate. Compare the OCR result with the original image before continuing.'
+                    : 'OCR is only an automated reading aid. The pharmacist will verify the original prescription.'}
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          {preview && unavailable ? (
+            <div className="checkout-ocr-unavailable">
+              <i
+                className="bi bi-eye-slash"
+                aria-hidden="true"
+              ></i>
+
+              <strong>
+                Automatic reading unavailable
+              </strong>
+
+              <p>
+                You may continue with the
+                reservation. The pharmacist will
+                check the original image.
+              </p>
+
+              {onRetry ? (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  disabled={busy}
+                >
+                  <i
+                    className="bi bi-arrow-clockwise"
+                    aria-hidden="true"
+                  ></i>
+
+                  Try OCR again
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="checkout-prescription__reminder">
+        <i
+          className="bi bi-shield-check"
+          aria-hidden="true"
+        ></i>
+
+        <div>
+          <strong>
+            Pharmacist verification is always
+            required.
+          </strong>
+
+          <p>
+            The OCR result does not replace the
+            original prescription or professional
+            review.
+          </p>
+        </div>
+      </div>
+    </section>
   )
 }
