@@ -17,7 +17,9 @@
 /* the old shell and page stylesheets (copied, see styles/legacy/README) */
 @import './styles/legacy/sidebar.css';
 @import './styles/legacy/medicines.css';
+@import './styles/legacy/branches.css';
 @import './styles/legacy/footer.css';
+@import './styles/legacy/carousel.css';
 
 /* Bootstrap 5.3.8 CSS only (no JavaScript), as on the old pages */
 @import 'bootstrap/dist/css/bootstrap.min.css';
@@ -35,8 +37,10 @@
 @import './styles/legacy/homepage-inline.css';
 @import './styles/legacy/auth.css';
 @import './styles/legacy/auth-register.css';
+@import './styles/legacy/guide.css';
 
 /* the app: accessibility, notices, clash fixes, the high contrast theme, phone rules */
 @import './styles/app.css';
+@import './styles/app-extra.css';
 @import './styles/contrast.css';
 @import './styles/responsive.css';

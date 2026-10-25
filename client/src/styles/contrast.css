@@ -171,3 +171,50 @@ html[data-contrast='high'] .app-notice p { color: inherit !important; }
 html[data-contrast='high'] .field-error { color: #ffb3b3 !important; }
 html[data-contrast='high'] .field-hint { color: #fff !important; }
 html[data-contrast='high'] .brand-logo-chip { background: #fff; }
+
+/* ---- polish step: top bar search, dialogs, branches, carousel, text pages ---- */
+html[data-contrast='high'] .topbar-locate { color: #fff; border-color: #fff; background: #000; }
+html[data-contrast='high'] .topbar-locate[aria-pressed='true'] { background: #ffee00; color: #000; border-color: #fff; }
+html[data-contrast='high'] .topbar-note { color: #fff; }
+html[data-contrast='high'] .ps-bar:focus-within { border-color: #00ffff; box-shadow: none; }
+
+html[data-contrast='high'] dialog.legacy-dialog { background: #000; border: 3px solid #fff; box-shadow: none; }
+html[data-contrast='high'] .legacy-dialog__header { background: #000; border-bottom: 3px solid #fff; }
+html[data-contrast='high'] .legacy-dialog__header h2,
+html[data-contrast='high'] .legacy-dialog__close { color: #ffee00 !important; }
+html[data-contrast='high'] .legacy-dialog__body { background: #000; }
+html[data-contrast='high'] .legacy-dialog__body h3 { color: #ffee00 !important; }
+html[data-contrast='high'] .legacy-dialog__body p,
+html[data-contrast='high'] .legacy-dialog__body li { color: #fff !important; }
+html[data-contrast='high'] .legacy-dialog__contact i { color: #ffee00; }
+
+html[data-contrast='high'] .branches-section { background: #000 !important; }
+html[data-contrast='high'] .section-header h2 { color: #ffee00 !important; }
+html[data-contrast='high'] .section-header p,
+html[data-contrast='high'] .map-note,
+html[data-contrast='high'] .info-item { color: #fff !important; }
+html[data-contrast='high'] .info-item i { color: #ffee00; }
+html[data-contrast='high'] .branch-card { background: #000; border: 2px solid #fff; box-shadow: none; }
+html[data-contrast='high'] .branch-card.is-selected { outline-color: #ffee00; }
+html[data-contrast='high'] .branch-name { color: #fff !important; }
+html[data-contrast='high'] .branch-badge { background: #000; color: #ffee00; border: 2px solid #ffee00; }
+html[data-contrast='high'] .branch-actions { border-top-color: #fff; }
+html[data-contrast='high'] .btn-view,
+html[data-contrast='high'] .btn-directions { background: #ffee00 !important; color: #000 !important; border: 2px solid #fff; }
+html[data-contrast='high'] .branch-map { border: 2px solid #fff; box-shadow: none; }
+
+html[data-contrast='high'] .legacy-carousel .carousel-card { background: #000 !important; border: 2px solid #fff; }
+html[data-contrast='high'] .legacy-carousel .carousel-art { color: #ffee00; }
+html[data-contrast='high'] .legacy-carousel .card-overlay { background: #000; border-top: 2px solid #fff; }
+html[data-contrast='high'] .legacy-carousel .carousel-nav { background: #ffee00; color: #000; border: 2px solid #fff; }
+html[data-contrast='high'] .legacy-carousel .indicator { background: #fff; }
+html[data-contrast='high'] .legacy-carousel .indicator.active { background: #ffee00; outline: 2px solid #fff; outline-offset: 2px; }
+html[data-contrast='high'] .legacy-carousel .carousel-toggle { background: #ffee00; color: #000; border: 2px solid #fff; }
+
+html[data-contrast='high'] .legacy-guide .page-header h1,
+html[data-contrast='high'] .legacy-guide .page-header p { color: #ffee00 !important; }
+html[data-contrast='high'] .legacy-guide section.content { background: #000; border: 2px solid #fff; box-shadow: none; }
+html[data-contrast='high'] .legacy-guide section.content h2,
+html[data-contrast='high'] .legacy-guide section.content h3 { color: #ffee00 !important; }
+html[data-contrast='high'] .legacy-guide .rules { background: #000; border: 2px solid #fff; border-left: 8px solid #ffee00; }
+html[data-contrast='high'] .legacy-guide a { color: #ffee00; }

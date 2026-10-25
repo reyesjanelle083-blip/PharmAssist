@@ -4,11 +4,14 @@ import Layout from '../components/Layout.jsx'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import RoleRoute from '../components/RoleRoute.jsx'
 import Forbidden from '../pages/Forbidden.jsx'
+import Guide from '../pages/Guide.jsx'
 import Home from '../pages/Home.jsx'
 import Login from '../pages/Login.jsx'
 import NotFound from '../pages/NotFound.jsx'
+import Privacy from '../pages/Privacy.jsx'
 import Register from '../pages/Register.jsx'
 import ReserveComingSoon from '../pages/ReserveComingSoon.jsx'
+import Terms from '../pages/Terms.jsx'
 import VerifyEmail from '../pages/VerifyEmail.jsx'
 
 export default function AppRoutes() {
@@ -24,6 +27,9 @@ export default function AppRoutes() {
       {/* the old shell: sidebar, top bar, page, footer */}
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/guide" element={<Guide />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/forbidden" element={<Forbidden />} />
 
         {/* needs a login, and then the customer role */}

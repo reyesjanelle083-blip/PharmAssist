@@ -135,3 +135,80 @@ video {
     flex: 1 1 100%;
   }
 }
+
+/* ---- polish step ---- */
+@media (max-width: 1100px) {
+  /* the top bar is crowded: the location button shows only its icon (its name is in the title and the label) */
+  .topbar-locate__text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .topbar-locate {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+    flex: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar-search .ps-bar {
+    flex: 1 1 140px;
+    width: auto;
+  }
+
+  .topbar-search {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+  }
+
+  .legacy-branches .branch-map {
+    height: 300px;
+  }
+
+  .legacy-carousel .carousel-card {
+    height: 260px;
+  }
+
+  .legacy-carousel .carousel-art {
+    font-size: 3.5rem;
+    padding-bottom: 90px;
+  }
+
+  dialog.legacy-dialog .legacy-dialog__header,
+  dialog.legacy-dialog .legacy-dialog__body {
+    padding: 16px 18px;
+  }
+}
+
+@media (max-width: 576px) {
+  /* no room for the name next to the search bar: it stays in the sidebar and as the page's first link */
+  .topbar-brand > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .legacy-branches .section-header h2 {
+    font-size: 26px;
+  }
+
+  .legacy-guide section.content {
+    padding: 18px 16px;
+  }
+
+  .legacy-carousel .carousel-slide {
+    padding: 0 6px;
+  }
+
+  .legacy-carousel .card-title {
+    font-size: 17px;
+  }
+}

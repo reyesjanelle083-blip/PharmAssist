@@ -1,0 +1,63 @@
+/*
+ * COPIED from old/PharmAssist/guide.php (the <style> block, lines 34-89)
+ * Left out: the text-to-speech bar, the floating buttons and the guide modal (removed features).
+ * Wrapped in .legacy-guide (CSS nesting) so its h2 and h3 font rule stays on the guide page.
+ */
+.legacy-guide {
+    h2, h3 {
+      font-family: "Bricolage Grotesque", sans-serif;
+    }
+
+    .page-wrapper {
+      transform-origin: top center;
+      transition: transform 0.2s ease-out;
+    }
+
+    .page-header {
+      text-align: center;
+      margin: 30px auto 40px auto;
+      padding: 0;
+    }
+
+    .page-header h1 {
+      color: #7393A7;
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-weight: 600;
+      font-size: 28px;
+      margin-bottom: 5px;
+    }
+
+    .page-header p {
+      color: #6C737E;
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-size: 16px;
+    }
+
+    section.content {
+      max-width: 900px;
+      margin: 0 auto 40px auto;
+      padding: 25px 35px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    section.content h2 {
+      color: #6C737E;
+      margin-top: 0;
+      font-family: "Bricolage Grotesque", sans-serif;
+      font-weight: 600;
+    }
+
+    section.content ul {
+      margin-left: 20px;
+    }
+
+    .rules {
+      background: #F4F8FA;
+      padding: 15px;
+      border-left: 5px solid #7393A7;
+      border-radius: 6px;
+    }
+
+}
