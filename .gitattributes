@@ -1,3 +1,9 @@
 # Keep shell scripts LF so they run inside Linux containers
 *.sh text eol=lf
 *.ini text eol=lf
+
+# docs/schemas/inventory-feed.xsd must stay byte-identical to
+# services/integration-service/resources/schemas/inventory-feed.xsd (a test enforces it); each service's own
+# .gitattributes already pins its files to eol=lf, but docs/ has no such file of its own, so on a Windows checkout
+# (core.autocrlf=true) this one drifted to CRLF. Force LF on checkout here too, regardless of autocrlf.
+*.xsd text eol=lf

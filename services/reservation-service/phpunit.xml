@@ -5,9 +5,8 @@
          colors="true"
 >
     <testsuites>
-        <testsuite name="Unit">
-            <directory>tests/Unit</directory>
-        </testsuite>
+        <!-- This service has no tests/Unit directory (removed; the default placeholder test was not worth keeping).
+             Declaring a Unit suite here anyway made plain `phpunit` fail with "Test directory ... not found". -->
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
         </testsuite>
