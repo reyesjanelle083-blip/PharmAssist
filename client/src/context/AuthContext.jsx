@@ -22,6 +22,9 @@ export function AuthProvider({ children }) {
     return valid
   })
   const [restoring, setRestoring] = useState(session !== null)
+  // Why there is no session any more ('logged_out' or 'session_expired'), so the log-in page says the right thing even when a
+  // protected page redirects there before anything else can.
+  const [exitReason, setExitReason] = useState(null)
 
   const store = useCallback((next) => {
     setToken(next?.token ?? null)
@@ -30,12 +33,16 @@ export function AuthProvider({ children }) {
     else remove('session', STORAGE_KEY)
   }, [])
 
-  const logout = useCallback(() => store(null), [store])
+  const logout = useCallback(() => {
+    store(null)
+    setExitReason('logged_out')
+  }, [store])
 
   // The gateway says the token is missing, invalid or expired (401 UNAUTHENTICATED or TOKEN_EXPIRED): end the session, go to log in.
   useEffect(() => {
     setUnauthorizedHandler(() => {
       store(null)
+      setExitReason('session_expired')
       navigate('/login', { replace: true, state: { notice: 'session_expired' } })
     })
     return () => setUnauthorizedHandler(null)
@@ -71,6 +78,7 @@ export function AuthProvider({ children }) {
     async (email, password) => {
       const { data } = await apiLogin(email, password)
       store({ token: data.access_token, user: data.user })
+      setExitReason(null)
       return data.user
     },
     [store],
@@ -81,10 +89,11 @@ export function AuthProvider({ children }) {
       user: session?.user ?? null,
       role: session?.user?.role ?? null,
       loading: restoring,
+      exitReason,
       login,
       logout,
     }),
-    [session, restoring, login, logout],
+    [session, restoring, exitReason, login, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

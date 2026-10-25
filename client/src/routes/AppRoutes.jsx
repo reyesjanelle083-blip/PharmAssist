@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout.jsx'
 import CustomerLayout from '../layouts/CustomerLayout.jsx'
-import StaffLayout from '../layouts/StaffLayout.jsx'
+import StaffGate from '../layouts/StaffGate.jsx'
 import { STAFF_ROLES } from '../utils/staff.js'
 import StaffInventory from '../pages/staff/StaffInventory.jsx'
 import StaffPrescriptions from '../pages/staff/StaffPrescriptions.jsx'
@@ -61,8 +61,8 @@ export default function AppRoutes() {
 
       {/* the staff portal: needs a login and a staff role (or the CEO); the backend still decides what each role may do */}
       <Route element={<ProtectedRoute />}>
-        <Route element={<RoleRoute roles={STAFF_ROLES} />}>
-          <Route path="/staff" element={<StaffLayout />}>
+        <Route path="/staff" element={<StaffGate />}>
+          <Route element={<RoleRoute roles={STAFF_ROLES} />}>
             <Route index element={<Navigate to="/staff/reservations" replace />} />
             <Route path="reservations" element={<StaffReservations />} />
             <Route path="reservations/:id" element={<StaffReservationDetail />} />

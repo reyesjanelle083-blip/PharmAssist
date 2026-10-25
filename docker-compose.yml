@@ -71,7 +71,7 @@ services:
       dockerfile: docker/php/Dockerfile
       args:
         APP_PATH: services/inventory-service
-    environment:
+    environment: &inventory-env
       <<: *laravel-env
       SERVICE_NAME: inventory-service
       DB_CONNECTION: mysql
@@ -96,7 +96,7 @@ services:
       dockerfile: docker/php/Dockerfile
       args:
         APP_PATH: services/reservation-service
-    environment:
+    environment: &reservation-env
       <<: *laravel-env
       SERVICE_NAME: reservation-service
       DB_CONNECTION: mysql
@@ -116,6 +116,34 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+  # Nothing expires without the Laravel scheduler: reservations (reservations:expire) and stock holds (inventory:expire-holds) are
+  # scheduled every minute in each service's routes/console.php. These two containers run it, from the same image and environment.
+  reservation-scheduler:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        APP_PATH: services/reservation-service
+    environment: *reservation-env
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      reservation-service:
+        condition: service_healthy
+
+  inventory-scheduler:
+    <<: *service-base
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      args:
+        APP_PATH: services/inventory-service
+    environment: *inventory-env
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      inventory-service:
+        condition: service_healthy
 
   integration-service:
     <<: *service-base
@@ -175,7 +203,7 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       GATEWAY_OCR_TIMEOUT_SECONDS: "${GATEWAY_OCR_TIMEOUT_SECONDS:-20}"
       GATEWAY_SYNC_TIMEOUT_SECONDS: "${GATEWAY_SYNC_TIMEOUT_SECONDS:-10}"
-      GATEWAY_RESERVATION_TIMEOUT_SECONDS: "${GATEWAY_RESERVATION_TIMEOUT_SECONDS:-10}"
+      GATEWAY_RESERVATION_TIMEOUT_SECONDS: "${GATEWAY_RESERVATION_TIMEOUT_SECONDS:-30}"
       GATEWAY_DISTANCE_TIMEOUT_SECONDS: "${GATEWAY_DISTANCE_TIMEOUT_SECONDS:-2.5}"
       HAVERSINE_ROAD_FACTOR: "${HAVERSINE_ROAD_FACTOR:-1.3}"
       HAVERSINE_AVG_SPEED_KMH: "${HAVERSINE_AVG_SPEED_KMH:-25}"

@@ -117,6 +117,7 @@ html[data-contrast='high'] .status-low-stock { color: #ffcf99; }
 /* ---- footer ---- */
 html[data-contrast='high'] .site-footer { background: #000; color: #fff; border-top: 3px solid #fff; }
 html[data-contrast='high'] .site-footer h6,
+html[data-contrast='high'] .site-footer .footer-heading,
 html[data-contrast='high'] .site-footer p,
 html[data-contrast='high'] .site-footer a,
 html[data-contrast='high'] .site-footer .footer-links a,

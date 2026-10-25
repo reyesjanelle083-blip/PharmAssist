@@ -36,7 +36,7 @@ export default function AppShell({ renderSidebar }) {
         {renderSidebar(closed)}
 
         <section className="home-section">
-          <header className="home-content d-flex align-items-center justify-content-between px-4">
+          <header role="banner" className="home-content d-flex align-items-center justify-content-between px-4">
             <div className="d-flex align-items-center gap-2 topbar-brand">
               <button
                 type="button"

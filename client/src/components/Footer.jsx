@@ -8,12 +8,12 @@ export default function Footer() {
   const social = socialLinks()
 
   return (
-    <section className="home-sections">
+    <div className="home-sections">
       <footer className="site-footer">
         <div className="container">
           <div className="row footer-columns">
             <div>
-              <h6>About PharmAssist</h6>
+              <h2 className="footer-heading">About PharmAssist</h2>
               <p className="text-justify">
                 PharmAssist is your trusted online medicine reservation system. We provide a seamless platform that allows customers to
                 track medicine availability in real time across multiple pharmacy branches.
@@ -21,7 +21,7 @@ export default function Footer() {
             </div>
 
             <div>
-              <h6>Explore</h6>
+              <h2 className="footer-heading">Explore</h2>
               <ul className="footer-links">
                 <li>
                   <Link to="/">Home</Link>
@@ -42,7 +42,7 @@ export default function Footer() {
             </div>
 
             <div>
-              <h6>Legal</h6>
+              <h2 className="footer-heading">Legal</h2>
               <ul className="footer-links">
                 <li>
                   <Link to="/terms">Terms &amp; Conditions</Link>
@@ -55,7 +55,7 @@ export default function Footer() {
             </div>
 
             <div>
-              <h6>Contact Us</h6>
+              <h2 className="footer-heading">Contact Us</h2>
               <ul className="footer-links">
                 {site.email ? (
                   <li>
@@ -97,6 +97,6 @@ export default function Footer() {
           </div>
         </div>
       </footer>
-    </section>
+    </div>
   )
 }

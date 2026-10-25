@@ -27,22 +27,22 @@ export default function AuthLayout() {
       </a>
 
       <div id="login-page">
-        <div id="logo">
+        <header id="logo">
           <Link to="/" aria-label="PharmAssist home">
             <img src={logo} alt="PharmAssist" />
           </Link>
-        </div>
+        </header>
 
         <main id="main-content" ref={main} tabIndex={-1} className="login">
           <Outlet />
         </main>
 
-        <div className="background">
+        <aside className="background" aria-label="PharmAssist">
           <h1>
             Your Medicine,
             <br /> Minutes Away
           </h1>
-        </div>
+        </aside>
       </div>
 
       <AccessibilityToolbar />

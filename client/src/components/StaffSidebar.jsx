@@ -14,7 +14,7 @@ export default function StaffSidebar({ closed }) {
   const job = ROLE_LABELS[user?.role] ?? 'Staff'
 
   return (
-    <div className={closed ? 'sidebar close' : 'sidebar'} id="site-sidebar">
+    <aside className={closed ? 'sidebar close' : 'sidebar'} id="site-sidebar" aria-label="Staff menu">
       <div className="logo-details">
         <img src={mark} alt="" />
         <span className="logo_name">Staff</span>
@@ -54,6 +54,6 @@ export default function StaffSidebar({ closed }) {
           </li>
         </ul>
       </nav>
-    </div>
+    </aside>
   )
 }

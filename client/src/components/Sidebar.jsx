@@ -13,7 +13,7 @@ export default function Sidebar({ closed }) {
   const job = user ? ROLE_LABELS[user.role] ?? 'User' : 'Not logged in'
 
   return (
-    <div className={closed ? 'sidebar close' : 'sidebar'} id="site-sidebar">
+    <aside className={closed ? 'sidebar close' : 'sidebar'} id="site-sidebar" aria-label="Site menu">
       <div className="logo-details">
         <img src={mark} alt="" />
         <span className="logo_name">Menu</span>
@@ -74,6 +74,6 @@ export default function Sidebar({ closed }) {
           </li>
         </ul>
       </nav>
-    </div>
+    </aside>
   )
 }

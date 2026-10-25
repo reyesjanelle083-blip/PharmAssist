@@ -38,7 +38,17 @@ curl -H "X-Internal-Key: <your INTERNAL_SERVICE_KEY>" http://localhost:8001/inte
 ```
 A service called without the key returns 401 `INVALID_INTERNAL_KEY`.
 
-## 4. Stop / reset
+## 4. Scheduled jobs (reservation expiry)
+A reservation is held for `RESERVATION_TTL_HOURS` (48 by default). Nothing expires by itself: the Laravel scheduler runs
+`reservations:expire` (reservation-service) and `inventory:expire-holds` (inventory-service) every minute. With Docker the
+`reservation-scheduler` and `inventory-scheduler` containers do this. When you run the services by hand
+(`php artisan serve`), also run, in each of those two service folders:
+```
+php artisan schedule:work
+```
+Without it a reservation past its hold time stays "pending" or "approved" (the pages say that the hold time has passed).
+
+## 5. Stop / reset
 ```
 docker compose down          # stop, keep database data
 docker compose down -v       # stop and DELETE the MySQL volume (schemas are recreated on next start)

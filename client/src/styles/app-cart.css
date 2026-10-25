@@ -65,6 +65,10 @@
   margin-bottom: 6px;
 }
 
+.legacy-cart .summary-head p {
+  color: #fff; /* was white at 55% opacity: 2.0:1 on the blue-grey header */
+}
+
 .legacy-cart .summary-head h2 {
   margin: 0;
   font-size: 1.05rem;

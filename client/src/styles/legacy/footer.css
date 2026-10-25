@@ -13,7 +13,8 @@
   margin-top: 40px;
 }
 
-.site-footer h6 {
+.site-footer h6,
+.site-footer .footer-heading {
   color: #4e6a7b;
   font-size: 16px;
   font-weight: bold;

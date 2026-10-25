@@ -8,7 +8,7 @@ export default function AccessibilityToolbar() {
   const a11y = useAccessibility()
 
   return (
-    <div className="floating-buttons" role="group" aria-label="Accessibility options">
+    <aside className="floating-buttons" aria-label="Accessibility options">
       <button type="button" className="fab fab-text" id="zoomInBtn" onClick={a11y.grow} disabled={!a11y.canGrow} aria-label="Make text larger" title="Larger text">
         +
       </button>
@@ -28,6 +28,6 @@ export default function AccessibilityToolbar() {
       <p className="visually-hidden" role="status">
         Text size {a11y.textPercent} percent. High contrast {a11y.highContrast ? 'on' : 'off'}. Readable font {a11y.readableFont ? 'on' : 'off'}.
       </p>
-    </div>
+    </aside>
   )
 }

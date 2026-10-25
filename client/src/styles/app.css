@@ -185,7 +185,7 @@ main:focus,
   display: block;
   margin: 4px 0 0 15px;
   font-size: 12px;
-  color: #999;
+  color: #5f6670; /* was #999 (2.8:1 on white); this is 5.9:1 on white and 4.9:1 on the pale page background */
 }
 
 /* ---- results area on the home page ---- */

@@ -32,8 +32,8 @@
   --pa-focus: #2d3f50;
 
   /* status colours (the old ones; the status is always also written as a word) */
-  --pa-status-pending: #ffc107;
-  --pa-status-approved: #28a745;
+  --pa-status-pending: #8a6100; /* the old yellow and green are used as TEXT here, and were 1.6:1 and 3.1:1 on white */
+  --pa-status-approved: #1e7e34;
   --pa-status-completed: #5b7a92;
   --pa-status-rejected: #dc3545;
   --pa-status-cancelled: #6c737e;

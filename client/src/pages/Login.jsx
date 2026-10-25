@@ -10,6 +10,7 @@ import { isStaffRole } from '../utils/staff.js'
 const NOTICES = {
   session_expired: 'Your session has ended. Please log in again.',
   login_required: 'Please log in to continue.',
+  logged_out: 'You have been logged out.',
 }
 
 /** Only paths inside this app are followed after logging in. */
