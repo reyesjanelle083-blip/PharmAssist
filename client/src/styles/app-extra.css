@@ -408,6 +408,13 @@ dialog.legacy-dialog::backdrop {
 }
 
 /* ---- medicine details page ---- */
+/* Centred with the same max-width the cart pages use (.cart-wrapper), so a full-width row (the availability preview
+   below) stays clear of the floating accessibility buttons on wide screens instead of running underneath them. */
+.medicine-details {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
 .medicine-details-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

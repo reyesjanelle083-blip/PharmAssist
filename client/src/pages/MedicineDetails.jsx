@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { getMedicine, getMedicineCounseling } from '../api/index.js'
+import { getMedicine, getMedicineCounseling, searchAvailability } from '../api/index.js'
 import Button from '../components/ui/Button.jsx'
 import EmptyState from '../components/ui/EmptyState.jsx'
 import ErrorState from '../components/ui/ErrorState.jsx'
 import LoadingState from '../components/ui/LoadingState.jsx'
 import PageHeader from '../components/ui/PageHeader.jsx'
+import StockBadge from '../components/ui/StockBadge.jsx'
 import { useSearch } from '../context/useSearch.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
+import { formatPeso, formatTravel } from '../utils/format.js'
 import NotFound from './NotFound.jsx'
+
+const PREVIEW_LIMIT = 3
 
 /** "Amoxicillin (Amoxil)", or just the generic name when there is no brand. Matches the name the availability search shows. */
 function displayName(medicine) {
@@ -21,7 +25,7 @@ export default function MedicineDetails() {
 }
 
 function Details({ id }) {
-  const { searchForMedicine } = useSearch()
+  const { origin, searchForMedicine } = useSearch()
   const [state, setState] = useState({ phase: 'loading' })
   const [counseling, setCounseling] = useState({ phase: 'loading' })
   const heading = useRef(null)
@@ -147,6 +151,75 @@ function Details({ id }) {
           </div>
         </section>
       </div>
+
+      <section className="pa-card" aria-labelledby="availability-heading" style={{ marginTop: 20 }}>
+        <div className="pa-card__header">
+          <h2 id="availability-heading">Where to find it</h2>
+          <p>The nearest branches with this in stock right now.</p>
+        </div>
+        <AvailabilityPreview medicineId={medicine.id} origin={origin} onViewAll={() => searchForMedicine(medicine.id, displayName(medicine))} />
+      </section>
     </div>
+  )
+}
+
+/**
+ * Up to three branches, real /availability data (same mashup as the Home page search: inventory-service stock, ranked by
+ * OSRM travel time when a location is shared, falling back to an estimate the same way). Loaded on its own, independent
+ * of the medicine and counseling above: it never blocks the rest of the page, and a retry here only retries this panel.
+ */
+function AvailabilityPreview({ medicineId, origin, onViewAll }) {
+  const [state, setState] = useState({ phase: 'loading' })
+
+  const load = useCallback(
+    (signal) =>
+      searchAvailability({ medicineId, limit: PREVIEW_LIMIT, ...(origin ?? {}) }, { signal })
+        .then(({ data }) => setState({ phase: 'done', items: data.items ?? [] }))
+        .catch((error) => {
+          if (error?.name !== 'CanceledError') setState({ phase: 'error', error })
+        }),
+    [medicineId, origin],
+  )
+
+  useEffect(() => {
+    const controller = new AbortController()
+    load(controller.signal)
+    return () => controller.abort()
+  }, [load])
+
+  if (state.phase === 'loading') return <LoadingState>Loading nearby branches...</LoadingState>
+  if (state.phase === 'error') return <ErrorState error={state.error} onRetry={() => load()} />
+
+  if (state.items.length === 0) {
+    return (
+      <EmptyState icon="bi bi-shop" title="Not currently in stock nearby" actions={<Button onClick={onViewAll}>View all branches</Button>}>
+        No branch has this in stock right now.
+      </EmptyState>
+    )
+  }
+
+  return (
+    <>
+      <ul className="ui-branch-list" style={{ listStyle: 'none', padding: 0, margin: '0 0 16px' }}>
+        {state.items.map((item) => {
+          const travel = formatTravel(item.travel_min, item.distance_km)
+          return (
+            <li key={item.branch_id} className="ui-branch-row">
+              <div>
+                <p className="ui-branch-row__name">{item.branch_name}</p>
+                <p className="ui-branch-row__meta">
+                  {item.available_quantity} in stock &middot; {formatPeso(item.price)}
+                  {travel ? <> &middot; about {travel}</> : null}
+                </p>
+              </div>
+              <StockBadge status={item.status} />
+            </li>
+          )
+        })}
+      </ul>
+      <Button onClick={onViewAll}>
+        <i className="bi bi-geo-alt" aria-hidden="true"></i> View all branches
+      </Button>
+    </>
   )
 }

@@ -21,6 +21,10 @@
   --pa-danger-edge: #e8c5c2;
   --pa-success: #2e7d54;
   --pa-success-soft: #edf7f1;
+  /* the old cart page's amber (low stock, warnings); same colour, a general-purpose name */
+  --pa-warning: #b45309;
+  --pa-warning-soft: #fdf8ef;
+  --pa-warning-edge: #f5dfa8;
   --pa-focus: #2d3f50;
 
   /* status colours (the old ones; the status is always also written as a word) */
@@ -64,6 +68,9 @@ html[data-contrast='high'] {
   --pa-danger-edge: #ffb3b3;
   --pa-success: #8dff9d;
   --pa-success-soft: #000000;
+  --pa-warning: #ffee00;
+  --pa-warning-soft: #000000;
+  --pa-warning-edge: #ffee00;
   --pa-focus: #ffee00;
 
   --pa-status-pending: #ffee00;
