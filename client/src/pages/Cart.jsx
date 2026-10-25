@@ -29,8 +29,9 @@ function photoProblem(file) {
 export default function Cart() {
   usePageTitle('Cart')
   const cart = useCart()
-  const [step, setStep] = useState('cart') // cart | checkout | done
+  const [step, setStep] = useState('cart') // cart | checkout | review | done
   const [notes, setNotes] = useState('')
+  const [notesError, setNotesError] = useState('')
   const [file, setFile] = useState(null)
   const [fileError, setFileError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -40,6 +41,11 @@ export default function Cart() {
   const [confirmClear, setConfirmClear] = useState(false)
   const clearButton = useRef(null)
   const errorBox = useRef(null)
+  const reviewHeading = useRef(null)
+  // A synchronous guard against a request going out twice (a very fast double click, or Enter plus a click in the same
+  // instant): React state updates are not guaranteed to be visible yet to a second, near-simultaneous event handler.
+  // The Idempotency-Key below already makes a duplicate request harmless server-side; this just avoids sending it.
+  const submitting = useRef(false)
 
   // The Idempotency-Key: made when the checkout step opens, kept for a retry of the same request (for example after a network
   // error or a timeout), and replaced only when what is sent changes (cart contents, notes or the file).
@@ -84,18 +90,30 @@ export default function Cart() {
     setFile(problem ? null : chosen)
   }
 
-  async function submit(event) {
+  /** Checkout step -> Review step: only client-side validation here, nothing is sent yet. */
+  function proceedToReview(event) {
     event.preventDefault()
     if (busy) return
 
     if (notes.length > NOTES_MAX) {
-      setError(null)
+      setNotesError(`Please shorten your notes to ${NOTES_MAX} characters or fewer.`)
       return
     }
+    setNotesError('')
     if (needsPhoto && !file) {
       setFileError('Please add a photo of the prescription.')
       return
     }
+
+    setError(null)
+    setStep('review')
+    requestAnimationFrame(() => reviewHeading.current?.focus())
+  }
+
+  /** Review step -> the actual request. Nothing here changes what is sent; it only moves where Reserve is pressed from. */
+  async function confirmReservation() {
+    if (busy || submitting.current) return
+    submitting.current = true
 
     setBusy(true)
     setError(null)
@@ -111,10 +129,15 @@ export default function Cart() {
     } catch (caught) {
       setError(caught)
       if (caught.code === 'STOCK_INSUFFICIENT') setShort(shortages(caught))
-      if (caught.code === 'PRESCRIPTION_REQUIRED' && Array.isArray(caught.details?.medicine_ids)) cart.markPrescription(caught.details.medicine_ids.map(Number))
+      if (caught.code === 'PRESCRIPTION_REQUIRED' && Array.isArray(caught.details?.medicine_ids)) {
+        cart.markPrescription(caught.details.medicine_ids.map(Number))
+        // The review step has no file field; send them back to where they can actually add the photo.
+        if (!file) setStep('checkout')
+      }
       requestAnimationFrame(() => errorBox.current?.focus())
     } finally {
       setBusy(false)
+      submitting.current = false
     }
   }
 
@@ -227,16 +250,35 @@ export default function Cart() {
                 <button type="button" className="submit-btn" onClick={openCheckout}>
                   <i className="bi bi-arrow-right-circle" aria-hidden="true"></i> Continue to checkout
                 </button>
-              ) : (
-                <form onSubmit={submit} noValidate aria-busy={busy}>
+              ) : null}
+
+              {step === 'checkout' ? (
+                <form onSubmit={proceedToReview} noValidate>
                   <div className="form-section-title">Your reservation</div>
 
                   <div className="form-field">
                     <label htmlFor="cart-notes">Additional notes (optional)</label>
-                    <textarea id="cart-notes" rows={3} maxLength={NOTES_MAX} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any special instructions..." aria-describedby="cart-notes-count" />
+                    <textarea
+                      id="cart-notes"
+                      rows={3}
+                      maxLength={NOTES_MAX}
+                      value={notes}
+                      onChange={(e) => {
+                        setNotes(e.target.value)
+                        if (notesError) setNotesError('')
+                      }}
+                      placeholder="Any special instructions..."
+                      aria-describedby={notesError ? 'cart-notes-count cart-notes-error' : 'cart-notes-count'}
+                      aria-invalid={notesError ? 'true' : undefined}
+                    />
                     <small id="cart-notes-count">
                       {notes.length} of {NOTES_MAX} characters
                     </small>
+                    {notesError ? (
+                      <p id="cart-notes-error" className="field-error" role="alert">
+                        {notesError}
+                      </p>
+                    ) : null}
                   </div>
 
                   {needsPhoto ? (
@@ -252,14 +294,58 @@ export default function Cart() {
                     />
                   ) : null}
 
-                  <button type="submit" className="submit-btn" disabled={busy}>
-                    <i className="bi bi-bag-check" aria-hidden="true"></i> {busy ? 'Sending...' : 'Reserve'}
+                  <button type="submit" className="submit-btn">
+                    <i className="bi bi-eye" aria-hidden="true"></i> Review reservation
                   </button>
-                  <button type="button" className="btn-outline btn-outline-blue back-button" onClick={() => setStep('cart')} disabled={busy}>
+                  <button type="button" className="btn-outline btn-outline-blue back-button" onClick={() => setStep('cart')}>
                     Back to cart
                   </button>
                 </form>
-              )}
+              ) : null}
+
+              {step === 'review' ? (
+                <div aria-busy={busy}>
+                  <h3 ref={reviewHeading} tabIndex={-1} className="form-section-title">
+                    Review before you reserve
+                  </h3>
+
+                  <dl className="claim-facts">
+                    <div>
+                      <dt>Branch</dt>
+                      <dd>{cart.branchName}</dd>
+                    </div>
+                    <div>
+                      <dt>Items</dt>
+                      <dd>
+                        {cart.count} {cart.count === 1 ? 'medicine' : 'medicines'}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  {notes.trim() ? (
+                    <>
+                      <div className="form-section-title">Your notes</div>
+                      <p className="detail-notes">{notes}</p>
+                    </>
+                  ) : null}
+
+                  {needsPhoto ? (
+                    <>
+                      <div className="form-section-title">Prescription photo</div>
+                      {preview ? <img className="presc-photo" src={preview} alt="The prescription photo that will be submitted with this reservation" /> : null}
+                    </>
+                  ) : null}
+
+                  <p className="field-hint">Check the quantities above before you continue: they cannot be changed once sent.</p>
+
+                  <button type="button" className="submit-btn" onClick={confirmReservation} disabled={busy}>
+                    <i className="bi bi-bag-check" aria-hidden="true"></i> {busy ? 'Sending...' : 'Confirm & Reserve'}
+                  </button>
+                  <button type="button" className="btn-outline btn-outline-blue back-button" onClick={() => setStep('checkout')} disabled={busy}>
+                    Back to edit
+                  </button>
+                </div>
+              ) : null}
             </div>
           </aside>
         </div>
