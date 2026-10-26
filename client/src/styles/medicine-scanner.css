@@ -1,0 +1,416 @@
+.medicine-scanner-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(30, 44, 54, 0.58);
+}
+
+.medicine-scanner-dialog {
+  width: min(960px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(22, 39, 51, 0.28);
+}
+
+.medicine-scanner-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 30px 20px;
+}
+
+.medicine-scanner-header h2 {
+  margin: 3px 0 7px;
+  color: #425f70;
+  font-size: 1.65rem;
+}
+
+.medicine-scanner-header p {
+  margin: 0;
+  color: #69757c;
+  line-height: 1.5;
+}
+
+.medicine-scanner-kicker {
+  color: #7393a7 !important;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.medicine-scanner-close {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 0;
+  border-radius: 50%;
+  background: #eef3f6;
+  color: #526d7d;
+  cursor: pointer;
+}
+
+.medicine-scanner-support-note {
+  display: flex;
+  gap: 10px;
+  margin: 0 30px 20px;
+  padding: 13px 15px;
+  border-radius: 10px;
+  background: #eef5f8;
+  color: #506876;
+  font-size: 0.9rem;
+}
+
+.medicine-scanner-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 30px 20px;
+}
+
+.medicine-scanner-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 1px solid #cfdae0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #607683;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.medicine-scanner-tabs button.active {
+  border-color: #7393a7;
+  background: #7393a7;
+  color: #ffffff;
+}
+
+.medicine-scanner-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  padding: 0 30px 30px;
+}
+
+.medicine-scanner-source,
+.medicine-scanner-result {
+  min-height: 390px;
+  border: 1px solid #dce5ea;
+  border-radius: 14px;
+  background: #fafcfd;
+}
+
+.medicine-scanner-upload {
+  display: flex;
+  min-height: 390px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px dashed #bdcdd6;
+  border-radius: 14px;
+  cursor: pointer;
+}
+
+.medicine-scanner-upload input,
+.medicine-scanner-replace input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.medicine-scanner-upload > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 35px;
+  text-align: center;
+  color: #607683;
+}
+
+.medicine-scanner-upload > div i {
+  margin-bottom: 6px;
+  color: #7393a7;
+  font-size: 2.7rem;
+}
+
+.medicine-scanner-upload > div strong {
+  color: #415c6c;
+  font-size: 1rem;
+}
+
+.medicine-scanner-upload > div span {
+  font-size: 0.82rem;
+}
+
+.medicine-scanner-upload img {
+  display: block;
+  width: 100%;
+  height: 390px;
+  object-fit: contain;
+  background: #f1f5f7;
+}
+
+.medicine-scanner-replace {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 10px;
+  color: #67879a;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.medicine-scanner-camera {
+  position: relative;
+  min-height: 390px;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #18242b;
+}
+
+.medicine-scanner-camera video {
+  display: block;
+  width: 100%;
+  height: 390px;
+  object-fit: cover;
+}
+
+.medicine-scanner-capture {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  min-height: 46px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #526f80;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.medicine-scanner-camera-preview {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 92px;
+  height: 92px;
+  border: 3px solid #ffffff;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.medicine-scanner-result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+
+.medicine-scanner-empty,
+.medicine-scanner-loading {
+  max-width: 300px;
+  text-align: center;
+  color: #71818a;
+}
+
+.medicine-scanner-empty > i {
+  color: #91aebb;
+  font-size: 3.2rem;
+}
+
+.medicine-scanner-empty h3,
+.medicine-scanner-loading strong {
+  display: block;
+  margin: 12px 0 6px;
+  color: #496475;
+}
+
+.medicine-scanner-empty p,
+.medicine-scanner-loading p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.medicine-scanner-spinner {
+  display: block;
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 15px;
+  border: 4px solid #dbe6eb;
+  border-top-color: #7393a7;
+  border-radius: 50%;
+  animation: medicine-scanner-spin 0.8s linear infinite;
+}
+
+@keyframes medicine-scanner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.medicine-scanner-error {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 18px;
+  border-radius: 10px;
+  background: #fff0f0;
+  color: #983939;
+}
+
+.medicine-scanner-error p {
+  margin: 4px 0 0;
+}
+
+.medicine-scanner-detection {
+  width: 100%;
+}
+
+.medicine-scanner-result-icon {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  margin-bottom: 14px;
+  border-radius: 14px;
+  background: #e9f1f5;
+  color: #7393a7;
+  font-size: 1.5rem;
+}
+
+.medicine-scanner-result-label {
+  margin: 0;
+  color: #788890;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.medicine-scanner-detection h3 {
+  margin: 4px 0 18px;
+  color: #3f5b6b;
+  font-size: 1.8rem;
+}
+
+.medicine-scanner-confidence > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  color: #637680;
+  font-size: 0.88rem;
+}
+
+.medicine-scanner-confidence-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e1e9ed;
+}
+
+.medicine-scanner-confidence-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #7393a7;
+}
+
+.medicine-scanner-low-confidence,
+.medicine-scanner-match-note {
+  margin: 17px 0;
+  padding: 12px 14px;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.medicine-scanner-low-confidence {
+  background: #fff4df;
+  color: #7b612d;
+}
+
+.medicine-scanner-match-note {
+  background: #edf6f1;
+  color: #466b59;
+}
+
+.medicine-scanner-predictions {
+  margin: 18px 0;
+}
+
+.medicine-scanner-predictions > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid #e5ebee;
+  color: #647780;
+  font-size: 0.88rem;
+}
+
+.medicine-scanner-search {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 999px;
+  background: #7393a7;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.medicine-scanner-search:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.catalog-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.catalog-scan-button {
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .medicine-scanner-overlay {
+    padding: 12px;
+  }
+
+  .medicine-scanner-body {
+    grid-template-columns: 1fr;
+  }
+
+  .medicine-scanner-dialog {
+    max-height: calc(100vh - 24px);
+  }
+
+  .medicine-scanner-header,
+  .medicine-scanner-tabs,
+  .medicine-scanner-body {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .medicine-scanner-support-note {
+    margin-right: 18px;
+    margin-left: 18px;
+  }
+}

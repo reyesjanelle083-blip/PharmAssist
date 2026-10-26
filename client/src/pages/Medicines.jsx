@@ -17,6 +17,7 @@ import { usePageTitle } from '../hooks/usePageTitle.js'
 import { displayName, RX_OPTIONS } from '../utils/catalog.js'
 import { straightLineKm } from '../utils/geo.js'
 import { isStaffRole } from '../utils/staff.js'
+import MedicineScanner from '../components/MedicineScanner.jsx'
 
 const PER_PAGE = 12
 const SHOWN_BRANCHES = 3
@@ -157,6 +158,7 @@ export default function Medicines() {
   const branches = useBranches()
 
   const [typed, setTyped] = useState('')
+  const [scannerOpen, setScannerOpen] = useState(false)
 
   const [filters, setFilters] = useState({
     q: '',
@@ -240,6 +242,19 @@ export default function Medicines() {
       branch: '',
     })
   }
+
+  function searchScannedMedicine(label) {
+  const query = label.trim()
+
+  setTyped(query)
+
+  change({
+    q: query,
+    category: '',
+    rx: '',
+    branch: '',
+  })
+}
 
   function goTo(nextPage) {
     setState({ phase: 'loading' })
@@ -336,6 +351,12 @@ export default function Medicines() {
           subtitle="Browse medicines, compare branch availability, and reserve from your preferred branch."
         />
 
+        <MedicineScanner
+          open={scannerOpen}
+          onClose={() => setScannerOpen(false)}
+          onUseDetection={searchScannedMedicine}
+        />
+
         <form
           className="catalog-filter-panel"
           onSubmit={submit}
@@ -351,12 +372,31 @@ export default function Medicines() {
               </p>
             </div>
 
-            {(filtered || typed !== '') && (
-              <Button onClick={clear} className="catalog-clear-button">
-                <i className="bi bi-arrow-counterclockwise" aria-hidden="true"></i>{' '}
-                Clear filters
+            <div className="catalog-filter-actions">
+              <Button
+                type="button"
+                variant="primary"
+                className="catalog-scan-button"
+                onClick={() => setScannerOpen(true)}
+              >
+                <i className="bi bi-camera" aria-hidden="true"></i>{' '}
+                Scan medicine
               </Button>
-            )}
+
+              {(filtered || typed !== '') && (
+                <Button
+                  type="button"
+                  onClick={clear}
+                  className="catalog-clear-button"
+                >
+                  <i
+                    className="bi bi-arrow-counterclockwise"
+                    aria-hidden="true"
+                  ></i>{' '}
+                  Clear filters
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="catalog-toolbar">
