@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Mail\EmailVerificationCodeMail;
 use App\Mail\PasswordResetCodeMail;
 use App\Models\EmailVerificationCode;
 use App\Models\PasswordReset;
@@ -75,9 +76,29 @@ class AuthService
 
         $this->audit->record('register', $user->id, 'user', $user->id);
 
-        // No email is sent yet. The code is written to the log in the local environment only.
-        if (app()->environment('local')) {
-            Log::info('Email verification code (local only)', ['user_id' => $user->id, 'code' => $code]);
+        try {
+            Mail::to($user->email)->send(
+                new EmailVerificationCodeMail(
+                    $code,
+                    self::CODE_TTL_MINUTES,
+                    $user->first_name,
+                )
+            );
+        } catch (Throwable $e) {
+            Log::error('Email verification email could not be sent', [
+                'user_id' => $user->id,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+
+            // Development fallback only.
+            // Never log verification codes outside the local environment.
+            if (app()->environment('local')) {
+                Log::warning('Email verification local fallback code', [
+                    'user_id' => $user->id,
+                    'code' => $code,
+                ]);
+            }
         }
 
         return $user;

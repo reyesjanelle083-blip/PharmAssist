@@ -25,7 +25,12 @@ class AuthController extends Controller
             $request->only(self::REGISTER_FIELDS)
         );
 
-        return $this->services->postJson('identity', '/internal/v1/auth/register', $fields);
+        return $this->services->postJson(
+            'identity',
+            '/internal/v1/auth/register',
+            $fields,
+            $this->slowIdentityTimeout(),
+        );
     }
 
     public function verifyEmail(Request $request): JsonResponse
