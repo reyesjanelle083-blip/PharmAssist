@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import '../styles/medicine-scanner.css'
 
 const MODEL_URL = '/models/medicine-scanner/model.json'
@@ -85,30 +85,30 @@ export default function MedicineScanner({
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
 
-  function stopCamera() {
+  const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop())
-      streamRef.current = null
+        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
     }
 
     if (videoRef.current) {
-      videoRef.current.srcObject = null
+        videoRef.current.srcObject = null
     }
-  }
+    }, [])
 
-  function resetScan() {
+    const resetScan = useCallback(() => {
     setPreview('')
     setResult(null)
     setError('')
     setPhase('idle')
-  }
+    }, [])
 
-  function closeScanner() {
+    const closeScanner = useCallback(() => {
     stopCamera()
     resetScan()
     setMode('upload')
     onClose()
-  }
+    }, [onClose, resetScan, stopCamera])
 
   useEffect(() => {
     if (!open) {
@@ -132,7 +132,7 @@ export default function MedicineScanner({
       document.removeEventListener('keydown', onKeyDown)
       stopCamera()
     }
-  }, [open])
+ }, [open, closeScanner, stopCamera])
 
   async function predict(canvas) {
     setError('')

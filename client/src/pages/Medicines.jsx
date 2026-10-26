@@ -18,6 +18,7 @@ import { displayName, RX_OPTIONS } from '../utils/catalog.js'
 import { straightLineKm } from '../utils/geo.js'
 import { isStaffRole } from '../utils/staff.js'
 import MedicineScanner from '../components/MedicineScanner.jsx'
+import MedicineLabelScanner from '../components/MedicineLabelScanner.jsx'
 
 const PER_PAGE = 12
 const SHOWN_BRANCHES = 3
@@ -159,6 +160,7 @@ export default function Medicines() {
 
   const [typed, setTyped] = useState('')
   const [scannerOpen, setScannerOpen] = useState(false)
+  const [labelScannerOpen, setLabelScannerOpen] = useState(false)
 
   const [filters, setFilters] = useState({
     q: '',
@@ -254,6 +256,21 @@ export default function Medicines() {
     rx: '',
     branch: '',
   })
+}
+
+function openLabelScanner() {
+  if (!role) {
+    navigate('/login', {
+      state: {
+        notice: 'login_required',
+        from: '/medicines',
+      },
+    })
+
+    return
+  }
+
+  setLabelScannerOpen(true)
 }
 
   function goTo(nextPage) {
@@ -357,6 +374,12 @@ export default function Medicines() {
           onUseDetection={searchScannedMedicine}
         />
 
+        <MedicineLabelScanner
+          open={labelScannerOpen}
+          onClose={() => setLabelScannerOpen(false)}
+          onUseMedicine={searchScannedMedicine}
+        />
+
         <form
           className="catalog-filter-panel"
           onSubmit={submit}
@@ -382,6 +405,20 @@ export default function Medicines() {
                 <i className="bi bi-camera" aria-hidden="true"></i>{' '}
                 Scan medicine
               </Button>
+
+              {role !== 'ceo' ? (
+                <Button
+                  type="button"
+                  className="catalog-label-scan-button"
+                  onClick={openLabelScanner}
+                >
+                  <i
+                    className="bi bi-card-text"
+                    aria-hidden="true"
+                  ></i>{' '}
+                  Scan label
+                </Button>
+              ) : null}
 
               {(filtered || typed !== '') && (
                 <Button
