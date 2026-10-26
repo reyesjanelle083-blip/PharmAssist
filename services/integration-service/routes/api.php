@@ -18,4 +18,7 @@ Route::middleware(InternalKey::class)->prefix('internal/v1')->group(function () 
 
     // Prescription image to text (local Tesseract). Reached through the gateway's POST /api/v1/prescriptions/ocr.
     Route::post('/ocr/prescription', [OcrController::class, 'prescription']);
+
+    // Medicine package label to structured fields using the same local Tesseract OCR.
+    Route::post('/ocr/label', [OcrController::class, 'label']);
 });

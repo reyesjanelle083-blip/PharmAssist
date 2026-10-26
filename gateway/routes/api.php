@@ -7,6 +7,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\InventorySyncController;
 use App\Http\Controllers\PrescriptionController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\MedicineLabelController;
 use Illuminate\Support\Facades\Route;
 use PharmAssist\Common\Http\Envelope;
 
@@ -69,5 +70,10 @@ Route::prefix('api/v1')->group(function () {
         // Prescription image to text: 10 requests a minute per IP, counted only after the token and role checks pass.
         Route::post('/prescriptions/ocr', [PrescriptionController::class, 'ocr'])
             ->middleware(['role:customer,pharmacy_technician,pharmacy_assistant,branch_manager', 'throttle:ocr']);
+
+            // Medicine package label OCR: same protected/rate-limited OCR budget.
+        Route::post('/labels/ocr', [MedicineLabelController::class, 'ocr'])
+            ->middleware([
+                'role:customer,pharmacy_technician,pharmacy_assistant,branch_manager', 'throttle:ocr',]);
     });
 });
