@@ -1,873 +1,1376 @@
 {
-  "info": {
-    "name": "PharmAssist - Auth through the gateway",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Functional and negative tests for the auth endpoints, called through the API gateway (base_url).\n\nSee tests/postman/README.md.\n\nNOTE: email verification with the 6-digit code (POST /auth/verify-email) is NOT tested here. The code is only written to the local identity-service log (APP_ENV=local) and no email is sent yet, so a collection cannot read it. That path is covered by the identity-service PHPUnit tests.\n\nOrder matters: 01 Auth, 02 Negative, then 99 Rate limit last. The login limit is 10 per minute per IP and this whole collection counts toward it, so wait 60 seconds between runs.\n\nSecrets: the seeded password is NOT stored in any file. Supply it with --env-var \"seed_password=<password>\" or paste it into the environment in Postman."
-  },
-  "item": [
-    {
-      "name": "01 Auth",
-      "item": [
-        {
-          "name": "T01 Register valid customer",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "var email = 'postman.' + Date.now() + '.' + Math.floor(Math.random() * 10000) + '@pharmassist.test';",
-                  "pm.environment.set('random_email', email);"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 201', function () { pm.response.to.have.status(201); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(201); });",
-                  "pm.test('no account-approval field and no ID photo are involved', function () {",
-                  "  pm.expect(body.data).to.not.have.property('verification_status');",
-                  "  pm.expect(pm.response.text()).to.not.include('id_photo');",
-                  "});",
-                  "pm.test('role is customer and email not verified', function () {",
-                  "  pm.expect(body.data.role).to.eql('customer');",
-                  "  pm.expect(body.data.email_verified).to.eql(false);",
-                  "});",
-                  "pm.test('email matches the generated random_email', function () { pm.expect(body.data.email).to.eql(pm.environment.get('random_email')); });",
-                  "pm.test('no sensitive fields leaked', function () {",
-                  "  var text = pm.response.text();",
-                  "  pm.expect(text).to.not.include('password_hash');",
-                  "  pm.expect(text).to.not.include('id_document_path');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\",\n  \"first_name\": \"Postman\",\n  \"last_name\": \"Tester\",\n  \"contact_no\": \"09171234567\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T03 Login valid approved customer",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(200); });",
-                  "pm.test('token_type is Bearer and expires_in is 3600', function () {",
-                  "  pm.expect(body.data.token_type).to.eql('Bearer');",
-                  "  pm.expect(body.data.expires_in).to.eql(3600);",
-                  "});",
-                  "pm.test('access_token has three dot-separated parts', function () {",
-                  "  pm.expect(body.data.access_token).to.be.a('string');",
-                  "  pm.expect(body.data.access_token.split('.')).to.have.lengthOf(3);",
-                  "});",
-                  "pm.test('user is the approved customer', function () {",
-                  "  pm.expect(body.data.user.email).to.eql(pm.environment.get('email_customer_approved'));",
-                  "  pm.expect(body.data.user.role).to.eql('customer');",
-                  "});",
-                  "pm.environment.set('access_token', body.data.access_token);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{email_customer_approved}}\",\n  \"password\": \"{{seed_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T06c GET /auth/me with a valid token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(200); });",
-                  "pm.test('returns the logged-in user', function () { pm.expect(body.data.email).to.eql(pm.environment.get('email_customer_approved')); });",
-                  "pm.test('body does not contain password_hash', function () {",
-                  "  var text = pm.response.text();",
-                  "  pm.expect(text).to.not.include('password_hash');",
-                  "  pm.expect(text).to.not.include('\"password\"');",
-                  "  pm.expect(text).to.not.include('id_document_path');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "me"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T03b Login CEO (role ceo, branch none)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(200); });",
-                  "pm.test('user role is ceo', function () { pm.expect(body.data.user.role).to.eql('ceo'); });",
-                  "pm.test('user branch_id is null', function () { pm.expect(body.data.user.branch_id).to.be.null; });",
-                  "pm.test('token returned', function () { pm.expect(body.data.access_token.split('.')).to.have.lengthOf(3); });",
-                  "pm.test('no password hash in response', function () { pm.expect(pm.response.text()).to.not.include('password_hash'); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{email_ceo}}\",\n  \"password\": \"{{seed_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T03c Login branch manager (role branch_manager, branch 1)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(200); });",
-                  "pm.test('user role is branch_manager', function () { pm.expect(body.data.user.role).to.eql('branch_manager'); });",
-                  "pm.test('user branch_id is 1', function () { pm.expect(body.data.user.branch_id).to.eql(1); });",
-                  "pm.test('token returned', function () { pm.expect(body.data.access_token.split('.')).to.have.lengthOf(3); });",
-                  "pm.test('no password hash in response', function () { pm.expect(pm.response.text()).to.not.include('password_hash'); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{email_manager}}\",\n  \"password\": \"{{seed_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T03d Login pharmacy technician (role pharmacy_technician, branch 1)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(200); });",
-                  "pm.test('user role is pharmacy_technician', function () { pm.expect(body.data.user.role).to.eql('pharmacy_technician'); });",
-                  "pm.test('user branch_id is 1', function () { pm.expect(body.data.user.branch_id).to.eql(1); });",
-                  "pm.test('token returned', function () { pm.expect(body.data.access_token.split('.')).to.have.lengthOf(3); });",
-                  "pm.test('no password hash in response', function () { pm.expect(pm.response.text()).to.not.include('password_hash'); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{email_technician}}\",\n  \"password\": \"{{seed_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T03e Login pharmacy assistant (role pharmacy_assistant, branch 1)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(200); });",
-                  "pm.test('user role is pharmacy_assistant', function () { pm.expect(body.data.user.role).to.eql('pharmacy_assistant'); });",
-                  "pm.test('user branch_id is 1', function () { pm.expect(body.data.user.branch_id).to.eql(1); });",
-                  "pm.test('token returned', function () { pm.expect(body.data.access_token.split('.')).to.have.lengthOf(3); });",
-                  "pm.test('no password hash in response', function () { pm.expect(pm.response.text()).to.not.include('password_hash'); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{email_assistant}}\",\n  \"password\": \"{{seed_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "02 Negative",
-      "item": [
-        {
-          "name": "T02 Register duplicate email",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 409', function () { pm.response.to.have.status(409); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(409); });",
-                  "pm.test('error.code is EMAIL_EXISTS', function () { pm.expect(body.error.code).to.eql('EMAIL_EXISTS'); });",
-                  "pm.test('data is null on error', function () { pm.expect(body.data).to.be.null; });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\",\n  \"first_name\": \"Postman\",\n  \"last_name\": \"Tester\",\n  \"contact_no\": \"09171234567\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "register"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T04 Login wrong password",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(401); });",
-                  "pm.test('error.code is INVALID_CREDENTIALS', function () { pm.expect(body.error.code).to.eql('INVALID_CREDENTIALS'); });",
-                  "pm.test('data is null on error', function () { pm.expect(body.data).to.be.null; });",
-                  "pm.environment.set('invalid_credentials_message', body.error.message);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{email_customer_approved}}\",\n  \"password\": \"Wrong-password-1\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T04b Login unknown email (same message as wrong password)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(401); });",
-                  "pm.test('error.code is INVALID_CREDENTIALS', function () { pm.expect(body.error.code).to.eql('INVALID_CREDENTIALS'); });",
-                  "pm.test('data is null on error', function () { pm.expect(body.data).to.be.null; });",
-                  "pm.test('message is identical to the wrong-password message (no user enumeration)', function () {",
-                  "  pm.expect(body.error.message).to.eql(pm.environment.get('invalid_credentials_message'));",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"nobody.exists@pharmassist.test\",\n  \"password\": \"Wrong-password-1\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T05 Login before the email is verified",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 403', function () { pm.response.to.have.status(403); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(403); });",
-                  "pm.test('error.code is EMAIL_NOT_VERIFIED', function () { pm.expect(body.error.code).to.eql('EMAIL_NOT_VERIFIED'); });",
-                  "pm.test('data is null on error', function () { pm.expect(body.data).to.be.null; });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T06 GET /auth/me without token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(401); });",
-                  "pm.test('error.code is UNAUTHENTICATED', function () { pm.expect(body.error.code).to.eql('UNAUTHENTICATED'); });",
-                  "pm.test('data is null on error', function () { pm.expect(body.data).to.be.null; });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "me"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T06b GET /auth/me with a tampered token",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "var t = pm.environment.get('access_token') || 'a.b.c';",
-                  "var last = t.charAt(t.length - 1);",
-                  "pm.environment.set('tampered_token', t.slice(0, -1) + (last === 'A' ? 'B' : 'A'));"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 401', function () { pm.response.to.have.status(401); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(401); });",
-                  "pm.test('error.code is UNAUTHENTICATED', function () { pm.expect(body.error.code).to.eql('UNAUTHENTICATED'); });",
-                  "pm.test('data is null on error', function () { pm.expect(body.data).to.be.null; });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{tampered_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/auth/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "me"
-              ]
-            }
-          }
-        },
-        {
-          "name": "T10c Unknown route returns a 404 envelope (no stack trace)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('status is 404', function () { pm.response.to.have.status(404); });",
-                  "var body = pm.response.json();",
-                  "pm.test('envelope has all six keys', function () {",
-                  "  ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "});",
-                  "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(404); });",
-                  "pm.test('error.code is NOT_FOUND', function () { pm.expect(body.error.code).to.eql('NOT_FOUND'); });",
-                  "pm.test('data is null on error', function () { pm.expect(body.data).to.be.null; });",
-                  "pm.test('no stack trace, file path or framework detail in the body', function () {",
-                  "  var text = pm.response.text();",
-                  "  ['trace', 'vendor', '.php', 'Illuminate', 'Stack', 'Symfony'].forEach(function (w) { pm.expect(text).to.not.include(w); });",
-                  "});",
-                  "pm.test('error comes from the gateway', function () { pm.expect(body.service).to.eql('gateway'); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/does-not-exist",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "does-not-exist"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "99 Rate limit (run last)",
-      "item": [
-        {
-          "name": "T31 Rate limit on login returns 429",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.info.iteration === 0 && !pm.environment.get('rl_attempts')) { pm.environment.set('rl_attempts', '0'); }"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "var attempts = parseInt(pm.environment.get('rl_attempts') || '0', 10) + 1;",
-                  "pm.environment.set('rl_attempts', String(attempts));",
-                  "var limited = pm.response.code === 429;",
-                  "if (!limited && attempts < 20) {",
-                  "  pm.execution.setNextRequest('T31 Rate limit on login returns 429'); // keep hammering until limited",
-                  "} else {",
-                  "  pm.environment.unset('rl_attempts');",
-                  "  var body = pm.response.json();",
-                  "  pm.test('a 429 appeared within 20 attempts (got it after ' + attempts + ')', function () { pm.expect(limited).to.be.true; });",
-                  "  pm.test('status is 429', function () { pm.response.to.have.status(429); });",
-                  "  pm.test('envelope has all six keys', function () {",
-                  "    ['status', 'service', 'request_id', 'data', 'error', 'warnings'].forEach(function (k) { pm.expect(body).to.have.property(k); });",
-                  "  });",
-                  "  pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
-                  "  pm.test('error.code is TOO_MANY_REQUESTS', function () { pm.expect(body.error.code).to.eql('TOO_MANY_REQUESTS'); });",
-                  "  pm.test('Retry-After header exists', function () { pm.expect(pm.response.headers.has('Retry-After')).to.be.true; });",
-                  "  pm.test('error comes from the gateway', function () { pm.expect(body.service).to.eql('gateway'); });",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"ratelimit.probe@pharmassist.test\",\n  \"password\": \"Wrong-password-1\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            }
-          }
-        }
-      ]
-    }
-  ]
+    "info":  {
+                 "name":  "PharmAssist - Auth through the gateway",
+                 "schema":  "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+                 "description":  "Functional and negative tests for the auth endpoints, called through the API gateway (base_url).\n\nSee tests/postman/README.md.\n\nNOTE: email verification with the 6-digit code (POST /auth/verify-email) is NOT tested here. The code is only written to the local identity-service log (APP_ENV=local) and no email is sent yet, so a collection cannot read it. That path is covered by the identity-service PHPUnit tests.\n\nOrder matters: 01 Auth, 02 Negative, then 99 Rate limit last. The login limit is 10 per minute per IP and this whole collection counts toward it, so wait 60 seconds between runs.\n\nSecrets: the seeded password is NOT stored in any file. Supply it with --env-var \"seed_password=\u003cpassword\u003e\" or paste it into the environment in Postman."
+             },
+    "item":  [
+                 {
+                     "name":  "01 Auth",
+                     "item":  [
+                                  {
+                                      "name":  "T01 Register valid customer",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "prerequest",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "var email = \u0027postman.\u0027 + Date.now() + \u0027.\u0027 + Math.floor(Math.random() * 10000) + \u0027@pharmassist.test\u0027;",
+                                                                                    "pm.environment.set(\u0027random_email\u0027, email);"
+                                                                                ]
+                                                                   }
+                                                    },
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 201\u0027, function () { pm.response.to.have.status(201); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(201); });",
+                                                                                    "pm.test(\u0027no account-approval field and no ID photo are involved\u0027, function () {",
+                                                                                    "  pm.expect(body.data).to.not.have.property(\u0027verification_status\u0027);",
+                                                                                    "  pm.expect(pm.response.text()).to.not.include(\u0027id_photo\u0027);",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027role is customer and email not verified\u0027, function () {",
+                                                                                    "  pm.expect(body.data.role).to.eql(\u0027customer\u0027);",
+                                                                                    "  pm.expect(body.data.email_verified).to.eql(false);",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027email matches the generated random_email\u0027, function () { pm.expect(body.data.email).to.eql(pm.environment.get(\u0027random_email\u0027)); });",
+                                                                                    "pm.test(\u0027no sensitive fields leaked\u0027, function () {",
+                                                                                    "  var text = pm.response.text();",
+                                                                                    "  pm.expect(text).to.not.include(\u0027password_hash\u0027);",
+                                                                                    "  pm.expect(text).to.not.include(\u0027id_document_path\u0027);",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\",\n  \"first_name\": \"Postman\",\n  \"last_name\": \"Tester\",\n  \"contact_no\": \"09171234567\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/register",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "register"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T03 Login valid approved customer",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(200); });",
+                                                                                    "pm.test(\u0027token_type is Bearer and expires_in is 3600\u0027, function () {",
+                                                                                    "  pm.expect(body.data.token_type).to.eql(\u0027Bearer\u0027);",
+                                                                                    "  pm.expect(body.data.expires_in).to.eql(3600);",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027access_token has three dot-separated parts\u0027, function () {",
+                                                                                    "  pm.expect(body.data.access_token).to.be.a(\u0027string\u0027);",
+                                                                                    "  pm.expect(body.data.access_token.split(\u0027.\u0027)).to.have.lengthOf(3);",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027user is the approved customer\u0027, function () {",
+                                                                                    "  pm.expect(body.data.user.email).to.eql(pm.environment.get(\u0027email_customer_approved\u0027));",
+                                                                                    "  pm.expect(body.data.user.role).to.eql(\u0027customer\u0027);",
+                                                                                    "});",
+                                                                                    "pm.environment.set(\u0027access_token\u0027, body.data.access_token);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{email_customer_approved}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T06c GET /auth/me with a valid token",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(200); });",
+                                                                                    "pm.test(\u0027returns the logged-in user\u0027, function () { pm.expect(body.data.email).to.eql(pm.environment.get(\u0027email_customer_approved\u0027)); });",
+                                                                                    "pm.test(\u0027body does not contain password_hash\u0027, function () {",
+                                                                                    "  var text = pm.response.text();",
+                                                                                    "  pm.expect(text).to.not.include(\u0027password_hash\u0027);",
+                                                                                    "  pm.expect(text).to.not.include(\u0027\"password\"\u0027);",
+                                                                                    "  pm.expect(text).to.not.include(\u0027id_document_path\u0027);",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/me",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "me"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T03b Login CEO (role ceo, branch none)",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(200); });",
+                                                                                    "pm.test(\u0027user role is ceo\u0027, function () { pm.expect(body.data.user.role).to.eql(\u0027ceo\u0027); });",
+                                                                                    "pm.test(\u0027user branch_id is null\u0027, function () { pm.expect(body.data.user.branch_id).to.be.null; });",
+                                                                                    "pm.test(\u0027token returned\u0027, function () { pm.expect(body.data.access_token.split(\u0027.\u0027)).to.have.lengthOf(3); });",
+                                                                                    "pm.test(\u0027no password hash in response\u0027, function () { pm.expect(pm.response.text()).to.not.include(\u0027password_hash\u0027); });",
+                                                                                    "var ceoTokenBody = pm.response.json();",
+                                                                                    "if (pm.response.code === 200 \u0026\u0026 ceoTokenBody.data \u0026\u0026 ceoTokenBody.data.access_token) {",
+                                                                                    "  pm.environment.set(\u0027ceo_access_token\u0027, ceoTokenBody.data.access_token);",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{email_ceo}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T03c Login branch manager (role branch_manager, branch 1)",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(200); });",
+                                                                                    "pm.test(\u0027user role is branch_manager\u0027, function () { pm.expect(body.data.user.role).to.eql(\u0027branch_manager\u0027); });",
+                                                                                    "pm.test(\u0027user branch_id is 1\u0027, function () { pm.expect(body.data.user.branch_id).to.eql(1); });",
+                                                                                    "pm.test(\u0027token returned\u0027, function () { pm.expect(body.data.access_token.split(\u0027.\u0027)).to.have.lengthOf(3); });",
+                                                                                    "pm.test(\u0027no password hash in response\u0027, function () { pm.expect(pm.response.text()).to.not.include(\u0027password_hash\u0027); });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{email_manager}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T03d Login pharmacy technician (role pharmacy_technician, branch 1)",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(200); });",
+                                                                                    "pm.test(\u0027user role is pharmacy_technician\u0027, function () { pm.expect(body.data.user.role).to.eql(\u0027pharmacy_technician\u0027); });",
+                                                                                    "pm.test(\u0027user branch_id is 1\u0027, function () { pm.expect(body.data.user.branch_id).to.eql(1); });",
+                                                                                    "pm.test(\u0027token returned\u0027, function () { pm.expect(body.data.access_token.split(\u0027.\u0027)).to.have.lengthOf(3); });",
+                                                                                    "pm.test(\u0027no password hash in response\u0027, function () { pm.expect(pm.response.text()).to.not.include(\u0027password_hash\u0027); });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{email_technician}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T03e Login pharmacy assistant (role pharmacy_assistant, branch 1)",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(200); });",
+                                                                                    "pm.test(\u0027user role is pharmacy_assistant\u0027, function () { pm.expect(body.data.user.role).to.eql(\u0027pharmacy_assistant\u0027); });",
+                                                                                    "pm.test(\u0027user branch_id is 1\u0027, function () { pm.expect(body.data.user.branch_id).to.eql(1); });",
+                                                                                    "pm.test(\u0027token returned\u0027, function () { pm.expect(body.data.access_token.split(\u0027.\u0027)).to.have.lengthOf(3); });",
+                                                                                    "pm.test(\u0027no password hash in response\u0027, function () { pm.expect(pm.response.text()).to.not.include(\u0027password_hash\u0027); });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{email_assistant}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "02 Negative",
+                     "item":  [
+                                  {
+                                      "name":  "T02 Register duplicate email",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 409\u0027, function () { pm.response.to.have.status(409); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(409); });",
+                                                                                    "pm.test(\u0027error.code is EMAIL_EXISTS\u0027, function () { pm.expect(body.error.code).to.eql(\u0027EMAIL_EXISTS\u0027); });",
+                                                                                    "pm.test(\u0027data is null on error\u0027, function () { pm.expect(body.data).to.be.null; });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\",\n  \"first_name\": \"Postman\",\n  \"last_name\": \"Tester\",\n  \"contact_no\": \"09171234567\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/register",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "register"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T04 Login wrong password",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 401\u0027, function () { pm.response.to.have.status(401); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(401); });",
+                                                                                    "pm.test(\u0027error.code is INVALID_CREDENTIALS\u0027, function () { pm.expect(body.error.code).to.eql(\u0027INVALID_CREDENTIALS\u0027); });",
+                                                                                    "pm.test(\u0027data is null on error\u0027, function () { pm.expect(body.data).to.be.null; });",
+                                                                                    "pm.environment.set(\u0027invalid_credentials_message\u0027, body.error.message);"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{email_customer_approved}}\",\n  \"password\": \"Wrong-password-1\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T04b Login unknown email (same message as wrong password)",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 401\u0027, function () { pm.response.to.have.status(401); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(401); });",
+                                                                                    "pm.test(\u0027error.code is INVALID_CREDENTIALS\u0027, function () { pm.expect(body.error.code).to.eql(\u0027INVALID_CREDENTIALS\u0027); });",
+                                                                                    "pm.test(\u0027data is null on error\u0027, function () { pm.expect(body.data).to.be.null; });",
+                                                                                    "pm.test(\u0027message is identical to the wrong-password message (no user enumeration)\u0027, function () {",
+                                                                                    "  pm.expect(body.error.message).to.eql(pm.environment.get(\u0027invalid_credentials_message\u0027));",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"nobody.exists@pharmassist.test\",\n  \"password\": \"Wrong-password-1\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T05 Login before the email is verified",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 403\u0027, function () { pm.response.to.have.status(403); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(403); });",
+                                                                                    "pm.test(\u0027error.code is EMAIL_NOT_VERIFIED\u0027, function () { pm.expect(body.error.code).to.eql(\u0027EMAIL_NOT_VERIFIED\u0027); });",
+                                                                                    "pm.test(\u0027data is null on error\u0027, function () { pm.expect(body.data).to.be.null; });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T06 GET /auth/me without token",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 401\u0027, function () { pm.response.to.have.status(401); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(401); });",
+                                                                                    "pm.test(\u0027error.code is UNAUTHENTICATED\u0027, function () { pm.expect(body.error.code).to.eql(\u0027UNAUTHENTICATED\u0027); });",
+                                                                                    "pm.test(\u0027data is null on error\u0027, function () { pm.expect(body.data).to.be.null; });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/me",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "me"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T06b GET /auth/me with a tampered token",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "prerequest",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "var t = pm.environment.get(\u0027access_token\u0027) || \u0027a.b.c\u0027;",
+                                                                                    "var last = t.charAt(t.length - 1);",
+                                                                                    "pm.environment.set(\u0027tampered_token\u0027, t.slice(0, -1) + (last === \u0027A\u0027 ? \u0027B\u0027 : \u0027A\u0027));"
+                                                                                ]
+                                                                   }
+                                                    },
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 401\u0027, function () { pm.response.to.have.status(401); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(401); });",
+                                                                                    "pm.test(\u0027error.code is UNAUTHENTICATED\u0027, function () { pm.expect(body.error.code).to.eql(\u0027UNAUTHENTICATED\u0027); });",
+                                                                                    "pm.test(\u0027data is null on error\u0027, function () { pm.expect(body.data).to.be.null; });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{tampered_token}}"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/me",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "me"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T10c Unknown route returns a 404 envelope (no stack trace)",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 404\u0027, function () { pm.response.to.have.status(404); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "pm.test(\u0027envelope status matches HTTP status\u0027, function () { pm.expect(body.status).to.eql(404); });",
+                                                                                    "pm.test(\u0027error.code is NOT_FOUND\u0027, function () { pm.expect(body.error.code).to.eql(\u0027NOT_FOUND\u0027); });",
+                                                                                    "pm.test(\u0027data is null on error\u0027, function () { pm.expect(body.data).to.be.null; });",
+                                                                                    "pm.test(\u0027no stack trace, file path or framework detail in the body\u0027, function () {",
+                                                                                    "  var text = pm.response.text();",
+                                                                                    "  [\u0027trace\u0027, \u0027vendor\u0027, \u0027.php\u0027, \u0027Illuminate\u0027, \u0027Stack\u0027, \u0027Symfony\u0027].forEach(function (w) { pm.expect(text).to.not.include(w); });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027error comes from the gateway\u0027, function () { pm.expect(body.service).to.eql(\u0027gateway\u0027); });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "GET",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/does-not-exist",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "does-not-exist"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "03 Auth Recovery",
+                     "item":  [
+                                  {
+                                      "name":  "T32 MANUAL Verify email with 6-digit code",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "prerequest",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "if (!pm.environment.get(\u0027email_manual_test\u0027) || !pm.environment.get(\u0027verification_code\u0027)) {",
+                                                                                    "  console.warn(\u0027Set email_manual_test and verification_code before running this request.\u0027);",
+                                                                                    "  pm.execution.skipRequest();",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    },
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027,\u0027service\u0027,\u0027request_id\u0027,\u0027data\u0027,\u0027error\u0027,\u0027warnings\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is present\u0027, function () {",
+                                                                                    "  pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027data is null\u0027, function () { pm.expect(body.data).to.eql(null); });",
+                                                                                    "pm.test(\u0027error is null\u0027, function () { pm.expect(body.error).to.eql(null); });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\r\n  \"email\": \"{{email_manual_test}}\",\r\n  \"code\": \"{{verification_code}}\"\r\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/verify-email",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "verify-email"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T33 Forgot password - existing account",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027,\u0027service\u0027,\u0027request_id\u0027,\u0027data\u0027,\u0027error\u0027,\u0027warnings\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is present\u0027, function () {",
+                                                                                    "  pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027response does not disclose account existence\u0027, function () {",
+                                                                                    "  pm.expect(body.data).to.eql(null);",
+                                                                                    "  pm.expect(body.error).to.eql(null);",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\r\n  \"email\": \"{{email_customer_approved}}\"\r\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/forgot-password",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "forgot-password"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T34 Forgot password - unknown account returns same public response",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027,\u0027service\u0027,\u0027request_id\u0027,\u0027data\u0027,\u0027error\u0027,\u0027warnings\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is present\u0027, function () {",
+                                                                                    "  pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027response does not disclose account existence\u0027, function () {",
+                                                                                    "  pm.expect(body.data).to.eql(null);",
+                                                                                    "  pm.expect(body.error).to.eql(null);",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\r\n  \"email\": \"unknown.password.reset@example.invalid\"\r\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/forgot-password",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "forgot-password"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T35 MANUAL Reset password with emailed 6-digit code",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "prerequest",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "if (!pm.environment.get(\u0027email_manual_test\u0027) || !pm.environment.get(\u0027reset_code\u0027)) {",
+                                                                                    "  console.warn(\u0027Set email_manual_test and reset_code before running this request.\u0027);",
+                                                                                    "  pm.execution.skipRequest();",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    },
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027,\u0027service\u0027,\u0027request_id\u0027,\u0027data\u0027,\u0027error\u0027,\u0027warnings\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is present\u0027, function () {",
+                                                                                    "  pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027data is null after reset\u0027, function () { pm.expect(body.data).to.eql(null); });"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\r\n  \"email\": \"{{email_manual_test}}\",\r\n  \"code\": \"{{reset_code}}\",\r\n  \"password\": \"{{reset_password_new}}\",\r\n  \"password_confirmation\": \"{{reset_password_new}}\"\r\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/reset-password",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "reset-password"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "04 OCR",
+                     "item":  [
+                                  {
+                                      "name":  "T36 Prescription OCR - authenticated customer",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027,\u0027service\u0027,\u0027request_id\u0027,\u0027data\u0027,\u0027error\u0027,\u0027warnings\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is present\u0027, function () {",
+                                                                                    "  pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027prescription OCR contract is present\u0027, function () {",
+                                                                                    "  pm.expect(body.data).to.have.property(\u0027ocr_text\u0027);",
+                                                                                    "  pm.expect(body.data).to.have.property(\u0027confidence\u0027);",
+                                                                                    "  pm.expect(body.data).to.have.property(\u0027ocr_status\u0027);",
+                                                                                    "  pm.expect(body.data).to.have.property(\u0027source\u0027);",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027OCR status is valid\u0027, function () {",
+                                                                                    "  pm.expect([\u0027success\u0027,\u0027low_confidence\u0027,\u0027unavailable\u0027]).to.include(body.data.ocr_status);",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "image",
+                                                                                        "type":  "file",
+                                                                                        "src":  "tests/fixtures/prescription-sample.png"
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/prescriptions/ocr",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "prescriptions",
+                                                                               "ocr"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T37 Medicine Label OCR - authenticated customer",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 200\u0027, function () { pm.response.to.have.status(200); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027,\u0027service\u0027,\u0027request_id\u0027,\u0027data\u0027,\u0027error\u0027,\u0027warnings\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027request_id is present\u0027, function () {",
+                                                                                    "  pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty;",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027label OCR structured fields are present\u0027, function () {",
+                                                                                    "  [\u0027medicine_name\u0027,\u0027dosage\u0027,\u0027batch_no\u0027,\u0027expiration_date\u0027,\u0027ocr_text\u0027,\u0027confidence\u0027,\u0027ocr_status\u0027,\u0027source\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body.data).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});",
+                                                                                    "pm.test(\u0027OCR status is valid\u0027, function () {",
+                                                                                    "  pm.expect([\u0027success\u0027,\u0027low_confidence\u0027,\u0027unavailable\u0027]).to.include(body.data.ocr_status);",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{access_token}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "image",
+                                                                                        "type":  "file",
+                                                                                        "src":  "tests/fixtures/medicine-label-sample.png"
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/labels/ocr",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "labels",
+                                                                               "ocr"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T38 Medicine Label OCR - no token returns 401",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 401\u0027, function () { pm.response.to.have.status(401); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027error envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027,\u0027service\u0027,\u0027request_id\u0027,\u0027data\u0027,\u0027error\u0027,\u0027warnings\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "image",
+                                                                                        "type":  "file",
+                                                                                        "src":  "tests/fixtures/medicine-label-sample.png"
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/labels/ocr",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "labels",
+                                                                               "ocr"
+                                                                           ]
+                                                              }
+                                                  }
+                                  },
+                                  {
+                                      "name":  "T39 Medicine Label OCR - CEO role returns 403",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "pm.test(\u0027status is 403\u0027, function () { pm.response.to.have.status(403); });",
+                                                                                    "var body = pm.response.json();",
+                                                                                    "pm.test(\u0027error envelope has all six keys\u0027, function () {",
+                                                                                    "  [\u0027status\u0027,\u0027service\u0027,\u0027request_id\u0027,\u0027data\u0027,\u0027error\u0027,\u0027warnings\u0027].forEach(function (k) {",
+                                                                                    "    pm.expect(body).to.have.property(k);",
+                                                                                    "  });",
+                                                                                    "});"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Authorization",
+                                                                         "value":  "Bearer {{ceo_access_token}}",
+                                                                         "type":  "text"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "formdata",
+                                                                   "formdata":  [
+                                                                                    {
+                                                                                        "key":  "image",
+                                                                                        "type":  "file",
+                                                                                        "src":  "tests/fixtures/medicine-label-sample.png"
+                                                                                    }
+                                                                                ]
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/labels/ocr",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "labels",
+                                                                               "ocr"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 },
+                 {
+                     "name":  "99 Rate limit (run last)",
+                     "item":  [
+                                  {
+                                      "name":  "T31 Rate limit on login returns 429",
+                                      "event":  [
+                                                    {
+                                                        "listen":  "prerequest",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "if (pm.info.iteration === 0 \u0026\u0026 !pm.environment.get(\u0027rl_attempts\u0027)) { pm.environment.set(\u0027rl_attempts\u0027, \u00270\u0027); }"
+                                                                                ]
+                                                                   }
+                                                    },
+                                                    {
+                                                        "listen":  "test",
+                                                        "script":  {
+                                                                       "type":  "text/javascript",
+                                                                       "exec":  [
+                                                                                    "var attempts = parseInt(pm.environment.get(\u0027rl_attempts\u0027) || \u00270\u0027, 10) + 1;",
+                                                                                    "pm.environment.set(\u0027rl_attempts\u0027, String(attempts));",
+                                                                                    "var limited = pm.response.code === 429;",
+                                                                                    "if (!limited \u0026\u0026 attempts \u003c 20) {",
+                                                                                    "  pm.execution.setNextRequest(\u0027T31 Rate limit on login returns 429\u0027); // keep hammering until limited",
+                                                                                    "} else {",
+                                                                                    "  pm.environment.unset(\u0027rl_attempts\u0027);",
+                                                                                    "  var body = pm.response.json();",
+                                                                                    "  pm.test(\u0027a 429 appeared within 20 attempts (got it after \u0027 + attempts + \u0027)\u0027, function () { pm.expect(limited).to.be.true; });",
+                                                                                    "  pm.test(\u0027status is 429\u0027, function () { pm.response.to.have.status(429); });",
+                                                                                    "  pm.test(\u0027envelope has all six keys\u0027, function () {",
+                                                                                    "    [\u0027status\u0027, \u0027service\u0027, \u0027request_id\u0027, \u0027data\u0027, \u0027error\u0027, \u0027warnings\u0027].forEach(function (k) { pm.expect(body).to.have.property(k); });",
+                                                                                    "  });",
+                                                                                    "  pm.test(\u0027request_id is non-empty\u0027, function () { pm.expect(body.request_id).to.be.a(\u0027string\u0027).and.not.empty; });",
+                                                                                    "  pm.test(\u0027error.code is TOO_MANY_REQUESTS\u0027, function () { pm.expect(body.error.code).to.eql(\u0027TOO_MANY_REQUESTS\u0027); });",
+                                                                                    "  pm.test(\u0027Retry-After header exists\u0027, function () { pm.expect(pm.response.headers.has(\u0027Retry-After\u0027)).to.be.true; });",
+                                                                                    "  pm.test(\u0027error comes from the gateway\u0027, function () { pm.expect(body.service).to.eql(\u0027gateway\u0027); });",
+                                                                                    "}"
+                                                                                ]
+                                                                   }
+                                                    }
+                                                ],
+                                      "request":  {
+                                                      "method":  "POST",
+                                                      "header":  [
+                                                                     {
+                                                                         "key":  "Content-Type",
+                                                                         "value":  "application/json"
+                                                                     },
+                                                                     {
+                                                                         "key":  "Accept",
+                                                                         "value":  "application/json"
+                                                                     }
+                                                                 ],
+                                                      "body":  {
+                                                                   "mode":  "raw",
+                                                                   "raw":  "{\n  \"email\": \"ratelimit.probe@pharmassist.test\",\n  \"password\": \"Wrong-password-1\"\n}",
+                                                                   "options":  {
+                                                                                   "raw":  {
+                                                                                               "language":  "json"
+                                                                                           }
+                                                                               }
+                                                               },
+                                                      "url":  {
+                                                                  "raw":  "{{base_url}}/auth/login",
+                                                                  "host":  [
+                                                                               "{{base_url}}"
+                                                                           ],
+                                                                  "path":  [
+                                                                               "auth",
+                                                                               "login"
+                                                                           ]
+                                                              }
+                                                  }
+                                  }
+                              ]
+                 }
+             ]
 }

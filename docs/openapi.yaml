@@ -12,7 +12,7 @@ info:
     `request_id` is also returned in the `X-Request-Id` header; a client may send its own `X-Request-Id`.
     The single exception is the successful image stream of `GET /reservations/{id}/prescription`
     (a binary file); its errors still use the envelope.
-    Where the plan listed 202/204 (logout, forgot-password) the contract returns an envelope with `data: null`.
+    Authentication operations that return no domain payload use the standard success envelope with `data: null`.
 
     **Tiers.** `x-tier` follows plan section 19: 0 = demo-critical, 1 = strongly desired, 2 = only if time remains.
     **Roles.** `x-roles` lists who may call the endpoint (`public` = no login). The gateway checks the role and the
@@ -30,6 +30,8 @@ tags:
   - { name: availability, description: Stock plus distance mashup }
   - { name: reservations, description: 'Reservations, notifications and messages' }
   - { name: prescriptions, description: Prescription image to text (OCR) }
+  - { name: labels, description: Medicine package label OCR and structured field extraction }
+  - { name: integrations, description: Legacy feed intake }
   - { name: integrations, description: Legacy feed intake }
   - { name: health, description: Health }
 
@@ -139,50 +141,87 @@ paths:
         '200': { description: The authenticated user., content: { application/json: { schema: { $ref: '#/components/schemas/UserEnvelope' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
-  /auth/forgot-password:
-    post:
-      operationId: forgotPassword
-      tags: [auth]
-      x-tier: 1
-      x-roles: [public]
-      security: []
-      summary: Send a password reset link (always answers the same, no enumeration)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [email]
-              properties:
-                email: { type: string, format: email }
-      responses:
-        '202': { $ref: '#/components/responses/OkNoData' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
-        '429': { $ref: '#/components/responses/TooManyRequests' }
+    /auth/forgot-password:
+      post:
+        operationId: forgotPassword
+        tags: [auth]
+        x-tier: 1
+        x-roles: [public]
+        security: []
+        summary: Send a password reset code
+        description: |
+          Sends a 6-digit password reset code to the email address when an account exists.
+          The public response is intentionally the same for existing and unknown email
+          addresses to prevent account enumeration. The code expires after 15 minutes.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [email]
+                properties:
+                  email:
+                    type: string
+                    format: email
+        responses:
+          '200':
+            $ref: '#/components/responses/OkNoData'
+          '422':
+            $ref: '#/components/responses/ValidationFailed'
+          '429':
+            $ref: '#/components/responses/TooManyRequests'
 
-  /auth/reset-password:
-    post:
-      operationId: resetPassword
-      tags: [auth]
-      x-tier: 1
-      x-roles: [public]
-      security: []
-      summary: Set a new password using the emailed token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [token, password]
-              properties:
-                token: { type: string, description: Must be valid and unused. }
-                password: { type: string, format: password, minLength: 8 }
-      responses:
-        '200': { $ref: '#/components/responses/OkNoData' }
-        '410': { $ref: '#/components/responses/Gone' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
+    /auth/reset-password:
+      post:
+        operationId: resetPassword
+        tags: [auth]
+        x-tier: 1
+        x-roles: [public]
+        security: []
+        summary: Reset a password using the emailed 6-digit code
+        description: |
+          Sets a new password using the email address and a valid, unused 6-digit
+          reset code. Reset codes expire after 15 minutes and are single-use.
+          A newly requested code replaces the previous code.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - email
+                  - code
+                  - password
+                  - password_confirmation
+                properties:
+                  email:
+                    type: string
+                    format: email
+                  code:
+                    type: string
+                    pattern: '^[0-9]{6}$'
+                    description: Six-digit password reset code sent by email.
+                  password:
+                    type: string
+                    format: password
+                    minLength: 8
+                    description: Must contain letters and digits.
+                  password_confirmation:
+                    type: string
+                    format: password
+                    minLength: 8
+                    description: Must match password.
+        responses:
+          '200':
+            $ref: '#/components/responses/OkNoData'
+          '410':
+            $ref: '#/components/responses/Gone'
+          '422':
+            $ref: '#/components/responses/ValidationFailed'
+          '429':
+            $ref: '#/components/responses/TooManyRequests'
 
   /staff:
     get:
@@ -758,7 +797,7 @@ paths:
               type: object
               required: [image]
               properties:
-                image: { type: string, format: binary, description: 'JPG or PNG, max 4 MB.' }
+                image: { type: string, format: binary, description: 'JPEG or PNG, max 5 MB.' }
       responses:
         '200': { description: OCR result., content: { application/json: { schema: { $ref: '#/components/schemas/OcrEnvelope' } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -766,6 +805,55 @@ paths:
         '413': { $ref: '#/components/responses/PayloadTooLarge' }
         '415': { $ref: '#/components/responses/UnsupportedMediaType' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /labels/ocr:
+    post:
+      operationId: ocrMedicineLabel
+      tags: [labels]
+      x-tier: 0
+      x-roles: [customer, pharmacy_technician, pharmacy_assistant, branch_manager]
+      summary: Extract structured medicine information from a package label
+      description: |
+        Sends a medicine package image through the gateway to the Integration
+        Service. Local Tesseract OCR extracts the printed text, then a rule-based
+        parser attempts to identify the medicine name, dosage or strength,
+        batch number and expiration date.
+
+        OCR results are assistive and may require manual verification. If the
+        OCR engine is unavailable, the request still returns 200 with
+        `ocr_status: unavailable`. Images and recognized text are not persisted
+        by the OCR service.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: JPEG or PNG medicine package image, max 5 MB.
+      responses:
+        '200':
+          description: Medicine label OCR result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelOcrEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
 
   /scans/medicine:
     post:
@@ -1205,6 +1293,56 @@ components:
         - type: object
           properties:
             matches: { type: array, items: { $ref: '#/components/schemas/Medicine' } }
+
+    LabelOcr:
+      type: object
+      required:
+        - medicine_name
+        - dosage
+        - batch_no
+        - expiration_date
+        - ocr_text
+        - confidence
+        - ocr_status
+        - source
+      properties:
+        medicine_name:
+          type: string
+          nullable: true
+          example: BIOGESIC
+          description: Medicine name inferred from the OCR text.
+        dosage:
+          type: string
+          nullable: true
+          example: 500 mg
+          description: Printed medicine strength or dose detected on the package.
+        batch_no:
+          type: string
+          nullable: true
+          example: BG24152
+        expiration_date:
+          type: string
+          nullable: true
+          example: 08/2028
+          description: Expiration value as printed and recognized from the package.
+        ocr_text:
+          type: string
+          nullable: true
+          description: Normalized raw text returned by the OCR engine.
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          nullable: true
+          example: 0.91
+        ocr_status:
+          type: string
+          enum: [success, low_confidence, unavailable]
+        source:
+          type: string
+          example: tesseract
+
     InventoryFeedXml:
       type: object
       xml: { name: inventoryFeed }
@@ -1442,6 +1580,15 @@ components:
         - type: object
           properties:
             data: { $ref: '#/components/schemas/Ocr' }
+
+    LabelOcrEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/LabelOcr'
+
     ScanEnvelope:
       allOf:
         - $ref: '#/components/schemas/Envelope'
