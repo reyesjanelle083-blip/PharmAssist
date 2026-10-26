@@ -1,5 +1,5 @@
 export { ApiError } from './ApiError.js'
-export { login, register, verifyEmail, me } from './auth.js'
+export {login, register, verifyEmail, forgotPassword, resetPassword, me,} from './auth.js'
 export { searchAvailability } from './availability.js'
 export { getMedicine, getMedicineCategories, getMedicineCounseling, getMedicines } from './medicines.js'
 export { getBranches } from './branches.js'

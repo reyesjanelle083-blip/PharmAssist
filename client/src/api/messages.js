@@ -25,6 +25,12 @@ const FRIENDLY = {
   VALIDATION_FAILED:
     'Please check the highlighted fields and try again.',
 
+  INVALID_RESET_CODE:
+    'That password reset code is not valid. Please check the code or request a new one.',
+
+  RESET_CODE_EXPIRED:
+    'That password reset code has expired. Please request a new one.',
+
   UNAUTHENTICATED:
     'Please log in to continue.',
 

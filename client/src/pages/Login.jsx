@@ -107,6 +107,15 @@ export default function Login() {
           )}
         </Field>
 
+        <div
+          className="form-links"
+          style={{ textAlign: 'right', marginBottom: 12 }}
+        >
+          <Link to="/forgot-password">
+            Forgot your password?
+          </Link>
+        </div>
+
         <button type="submit" disabled={busy}>
           {busy ? 'Signing in...' : 'Sign in'}
         </button>

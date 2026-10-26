@@ -3,12 +3,16 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Mail\PasswordResetCodeMail;
 use App\Models\EmailVerificationCode;
+use App\Models\PasswordReset;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Throwable;
 
 class AuthService
@@ -16,6 +20,8 @@ class AuthService
     public const MAX_FAILED_LOGINS = 5;
     public const LOCK_MINUTES = 15;
     public const CODE_TTL_MINUTES = 15;
+    /** Wrong reset codes allowed for one email before the code in force is cancelled and a new one must be requested. */
+    public const MAX_RESET_ATTEMPTS = 5;
 
     public function __construct(
         private readonly JwtIssuer $jwt,
@@ -97,6 +103,101 @@ class AuthService
             $record->update(['used_at' => now()]);
             $user->update(['email_verified_at' => $user->email_verified_at ?? now()]);
         });
+    }
+
+    /**
+     * Sends a 6-digit reset code to the email, when it belongs to an active account. The caller answers the same either way, so this method
+     * never says whether the email exists. Only the hash of the code is stored (table password_resets, one open code per user: asking again
+     * cancels the earlier one), and the code is never logged by the application.
+     */
+    public function forgotPassword(string $email): void
+    {
+        $email = strtolower(trim($email));
+        $user = User::where('email', $email)->first();
+
+        // The same work happens for an unknown email, so the answer does not take noticeably longer for a real one.
+        $code = (string) random_int(100000, 999999);
+        $hash = self::hashCode($code);
+
+        if (! $user || ! $user->is_active) {
+            return;
+        }
+
+        DB::transaction(function () use ($user, $hash) {
+            PasswordReset::where('user_id', $user->id)->whereNull('used_at')->update(['used_at' => now()]);
+            PasswordReset::create([
+                'user_id' => $user->id,
+                'token_hash' => $hash,
+                'expires_at' => now()->addMinutes(self::CODE_TTL_MINUTES),
+            ]);
+        });
+        RateLimiter::clear(self::resetAttemptsKey($email)); // a new code starts with a fresh set of attempts
+
+        $this->audit->record('password_reset_requested', $user->id, 'user', $user->id);
+
+        try {
+            Mail::to($user->email)->send(new PasswordResetCodeMail($code, self::CODE_TTL_MINUTES));
+        } catch (Throwable $e) {
+            // A mail failure must not turn into an answer that tells an outsider this email exists. Never log the code.
+            Log::error('Password reset email could not be sent', ['user_id' => $user->id, 'exception' => $e::class]);
+        }
+    }
+
+    /**
+     * @throws ApiException 422 INVALID_RESET_CODE (wrong, used, replaced or cancelled), 410 RESET_CODE_EXPIRED
+     */
+    public function resetPassword(string $email, string $code, string $password): void
+    {
+        $email = strtolower(trim($email));
+        $user = User::where('email', $email)->first();
+        $record = $user
+            ? PasswordReset::where('user_id', $user->id)->whereNull('used_at')->orderByDesc('id')->first()
+            : null;
+
+        if (! $record || ! hash_equals($record->token_hash, self::hashCode($code))) {
+            if ($record) {
+                $key = self::resetAttemptsKey($email);
+                RateLimiter::hit($key, self::CODE_TTL_MINUTES * 60);
+                if (RateLimiter::attempts($key) >= self::MAX_RESET_ATTEMPTS) {
+                    $record->update(['used_at' => now()]); // too many guesses: this code is dead, ask for a new one
+                    RateLimiter::clear($key);
+                }
+            }
+
+            throw $this->invalidResetCode();
+        }
+
+        if ($record->expires_at->isPast()) {
+            throw new ApiException('RESET_CODE_EXPIRED', 'The reset code has expired. Please request a new one.', 410);
+        }
+
+        DB::transaction(function () use ($user, $record, $password) {
+            // Locked and re-read so two requests with the same code cannot both succeed.
+            $current = PasswordReset::whereKey($record->id)->lockForUpdate()->first();
+            if (! $current || $current->used_at !== null) {
+                throw $this->invalidResetCode();
+            }
+
+            PasswordReset::where('user_id', $user->id)->whereNull('used_at')->update(['used_at' => now()]);
+            $user->forceFill([
+                'password_hash' => Hash::make($password),
+                'failed_logins' => 0,
+                'locked_until' => null,
+            ])->save();
+        });
+
+        RateLimiter::clear(self::resetAttemptsKey($email));
+        $this->audit->record('password_reset', $user->id, 'user', $user->id);
+    }
+
+    private static function resetAttemptsKey(string $email): string
+    {
+        return 'password-reset:'.sha1($email);
+    }
+
+    private function invalidResetCode(): ApiException
+    {
+        return new ApiException('INVALID_RESET_CODE', 'The reset code is invalid or has already been used.', 422);
     }
 
     /**

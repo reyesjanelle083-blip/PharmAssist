@@ -13,6 +13,8 @@ Route::middleware(InternalKey::class)->group(function () {
     Route::post('/internal/v1/auth/register', [AuthController::class, 'register']);
     Route::post('/internal/v1/auth/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/internal/v1/auth/login', [AuthController::class, 'login']);
+    Route::post('/internal/v1/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/internal/v1/auth/reset-password', [AuthController::class, 'resetPassword']);
 
     Route::get('/internal/v1/users/{id}', [UserController::class, 'show'])->whereNumber('id');
 });

@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
         // Per client IP. Exceeding a limit returns 429 TOO_MANY_REQUESTS with Retry-After.
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
         RateLimiter::for('register', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+        // Password reset: few requests, so the emails cannot be used to flood someone and a 6-digit code cannot be guessed quickly.
+        RateLimiter::for('forgot-password', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
+        RateLimiter::for('reset-password', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
         RateLimiter::for('ocr', fn (Request $request) => Limit::perMinute(10)->by($request->ip()));
         RateLimiter::for('sync', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));
         RateLimiter::for('availability', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));

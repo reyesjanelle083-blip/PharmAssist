@@ -33,6 +33,9 @@ import StaffReservationDetail from '../pages/staff/StaffReservationDetail.jsx'
 import StaffReservations from '../pages/staff/StaffReservations.jsx'
 import StaffStockAlerts from '../pages/staff/StaffStockAlerts.jsx'
 
+import ForgotPassword from '../pages/ForgotPassword.jsx'
+import ResetPassword from '../pages/ResetPassword.jsx'
+
 import {
   STAFF_ROLES,
 } from '../utils/staff.js'
@@ -56,6 +59,10 @@ export default function AppRoutes() {
           path="/verify-email"
           element={<VerifyEmail />}
         />
+
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
       </Route>
 
       {/* Customer/public site */}

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
@@ -24,6 +26,21 @@ class AuthController extends Controller
     public function verifyEmail(VerifyEmailRequest $request): JsonResponse
     {
         $this->auth->verifyEmail($request->validated('email'), $request->validated('code'));
+
+        return Envelope::success(null);
+    }
+
+    /** The same answer whether or not the email has an account. */
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $this->auth->forgotPassword($request->validated('email'));
+
+        return Envelope::success(null);
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $this->auth->resetPassword($request->validated('email'), $request->validated('code'), $request->validated('password'));
 
         return Envelope::success(null);
     }

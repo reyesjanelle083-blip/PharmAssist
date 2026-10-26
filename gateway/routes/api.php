@@ -22,6 +22,8 @@ Route::prefix('api/v1')->group(function () {
     Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:register');
     Route::post('/auth/verify-email', [AuthController::class, 'verifyEmail']);
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:forgot-password');
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:reset-password');
 
     Route::get('/medicines', [CatalogController::class, 'medicines']);
     Route::get('/medicines/categories', [CatalogController::class, 'categories']);
