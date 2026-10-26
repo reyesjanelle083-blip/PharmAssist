@@ -28,17 +28,17 @@ class UserSeeder extends Seeder
 
         $hash = Hash::make($password);
 
-        // [email, role, first_name, last_name, branch_id, verification_status]
+        // [email, role, first_name, last_name, branch_id]. Customers need no approval: a verified email is enough to log in.
+        // (customer.approved@ keeps its old name so existing notes and scripts still work; the old customer.pending@ account is gone.)
         $accounts = [
-            ['ceo@pharmassist.test', 'ceo', 'Carlos', 'Executive', null, 'approved'],
-            ['manager1@pharmassist.test', 'branch_manager', 'Maria', 'Manager', 1, 'approved'],
-            ['technician1@pharmassist.test', 'pharmacy_technician', 'Tomas', 'Technician', 1, 'approved'],
-            ['assistant1@pharmassist.test', 'pharmacy_assistant', 'Ana', 'Assistant', 1, 'approved'],
-            ['customer.approved@pharmassist.test', 'customer', 'Clara', 'Approved', null, 'approved'],
-            ['customer.pending@pharmassist.test', 'customer', 'Pedro', 'Pending', null, 'pending'],
+            ['ceo@pharmassist.test', 'ceo', 'Carlos', 'Executive', null],
+            ['manager1@pharmassist.test', 'branch_manager', 'Maria', 'Manager', 1],
+            ['technician1@pharmassist.test', 'pharmacy_technician', 'Tomas', 'Technician', 1],
+            ['assistant1@pharmassist.test', 'pharmacy_assistant', 'Ana', 'Assistant', 1],
+            ['customer.approved@pharmassist.test', 'customer', 'Clara', 'Approved', null],
         ];
 
-        foreach ($accounts as [$email, $role, $first, $last, $branchId, $status]) {
+        foreach ($accounts as [$email, $role, $first, $last, $branchId]) {
             User::updateOrCreate(
                 ['email' => $email],
                 [
@@ -48,7 +48,7 @@ class UserSeeder extends Seeder
                     'last_name' => $last,
                     'branch_id' => $branchId,
                     'email_verified_at' => now(),
-                    'verification_status' => $status,
+                    'verification_status' => 'approved', // legacy column, unused
                     'is_active' => true,
                     'failed_logins' => 0,
                     'locked_until' => null,

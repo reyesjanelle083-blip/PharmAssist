@@ -15,9 +15,7 @@ class User extends Authenticatable
         'contact_no',
         'branch_id',
         'email_verified_at',
-        'verification_status',
-        'rejection_reason',
-        'id_document_path',
+        'verification_status', // legacy (old ID-approval flow), unused; rejection_reason and id_document_path are legacy too and not fillable
         'is_active',
         'failed_logins',
         'locked_until',

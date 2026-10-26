@@ -18,3 +18,4 @@ c. The XML inventory feed (I-10) is Tier 0.
 d. Distance provider is OSRM (free).
 e. Hosting is Railway.
 f. TTS, STT and gesture recognition are out of scope.
+g. No customer ID photo and no customer account approval: a customer registers, verifies the email with the 6-digit code, and logs in. (Reservation approve/reject by staff is unchanged.)

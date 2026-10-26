@@ -8,7 +8,7 @@ Generated from `docs/openapi.yaml` (base path `/api/v1`). Roles: public = no log
 
 | Method | Path | Role | Module | Summary |
 |--------|------|------|--------|---------|
-| POST | `/auth/register` | public | auth | Register a customer account (starts as pending approval) |
+| POST | `/auth/register` | public | auth | Register a customer account (JSON, no ID photo; verify the email, then log in) |
 | POST | `/auth/verify-email` | public | auth | Confirm the emailed 6-digit code |
 | POST | `/auth/login` | public | auth | Log in and receive a JWT |
 | POST | `/auth/logout` | customer, technician, assistant, manager, ceo | auth | Invalidate the current token |
@@ -28,14 +28,12 @@ Generated from `docs/openapi.yaml` (base path `/api/v1`). Roles: public = no log
 | POST | `/integrations/inventory/sync` | manager, ceo | integrations | Import a branch inventory feed (XML or JSON) |
 | GET | `/health` | public | health | Aggregated health of the gateway and its services |
 
-### Tier 1 - strongly desired (12)
+### Tier 1 - strongly desired (10)
 
 | Method | Path | Role | Module | Summary |
 |--------|------|------|--------|---------|
 | POST | `/auth/forgot-password` | public | auth | Send a password reset link (always answers the same, no enumeration) |
 | POST | `/auth/reset-password` | public | auth | Set a new password using the emailed token |
-| GET | `/users/pending` | ceo | auth | ID-verification queue |
-| PATCH | `/users/{id}/verification` | ceo | auth | Approve or reject a customer account |
 | GET | `/medicines/{id}/counseling` | public | catalog | Plain-language guidance (internal data combined with openFDA) |
 | POST | `/branches` | ceo | catalog | Create a branch |
 | PUT | `/branches/{id}` | ceo | catalog | Replace a branch record |

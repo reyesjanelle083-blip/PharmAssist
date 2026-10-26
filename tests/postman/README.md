@@ -2,12 +2,11 @@
 
 Collection: `pharmassist.postman_collection.json` (Postman Collection v2.1)
 Environment: `local.postman_environment.json` (variables only, no secrets)
-Fixture: `fixtures/id.png` (1x1 PNG used as the registration ID photo)
 
 | Folder | What it covers |
 |--------|----------------|
 | 01 Auth | T01 register, T03 login (customer + CEO, manager, technician, assistant with role and branch checks), T06c `/auth/me` with a valid token |
-| 02 Negative | T02 duplicate email, T04/T04b wrong password vs unknown email (same message), T05 pending account, T06/T06b missing and tampered token, 404 envelope without stack trace |
+| 02 Negative | T02 duplicate email, T04/T04b wrong password vs unknown email (same message), T05 login before the email is verified (`EMAIL_NOT_VERIFIED`), T06/T06b missing and tampered token, 404 envelope without stack trace |
 | 99 Rate limit (run last) | T31 sends logins until a 429 appears, then checks `TOO_MANY_REQUESTS` and `Retry-After` |
 
 Every request asserts the HTTP status, that the envelope has `status`, `service`, `request_id`, `data`, `error` and `warnings`, and that `request_id` is not empty. Error cases also assert the exact `error.code`.
@@ -24,7 +23,7 @@ Email verification with the 6-digit code is **not** tested here: the code only e
 5. Node.js (Newman is fetched by `npx`).
 
 ## Run
-From the **repository root** (the fixture path is relative to it):
+From the repository root:
 
 ```
 npx newman run tests/postman/pharmassist.postman_collection.json -e tests/postman/local.postman_environment.json --env-var "seed_password=<password>"
@@ -47,4 +46,3 @@ npx newman run tests/postman/pharmassist.postman_collection.json -e tests/postma
 ## Notes
 - Each run registers a new customer with a unique generated email (`random_email`); these accounts accumulate in `identity_db`.
 - `access_token` and `random_email` are written into the environment at run time by the scripts. Newman does not save them back to the file unless you pass `--export-environment`; do not commit an exported environment.
-- Running in the Postman app: set the working directory to the repo root (Settings, Working directory) so `tests/postman/fixtures/id.png` is found.

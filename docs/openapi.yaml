@@ -24,7 +24,7 @@ servers:
   - url: http://localhost:8000/api/v1
     description: Local gateway
 tags:
-  - { name: auth, description: 'Accounts, login, approval and staff' }
+  - { name: auth, description: 'Accounts, login and staff' }
   - { name: catalog, description: 'Medicines, counseling and branches' }
   - { name: inventory, description: 'Branch stock and reports' }
   - { name: availability, description: Stock plus distance mashup }
@@ -45,23 +45,26 @@ paths:
       x-tier: 0
       x-roles: [public]
       security: []
-      summary: Register a customer account (starts as pending approval)
+      summary: Register a customer account
+      description: |
+        A customer registers with an email and a password, verifies the email with the 6-digit code (`POST /auth/verify-email`) and
+        can then log in. There is no ID photo and no administrator approval of the account. Only the fields below are read; a role or a
+        branch sent by the client is ignored (a new account is always a `customer`).
       requestBody:
         required: true
         content:
-          multipart/form-data:
+          application/json:
             schema:
               type: object
-              required: [email, password, first_name, last_name, contact_no, id_photo]
+              required: [email, password, first_name, last_name, contact_no]
               properties:
-                email: { type: string, format: email, maxLength: 255, description: Must be unique. }
+                email: { type: string, format: email, maxLength: 255, description: Must be unique (letter case and spaces around it are ignored). }
                 password: { type: string, format: password, minLength: 8, description: Minimum 8 characters with letters and digits. }
                 first_name: { type: string, maxLength: 100 }
                 last_name: { type: string, maxLength: 100 }
                 contact_no: { type: string, pattern: '^[0-9+\- ]{7,20}$' }
-                id_photo: { type: string, format: binary, description: 'JPG or PNG, max 2 MB. Stored privately and purged after the CEO decision.' }
       responses:
-        '201': { description: Created (verification code emailed)., content: { application/json: { schema: { $ref: '#/components/schemas/UserEnvelope' } } } }
+        '201': { description: Created. A 6-digit verification code is sent to the email; the account cannot log in until it is verified., content: { application/json: { schema: { $ref: '#/components/schemas/UserEnvelope' } } } }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
 
@@ -96,7 +99,7 @@ paths:
       x-roles: [public]
       security: []
       summary: Log in and receive a JWT
-      description: Wrong email or password returns a generic 401 (no user enumeration). 403 codes - `EMAIL_NOT_VERIFIED`, `ACCOUNT_PENDING`, `ACCOUNT_REJECTED`.
+      description: Wrong email or password returns a generic 401 (no user enumeration). A verified customer can log in at once, with no administrator approval. 403 codes - `EMAIL_NOT_VERIFIED` (verify the email first), `ACCOUNT_INACTIVE`. 423 `ACCOUNT_LOCKED` after repeated failures.
       requestBody:
         required: true
         content:
@@ -179,49 +182,6 @@ paths:
       responses:
         '200': { $ref: '#/components/responses/OkNoData' }
         '410': { $ref: '#/components/responses/Gone' }
-        '422': { $ref: '#/components/responses/ValidationFailed' }
-
-  /users/pending:
-    get:
-      operationId: listPendingUsers
-      tags: [auth]
-      x-tier: 1
-      x-roles: [ceo]
-      summary: ID-verification queue
-      parameters:
-        - { $ref: '#/components/parameters/Status' }
-        - { $ref: '#/components/parameters/Page' }
-        - { $ref: '#/components/parameters/PerPage' }
-      responses:
-        '200': { description: Accounts waiting for a decision., content: { application/json: { schema: { $ref: '#/components/schemas/UserListEnvelope' } } } }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-
-  /users/{id}/verification:
-    patch:
-      operationId: decideUserVerification
-      tags: [auth]
-      x-tier: 1
-      x-roles: [ceo]
-      summary: Approve or reject a customer account
-      parameters:
-        - { $ref: '#/components/parameters/IdPath' }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [decision]
-              properties:
-                decision: { type: string, enum: [approved, rejected] }
-                reason: { type: string, maxLength: 500, description: Required when the decision is rejected. }
-      responses:
-        '200': { description: Updated user (ID image purged)., content: { application/json: { schema: { $ref: '#/components/schemas/UserEnvelope' } } } }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { $ref: '#/components/responses/Forbidden' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
 
   /staff:
@@ -929,10 +889,6 @@ components:
       name: per_page
       in: query
       schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
-    Status:
-      name: status
-      in: query
-      schema: { type: string, enum: [pending, approved, rejected], default: pending }
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -951,7 +907,7 @@ components:
       description: Missing, invalid or expired token, or wrong credentials (`UNAUTHENTICATED`, `TOKEN_EXPIRED`, `INVALID_CREDENTIALS`).
       content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
     Forbidden:
-      description: Role or branch not allowed, or account state blocks it (`FORBIDDEN`, `ACCOUNT_PENDING`, `EMAIL_NOT_VERIFIED`, `ACCOUNT_REJECTED`).
+      description: Role or branch not allowed, or the account state blocks it (`FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `ACCOUNT_INACTIVE`).
       content: { application/json: { schema: { $ref: '#/components/schemas/ErrorEnvelope' } } }
     NotFound:
       description: Record does not exist (`NOT_FOUND`).
@@ -1040,7 +996,6 @@ components:
         role: { $ref: '#/components/schemas/Role' }
         branch_id: { type: integer, nullable: true, description: Reference to a branch in inventory-service (no foreign key). }
         email_verified: { type: boolean }
-        verification_status: { type: string, enum: [pending, approved, rejected] }
         is_active: { type: boolean }
         created_at: { type: string, format: date-time }
     Medicine:

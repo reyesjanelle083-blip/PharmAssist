@@ -13,10 +13,14 @@ Set `DB_PASSWORD` and `SEED_PASSWORD` in `.env` first. The seeder fails if `SEED
 and refuses to run when `APP_ENV=production`. It can be re-run safely (accounts are matched by email).
 
 ## Auth endpoints (internal, need `X-Internal-Key`)
-`POST /internal/v1/auth/register` (multipart, `id_photo` jpg/png max 2 MB), `POST /internal/v1/auth/verify-email`,
+`POST /internal/v1/auth/register` (JSON: email, password, first_name, last_name, contact_no; no ID photo), `POST /internal/v1/auth/verify-email`,
 `POST /internal/v1/auth/login` (returns an HS256 JWT, 60 min), `GET /internal/v1/users/{id}`.
 Requires `JWT_SECRET` (at least 32 characters) in `.env`; without it login fails closed with a 500.
 No email is sent yet: with `APP_ENV=local` the 6-digit verification code is written to `storage/logs/laravel.log`.
+A customer's flow is: register, verify the email with the 6-digit code, log in. There is no ID upload and no admin approval of the account;
+login is refused only for an unverified email (`EMAIL_NOT_VERIFIED`), an inactive account (`ACCOUNT_INACTIVE`) or a lock (`ACCOUNT_LOCKED`).
+The `users.verification_status`, `rejection_reason` and `id_document_path` columns come from the old ID-approval flow. They are kept (nothing
+reads or writes them any more) so no data is dropped; remove them in a later migration once nobody needs the old data.
 
 ## Tests
 Tests use in-memory SQLite. On machines where `pdo_sqlite` is disabled in `php.ini` (default on Windows), run:
@@ -28,14 +32,15 @@ php -d extension=pdo_sqlite -d extension=sqlite3 vendor/bin/phpunit
 ## Seeded test accounts
 All use the password from `SEED_PASSWORD`. Never commit that value.
 
-| Email | Role | Branch | Account status |
-|-------|------|--------|----------------|
-| ceo@pharmassist.test | ceo | - | approved |
-| manager1@pharmassist.test | branch_manager | 1 | approved |
-| technician1@pharmassist.test | pharmacy_technician | 1 | approved |
-| assistant1@pharmassist.test | pharmacy_assistant | 1 | approved |
-| customer.approved@pharmassist.test | customer | - | approved |
-| customer.pending@pharmassist.test | customer | - | pending (for testing CEO approval) |
+| Email | Role | Branch |
+|-------|------|--------|
+| ceo@pharmassist.test | ceo | - |
+| manager1@pharmassist.test | branch_manager | 1 |
+| technician1@pharmassist.test | pharmacy_technician | 1 |
+| assistant1@pharmassist.test | pharmacy_assistant | 1 |
+| customer.approved@pharmassist.test | customer | - |
+
+All are email-verified. A `customer.pending@pharmassist.test` row may still exist in a database seeded before this change; it can now log in like any verified customer.
 
 **Note:** `branch_id = 1` is only a reference (no foreign key, branches live in inventory-service).
 The inventory seed must create a branch with id 1, otherwise the staff accounts point at a branch that does not exist.

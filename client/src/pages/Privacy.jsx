@@ -6,71 +6,133 @@ export default function Privacy() {
   usePageTitle('Privacy Notice')
 
   return (
-    <ContentPage title="Privacy Notice" subtitle="What PharmAssist collects and why, in plain language">
-      <section className="content" aria-labelledby="privacy-note">
+    <ContentPage
+      title="Privacy Notice"
+      subtitle="What PharmAssist collects and why, in plain language"
+    >
+      <section
+        className="content"
+        aria-labelledby="privacy-note"
+      >
         <h2 id="privacy-note">About this notice</h2>
+
         <p>
-          PharmAssist is a school project. This notice was written by students to explain what the site does with your information. It is
-          <strong> not legal advice</strong> and it is not a formal legal document.
+          PharmAssist is a school project. This notice was written by
+          students to explain what the system does with information
+          provided by its users. It is <strong>not legal advice</strong>{' '}
+          and is not a formal legal document.
         </p>
       </section>
 
-      <section className="content" aria-labelledby="privacy-collect">
+      <section
+        className="content"
+        aria-labelledby="privacy-collect"
+      >
         <h2 id="privacy-collect">What we collect</h2>
+
         <ul>
           <li>
-            <strong>Account details:</strong> your name, email address, contact number and a password (kept only as a hash, never as plain
-            text).
+            <strong>Account details:</strong> your first name, last name,
+            email address and contact number. Your password is stored only
+            in hashed form and is not stored as readable plain text.
           </li>
+
           <li>
-            <strong>Your ID photo:</strong> used only to check who you are. It is deleted after the administrator has made a decision.
+            <strong>A prescription photo,</strong> when required for a
+            reservation. PharmAssist may process the image using its OCR
+            service to extract text that helps pharmacy staff review the
+            prescription.
           </li>
+
           <li>
-            <strong>A prescription photo,</strong> if you add one to a reservation: the text on it is read on our own server. It is not
-            sent to any other company or service.
-          </li>
-          <li>
-            <strong>Your reservations:</strong> what you reserved, at which branch, and the status.
+            <strong>Reservation information:</strong> the medicines you
+            reserved, selected branch, quantities, reservation status and
+            related transaction information.
           </li>
         </ul>
       </section>
 
-      <section className="content" aria-labelledby="privacy-location">
+      <section
+        className="content"
+        aria-labelledby="privacy-location"
+      >
         <h2 id="privacy-location">Your location</h2>
+
         <p>
-          If you press <strong>Use my location</strong>, your browser shares your position for that one search, so we can rank the
-          branches by distance. We do not store it, we do not write it in any log, and it is not kept in the address of the page.
+          If you select <strong>Use my location</strong>, your browser
+          shares your current coordinates for that search so PharmAssist
+          can rank pharmacy branches by proximity.
         </p>
+
         <p>
-          To estimate the distance, the position is sent to the distance service of this project. If that service is not available, the
-          estimate is calculated by the project's own server.
+          PharmAssist does not store the shared customer location as part
+          of the customer's account or reservation.
+        </p>
+
+        <p>
+          The location may be used by the project's distance and routing
+          integration to estimate travel distance or travel time. If
+          routing information is unavailable, the system can use a
+          fallback distance estimate.
         </p>
       </section>
 
-      <section className="content" aria-labelledby="privacy-map">
+      <section
+        className="content"
+        aria-labelledby="privacy-map"
+      >
         <h2 id="privacy-map">The map</h2>
+
         <p>
-          The map of the branches uses pictures (tiles) from <strong>OpenStreetMap</strong>. When the map loads, <strong>your browser sends
-          its request to the OpenStreetMap tile server</strong>, which can see your internet address and the part of the map you look at.
-          This is the only request the site makes to another company's server. Branch locations are approximate.
+          PharmAssist uses <strong>OpenStreetMap</strong> map tiles for
+          branch visualization. When the map is displayed, the browser may
+          request map tiles from the OpenStreetMap tile service.
+        </p>
+
+        <p>
+          Pharmacy branch locations shown in this school project are for
+          demonstration purposes.
         </p>
       </section>
 
-      <section className="content" aria-labelledby="privacy-storage">
+      <section
+        className="content"
+        aria-labelledby="privacy-storage"
+      >
         <h2 id="privacy-storage">What stays in your browser</h2>
+
         <ul>
-          <li>Your log-in session, in the browser tab only. It ends when you close the tab or log out.</li>
-          <li>Your text size, high contrast and readable font choices, so they are remembered next time.</li>
+          <li>
+            Your authenticated session information is kept in the browser
+            session and ends when you log out or the session expires.
+          </li>
+
+          <li>
+            Accessibility preferences such as text size, high contrast
+            and readable font settings may be stored so they can be
+            remembered.
+          </li>
         </ul>
-        <p>We do not use advertising or tracking cookies.</p>
+
+        <p>
+          PharmAssist does not use advertising or tracking cookies.
+        </p>
       </section>
 
-      <section className="content" aria-labelledby="privacy-ask">
+      <section
+        className="content"
+        aria-labelledby="privacy-ask"
+      >
         <h2 id="privacy-ask">Questions</h2>
+
         <p>
           {site.email ? (
             <>
-              You can write to the project team at <a href={`mailto:${site.email}`}>{site.email}</a>.
+              You can write to the project team at{' '}
+              <a href={`mailto:${site.email}`}>
+                {site.email}
+              </a>
+              .
             </>
           ) : (
             'Contact details for the project team will be added soon.'

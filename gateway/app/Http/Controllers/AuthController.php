@@ -19,17 +19,13 @@ class AuthController extends Controller
 
     public function register(Request $request): JsonResponse
     {
-        // Forward only the known fields and the ID photo, nothing else the client sent.
+        // Plain JSON registration. Forward only the known fields, nothing else the client sent (an old client's id_photo is ignored).
         $fields = array_map(
             fn ($value) => is_scalar($value) ? (string) $value : null,
             $request->only(self::REGISTER_FIELDS)
         );
 
-        $files = $request->file('id_photo') instanceof \Illuminate\Http\UploadedFile && $request->file('id_photo')->isValid()
-            ? ['id_photo' => $request->file('id_photo')]
-            : [];
-
-        return $this->services->postMultipart('identity', '/internal/v1/auth/register', $fields, $files);
+        return $this->services->postJson('identity', '/internal/v1/auth/register', $fields);
     }
 
     public function verifyEmail(Request $request): JsonResponse

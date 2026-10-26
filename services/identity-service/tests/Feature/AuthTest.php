@@ -8,9 +8,7 @@ use App\Models\User;
 use App\Services\AuthService;
 use App\Services\JwtIssuer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
 
@@ -20,8 +18,6 @@ class AuthTest extends TestCase
 
     private const KEY = 'test-internal-key';
     private const PASSWORD = 'Secret123';
-    // 1x1 transparent PNG (no GD extension needed to build a valid image upload)
-    private const PNG_1X1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
     protected function setUp(): void
     {
@@ -32,7 +28,6 @@ class AuthTest extends TestCase
             'pharmassist.service' => 'identity-service',
             'jwt.secret' => str_repeat('s', 40),
         ]);
-        Storage::fake('local');
     }
 
     // ---------------------------------------------------------------- helpers
@@ -50,7 +45,6 @@ class AuthTest extends TestCase
             'first_name' => 'New',
             'last_name' => 'Customer',
             'contact_no' => '09171234567',
-            'id_photo' => UploadedFile::fake()->createWithContent('id.png', base64_decode(self::PNG_1X1)),
         ], $overrides);
     }
 
@@ -64,7 +58,6 @@ class AuthTest extends TestCase
             'last_name' => 'User',
             'branch_id' => 1,
             'email_verified_at' => now(),
-            'verification_status' => 'approved',
             'is_active' => true,
         ], $overrides));
     }
@@ -95,26 +88,25 @@ class AuthTest extends TestCase
 
     // ---------------------------------------------------------------- register
 
-    public function test_register_creates_a_pending_customer_and_stores_the_id_privately(): void
+    public function test_register_creates_an_unverified_customer_without_any_id_photo(): void
     {
-        $response = $this->post('/internal/v1/auth/register', $this->registerPayload(), $this->headers());
+        $response = $this->postJson('/internal/v1/auth/register', $this->registerPayload(), $this->headers());
 
         $response->assertStatus(201)
             ->assertJsonStructure(['status', 'service', 'request_id', 'data', 'error', 'warnings'])
             ->assertJsonPath('data.email', 'new.customer@pharmassist.test')
             ->assertJsonPath('data.role', 'customer')
-            ->assertJsonPath('data.verification_status', 'pending')
             ->assertJsonPath('data.email_verified', false);
 
         $body = $response->getContent();
         $this->assertStringNotContainsString('password', $body);
         $this->assertStringNotContainsString('id_document_path', $body);
+        $this->assertArrayNotHasKey('verification_status', $response->json('data'), 'there is no account approval to report');
 
         $user = User::where('email', 'new.customer@pharmassist.test')->firstOrFail();
         $this->assertTrue(Hash::check(self::PASSWORD, $user->password_hash));
-        Storage::disk('local')->assertExists($user->id_document_path);
-        $this->assertStringStartsWith('id-documents/', $user->id_document_path);
-        $this->assertStringNotContainsString('id.png', $user->id_document_path);
+        $this->assertNull($user->id_document_path, 'no ID document is stored');
+        $this->assertNull($user->email_verified_at);
 
         $code = EmailVerificationCode::where('user_id', $user->id)->firstOrFail();
         $this->assertSame(64, strlen($code->code_hash)); // only a hash is stored
@@ -123,34 +115,63 @@ class AuthTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'register', 'actor_id' => $user->id]);
     }
 
+    public function test_register_also_accepts_a_form_post_and_ignores_a_leftover_id_photo_field(): void
+    {
+        $this->post('/internal/v1/auth/register', $this->registerPayload(['id_photo' => 'not-a-file']), $this->headers())
+            ->assertStatus(201)->assertJsonPath('data.role', 'customer');
+
+        $this->assertNull(User::firstOrFail()->id_document_path);
+    }
+
     public function test_register_with_a_duplicate_email_returns_409(): void
     {
         $this->makeUser(['email' => 'new.customer@pharmassist.test']);
 
-        $this->post('/internal/v1/auth/register', $this->registerPayload(), $this->headers())
+        $this->postJson('/internal/v1/auth/register', $this->registerPayload(), $this->headers())
             ->assertStatus(409)
             ->assertJsonPath('error.code', 'EMAIL_EXISTS');
 
         $this->assertSame(1, User::count());
-        $this->assertSame([], Storage::disk('local')->allFiles());
+        $this->assertSame(0, EmailVerificationCode::count());
     }
 
-    public function test_register_validates_input(): void
+    public function test_register_with_a_duplicate_email_ignores_letter_case_and_spaces(): void
     {
-        $this->post('/internal/v1/auth/register', $this->registerPayload(['password' => 'short1', 'id_photo' => UploadedFile::fake()->create('id.pdf', 100, 'application/pdf')]), $this->headers())
+        $this->makeUser(['email' => 'new.customer@pharmassist.test']);
+
+        $this->postJson('/internal/v1/auth/register', $this->registerPayload(['email' => '  New.Customer@Pharmassist.test ']), $this->headers())
+            ->assertStatus(409)->assertJsonPath('error.code', 'EMAIL_EXISTS');
+    }
+
+    public function test_register_validates_input_and_no_id_photo_is_needed(): void
+    {
+        $this->postJson('/internal/v1/auth/register', $this->registerPayload(['password' => 'short1']), $this->headers())
             ->assertStatus(422)
             ->assertJsonPath('error.code', 'VALIDATION_FAILED')
-            ->assertJsonStructure(['error' => ['details' => ['password', 'id_photo']]]);
+            ->assertJsonStructure(['error' => ['details' => ['password']]]);
 
-        $this->post('/internal/v1/auth/register', $this->registerPayload(['password' => 'onlyletters']), $this->headers())
+        $this->postJson('/internal/v1/auth/register', $this->registerPayload(['password' => 'onlyletters']), $this->headers())
             ->assertStatus(422);
+
+        $details = $this->postJson('/internal/v1/auth/register', ['email' => 'a@pharmassist.test'], $this->headers())
+            ->assertStatus(422)->json('error.details');
+        $this->assertArrayNotHasKey('id_photo', $details, 'an ID photo is no longer asked for');
+        $this->assertSame(0, User::count());
+    }
+
+    public function test_a_customer_cannot_choose_a_role_when_registering(): void
+    {
+        $this->postJson('/internal/v1/auth/register', $this->registerPayload(['role' => 'ceo', 'branch_id' => 1, 'is_active' => false]), $this->headers())->assertStatus(201);
+
+        $user = User::firstOrFail();
+        $this->assertSame(['customer', null, true], [$user->role, $user->branch_id, $user->is_active]);
     }
 
     // ---------------------------------------------------------------- verify email
 
     public function test_verify_email_marks_the_user_verified_and_the_code_used(): void
     {
-        $user = $this->makeUser(['email_verified_at' => null, 'verification_status' => 'pending']);
+        $user = $this->makeUser(['email_verified_at' => null]);
         $this->giveCode($user, '123456');
 
         $this->postJson('/internal/v1/auth/verify-email', ['email' => $user->email, 'code' => '123456'], $this->headers())
@@ -252,16 +273,57 @@ class AuthTest extends TestCase
         $this->login()->assertStatus(403)->assertJsonPath('error.code', 'EMAIL_NOT_VERIFIED');
     }
 
-    public function test_pending_rejected_and_inactive_accounts_are_403(): void
+    public function test_the_old_id_approval_states_never_block_a_verified_customer(): void
     {
-        $user = $this->makeUser(['verification_status' => 'pending']);
-        $this->login()->assertStatus(403)->assertJsonPath('error.code', 'ACCOUNT_PENDING');
+        $user = $this->makeUser(['role' => 'customer', 'branch_id' => null, 'verification_status' => 'pending']);
+        $this->login()->assertOk()->assertJsonPath('data.user.role', 'customer');
 
         $user->update(['verification_status' => 'rejected']);
-        $this->login()->assertStatus(403)->assertJsonPath('error.code', 'ACCOUNT_REJECTED');
+        $this->login()->assertOk();
 
-        $user->update(['verification_status' => 'approved', 'is_active' => false]);
+        $this->assertArrayNotHasKey('verification_status', $this->login()->json('data.user'));
+    }
+
+    public function test_an_inactive_account_is_still_403(): void
+    {
+        $this->makeUser(['is_active' => false]);
         $this->login()->assertStatus(403)->assertJsonPath('error.code', 'ACCOUNT_INACTIVE');
+    }
+
+    public function test_the_whole_customer_flow_is_register_verify_email_login_with_no_admin_step(): void
+    {
+        $this->postJson('/internal/v1/auth/register', $this->registerPayload(), $this->headers())->assertStatus(201);
+        $email = 'new.customer@pharmassist.test';
+
+        // before the email is verified there is no way in
+        $this->login(self::PASSWORD, $email)->assertStatus(403)->assertJsonPath('error.code', 'EMAIL_NOT_VERIFIED');
+
+        // verifying the email is the only step (the real code is only stored as a hash, so give the account a known one)
+        $this->giveCode(User::where('email', $email)->firstOrFail(), '482913');
+        $this->postJson('/internal/v1/auth/verify-email', ['email' => $email, 'code' => '482913'], $this->headers())->assertOk();
+
+        // and the customer can log in straight away
+        $response = $this->login(self::PASSWORD, $email)->assertOk()
+            ->assertJsonPath('data.token_type', 'Bearer')
+            ->assertJsonPath('data.user.role', 'customer')
+            ->assertJsonPath('data.user.email_verified', true);
+
+        $claims = app(JwtIssuer::class)->decode($response->json('data.access_token'));
+        $this->assertSame(['customer', null], [$claims['role'], $claims['branch_id']]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'login_success']);
+    }
+
+    public function test_staff_roles_and_their_branch_still_come_from_the_account_into_the_token(): void
+    {
+        foreach ([['pharmacy_technician', 1], ['pharmacy_assistant', 1], ['branch_manager', 2], ['ceo', null]] as $i => [$role, $branch]) {
+            $user = $this->makeUser(['email' => "staff{$i}@pharmassist.test", 'role' => $role, 'branch_id' => $branch]);
+
+            $claims = app(JwtIssuer::class)->decode(
+                $this->login(self::PASSWORD, $user->email)->assertOk()->json('data.access_token')
+            );
+
+            $this->assertSame([(string) $user->id, $role, $branch], [$claims['sub'], $claims['role'], $claims['branch_id']]);
+        }
     }
 
     public function test_account_locks_after_five_failures_and_unlocks_after_fifteen_minutes(): void
@@ -299,7 +361,8 @@ class AuthTest extends TestCase
 
     public function test_get_user_returns_the_user_without_sensitive_fields_or_404(): void
     {
-        $user = $this->makeUser(['id_document_path' => 'id-documents/secret.jpg']);
+        $user = $this->makeUser();
+        $user->forceFill(['id_document_path' => 'id-documents/secret.jpg'])->save(); // old data from before ID photos were removed
 
         $response = $this->getJson('/internal/v1/users/'.$user->id, $this->headers())
             ->assertOk()->assertJsonPath('data.id', $user->id);

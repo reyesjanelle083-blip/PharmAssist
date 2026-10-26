@@ -95,7 +95,37 @@ class ServiceClientTest extends TestCase
         $this->assertSame('identity-service', $response->json('service'));
     }
 
-    public function test_register_forwards_only_known_fields_and_the_id_photo_as_multipart(): void
+    public function test_register_is_plain_json_without_an_id_photo_and_forwards_only_known_fields(): void
+    {
+        Http::fake(['identity.test/*' => Http::response($this->downstream($this->userData(), 201), 201)]);
+
+        $this->postJson('/api/v1/auth/register', [
+            'email' => 'new@pharmassist.test',
+            'password' => 'Secret123',
+            'first_name' => 'New',
+            'last_name' => 'User',
+            'contact_no' => '09171234567',
+            'role' => 'ceo',                       // must not be forwarded
+            'verification_status' => 'approved',   // must not be forwarded
+            'branch_id' => 1,                      // must not be forwarded
+        ])->assertStatus(201)->assertJsonPath('service', 'identity-service');
+
+        Http::assertSent(function (Request $r) {
+            return $r->url() === 'http://identity.test/internal/v1/auth/register'
+                && ! $r->isMultipart()
+                && $r->isJson()
+                && $r->data() === [
+                    'email' => 'new@pharmassist.test',
+                    'password' => 'Secret123',
+                    'first_name' => 'New',
+                    'last_name' => 'User',
+                    'contact_no' => '09171234567',
+                ]
+                && $r->header('X-Internal-Key') === [$this->internalKey];
+        });
+    }
+
+    public function test_an_old_client_that_still_sends_an_id_photo_is_not_broken_and_the_file_is_not_forwarded(): void
     {
         Http::fake(['identity.test/*' => Http::response($this->downstream($this->userData(), 201), 201)]);
 
@@ -105,21 +135,24 @@ class ServiceClientTest extends TestCase
             'first_name' => 'New',
             'last_name' => 'User',
             'contact_no' => '09171234567',
-            'role' => 'ceo',                       // must not be forwarded
-            'verification_status' => 'approved',   // must not be forwarded
             'id_photo' => UploadedFile::fake()->createWithContent('id.png', base64_decode(self::PNG_1X1)),
         ], ['Accept' => 'application/json'])->assertStatus(201);
 
-        Http::assertSent(function (Request $r) {
-            $names = array_column($r->data(), 'name');
+        Http::assertSent(fn (Request $r) => $r->url() === 'http://identity.test/internal/v1/auth/register'
+            && ! $r->isMultipart()
+            && ! array_key_exists('id_photo', $r->data()));
+    }
 
-            return $r->url() === 'http://identity.test/internal/v1/auth/register'
-                && $r->isMultipart()
-                && in_array('id_photo', $names, true)
-                && in_array('email', $names, true)
-                && ! in_array('role', $names, true)
-                && ! in_array('verification_status', $names, true);
-        });
+    public function test_a_duplicate_email_is_relayed_unchanged_as_409(): void
+    {
+        $body = $this->downstream(null, 409, ['code' => 'EMAIL_EXISTS', 'message' => 'An account with this email already exists.', 'details' => null]);
+        Http::fake(['identity.test/*' => Http::response($body, 409)]);
+
+        $response = $this->postJson('/api/v1/auth/register', [
+            'email' => 'taken@pharmassist.test', 'password' => 'Secret123', 'first_name' => 'A', 'last_name' => 'B', 'contact_no' => '09171234567',
+        ])->assertStatus(409);
+
+        $this->assertSame($body, $response->json());
     }
 
     // ------------------------------------------------------------ failures

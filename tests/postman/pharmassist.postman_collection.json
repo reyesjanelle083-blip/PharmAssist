@@ -2,7 +2,7 @@
   "info": {
     "name": "PharmAssist - Auth through the gateway",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Functional and negative tests for the auth endpoints, called through the API gateway (base_url).\n\nRun from the repository root so the id.png fixture path resolves. See tests/postman/README.md.\n\nNOTE: email verification with the 6-digit code (POST /auth/verify-email) is NOT tested here. The code is only written to the local identity-service log (APP_ENV=local) and no email is sent yet, so a collection cannot read it. That path is covered by the identity-service PHPUnit tests.\n\nOrder matters: 01 Auth, 02 Negative, then 99 Rate limit last. The login limit is 10 per minute per IP and this whole collection counts toward it, so wait 60 seconds between runs.\n\nSecrets: the seeded password is NOT stored in any file. Supply it with --env-var \"seed_password=<password>\" or paste it into the environment in Postman."
+    "description": "Functional and negative tests for the auth endpoints, called through the API gateway (base_url).\n\nSee tests/postman/README.md.\n\nNOTE: email verification with the 6-digit code (POST /auth/verify-email) is NOT tested here. The code is only written to the local identity-service log (APP_ENV=local) and no email is sent yet, so a collection cannot read it. That path is covered by the identity-service PHPUnit tests.\n\nOrder matters: 01 Auth, 02 Negative, then 99 Rate limit last. The login limit is 10 per minute per IP and this whole collection counts toward it, so wait 60 seconds between runs.\n\nSecrets: the seeded password is NOT stored in any file. Supply it with --env-var \"seed_password=<password>\" or paste it into the environment in Postman."
   },
   "item": [
     {
@@ -33,7 +33,10 @@
                   "});",
                   "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
                   "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(201); });",
-                  "pm.test('verification_status is pending', function () { pm.expect(body.data.verification_status).to.eql('pending'); });",
+                  "pm.test('no account-approval field and no ID photo are involved', function () {",
+                  "  pm.expect(body.data).to.not.have.property('verification_status');",
+                  "  pm.expect(pm.response.text()).to.not.include('id_photo');",
+                  "});",
                   "pm.test('role is customer and email not verified', function () {",
                   "  pm.expect(body.data.role).to.eql('customer');",
                   "  pm.expect(body.data.email_verified).to.eql(false);",
@@ -52,44 +55,22 @@
             "method": "POST",
             "header": [
               {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
                 "key": "Accept",
                 "value": "application/json"
               }
             ],
             "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "email",
-                  "value": "{{random_email}}",
-                  "type": "text"
-                },
-                {
-                  "key": "password",
-                  "value": "{{seed_password}}",
-                  "type": "text"
-                },
-                {
-                  "key": "first_name",
-                  "value": "Postman",
-                  "type": "text"
-                },
-                {
-                  "key": "last_name",
-                  "value": "Tester",
-                  "type": "text"
-                },
-                {
-                  "key": "contact_no",
-                  "value": "09171234567",
-                  "type": "text"
-                },
-                {
-                  "key": "id_photo",
-                  "type": "file",
-                  "src": "tests/postman/fixtures/id.png"
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\",\n  \"first_name\": \"Postman\",\n  \"last_name\": \"Tester\",\n  \"contact_no\": \"09171234567\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
             "url": {
               "raw": "{{base_url}}/auth/register",
@@ -472,44 +453,22 @@
             "method": "POST",
             "header": [
               {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
                 "key": "Accept",
                 "value": "application/json"
               }
             ],
             "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "email",
-                  "value": "{{random_email}}",
-                  "type": "text"
-                },
-                {
-                  "key": "password",
-                  "value": "{{seed_password}}",
-                  "type": "text"
-                },
-                {
-                  "key": "first_name",
-                  "value": "Postman",
-                  "type": "text"
-                },
-                {
-                  "key": "last_name",
-                  "value": "Tester",
-                  "type": "text"
-                },
-                {
-                  "key": "contact_no",
-                  "value": "09171234567",
-                  "type": "text"
-                },
-                {
-                  "key": "id_photo",
-                  "type": "file",
-                  "src": "tests/postman/fixtures/id.png"
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\",\n  \"first_name\": \"Postman\",\n  \"last_name\": \"Tester\",\n  \"contact_no\": \"09171234567\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
+              }
             },
             "url": {
               "raw": "{{base_url}}/auth/register",
@@ -636,7 +595,7 @@
           }
         },
         {
-          "name": "T05 Login pending customer",
+          "name": "T05 Login before the email is verified",
           "event": [
             {
               "listen": "test",
@@ -650,7 +609,7 @@
                   "});",
                   "pm.test('request_id is non-empty', function () { pm.expect(body.request_id).to.be.a('string').and.not.empty; });",
                   "pm.test('envelope status matches HTTP status', function () { pm.expect(body.status).to.eql(403); });",
-                  "pm.test('error.code is ACCOUNT_PENDING', function () { pm.expect(body.error.code).to.eql('ACCOUNT_PENDING'); });",
+                  "pm.test('error.code is EMAIL_NOT_VERIFIED', function () { pm.expect(body.error.code).to.eql('EMAIL_NOT_VERIFIED'); });",
                   "pm.test('data is null on error', function () { pm.expect(body.data).to.be.null; });"
                 ]
               }
@@ -670,7 +629,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{email_customer_pending}}\",\n  \"password\": \"{{seed_password}}\"\n}",
+              "raw": "{\n  \"email\": \"{{random_email}}\",\n  \"password\": \"{{seed_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

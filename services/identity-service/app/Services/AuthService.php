@@ -6,11 +6,9 @@ use App\Exceptions\ApiException;
 use App\Models\EmailVerificationCode;
 use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 class AuthService
@@ -18,9 +16,6 @@ class AuthService
     public const MAX_FAILED_LOGINS = 5;
     public const LOCK_MINUTES = 15;
     public const CODE_TTL_MINUTES = 15;
-
-    /** Private disk (storage/app/private). Files are never served by URL. */
-    private const DISK = 'local';
 
     public function __construct(
         private readonly JwtIssuer $jwt,
@@ -33,7 +28,11 @@ class AuthService
         return hash_hmac('sha256', $code, (string) config('app.key'));
     }
 
-    public function register(array $data, UploadedFile $idPhoto): User
+    /**
+     * A customer registers with an email and a password, verifies the email with a 6-digit code, then logs in. There is no ID photo
+     * and no admin approval of the account.
+     */
+    public function register(array $data): User
     {
         $email = strtolower(trim($data['email']));
 
@@ -41,10 +40,8 @@ class AuthService
             throw $this->emailExists();
         }
 
-        $path = $idPhoto->store('id-documents', self::DISK); // random file name
-
         try {
-            [$user, $code] = DB::transaction(function () use ($data, $email, $path) {
+            [$user, $code] = DB::transaction(function () use ($data, $email) {
                 $user = User::create([
                     'email' => $email,
                     'password_hash' => Hash::make($data['password']),
@@ -52,8 +49,9 @@ class AuthService
                     'first_name' => $data['first_name'],
                     'last_name' => $data['last_name'],
                     'contact_no' => $data['contact_no'],
-                    'verification_status' => 'pending',
-                    'id_document_path' => $path,
+                    // Legacy column from the old ID-approval flow: nothing reads it any more. 'approved' keeps the row
+                    // valid for an older build, and a customer is never held back by it.
+                    'verification_status' => 'approved',
                 ]);
 
                 $code = (string) random_int(100000, 999999);
@@ -66,11 +64,7 @@ class AuthService
                 return [$user, $code];
             });
         } catch (UniqueConstraintViolationException) {
-            Storage::disk(self::DISK)->delete($path);
             throw $this->emailExists();
-        } catch (Throwable $e) {
-            Storage::disk(self::DISK)->delete($path);
-            throw $e;
         }
 
         $this->audit->record('register', $user->id, 'user', $user->id);
@@ -144,8 +138,6 @@ class AuthService
 
         $blocked = match (true) {
             $user->email_verified_at === null => ['EMAIL_NOT_VERIFIED', 'Please verify your email first.'],
-            $user->verification_status === 'pending' => ['ACCOUNT_PENDING', 'Your account is waiting for approval.'],
-            $user->verification_status === 'rejected' => ['ACCOUNT_REJECTED', 'Your account was not approved.'],
             ! $user->is_active => ['ACCOUNT_INACTIVE', 'This account is inactive.'],
             default => null,
         };

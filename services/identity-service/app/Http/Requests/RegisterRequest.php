@@ -28,7 +28,6 @@ class RegisterRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'contact_no' => ['required', 'string', 'regex:/^[0-9+\- ]{7,20}$/'],
-            'id_photo' => ['required', 'file', 'mimes:jpg,jpeg,png', 'max:2048'],
         ];
     }
 }

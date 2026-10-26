@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Public view of a user. Never exposes password_hash, id_document_path, lock or failure counters.
+ * Public view of a user. Never exposes password_hash, lock or failure counters, or any column of the old ID-approval flow.
  */
 class UserResource extends JsonResource
 {
@@ -23,7 +23,6 @@ class UserResource extends JsonResource
             'role' => $this->role,
             'branch_id' => $this->branch_id,
             'email_verified' => $this->email_verified_at !== null,
-            'verification_status' => $this->verification_status,
             'is_active' => $this->is_active,
             'created_at' => $this->created_at?->toIso8601String(),
         ];

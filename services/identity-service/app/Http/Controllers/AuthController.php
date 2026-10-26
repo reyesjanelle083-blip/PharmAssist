@@ -16,7 +16,7 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request): JsonResponse
     {
-        $user = $this->auth->register($request->validated(), $request->file('id_photo'));
+        $user = $this->auth->register($request->validated());
 
         return Envelope::success((new UserResource($user))->resolve(), 201);
     }
