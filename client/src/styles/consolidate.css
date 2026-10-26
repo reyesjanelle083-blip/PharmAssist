@@ -1,31 +1,13 @@
-/*
- * Visual consolidation step: no new features, no API/behaviour changes. This file only adjusts spacing, typography and a
- * few one-off styles so the customer screens read as one coherent design, built on the Phase 1 tokens (tokens.css,
- * ui.css), never on new copies of the old per-page stylesheets.
- */
-
-/* ---- one base font for the whole customer app ----
- * sidebar.css sets `* { font-family: 'Tinos', serif }` globally (it was written for one page, not a whole app), so
- * anything without its own more specific font-family rule - sidebar links, the hero buttons, plain paragraph text -
- * silently renders in a serif font while headings and most other UI text use Bricolage Grotesque. .legacy-shell wraps
- * every customer page (not the login/register pages, which already set their own plain sans-serif in app.css), so one
- * rule here is the single place this is decided, instead of papering over it on each element. */
 .legacy-shell {
   font-family: var(--pa-font);
 }
 
-/* ---- Home hero: the picture that was never added left a hero sized and gapped for a two-column layout ----
- * .parallax is still min-height: calc(100vh - 60px) in homepage.css (built for a wide hero photo beside the text that
- * no longer exists), so the text alone was stretched across almost the full screen height, pushing the search panel
- * below the fold. The hero keeps its full-width coloured band and its text and buttons; only the empty space shrinks. */
 .legacy-home .parallax {
   min-height: auto;
   padding-top: var(--pa-space-6);
   padding-bottom: var(--pa-space-6);
 }
 
-/* One hero heading size from the shared scale, replacing Bootstrap's display-3 (which could reach 80px+ on a wide
-   screen) - still clearly the page's biggest heading, but in proportion with the rest of the app, not 2-3x any other. */
 .hero-title {
   font-size: var(--pa-text-hero);
   line-height: 1.15;

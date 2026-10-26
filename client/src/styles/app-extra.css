@@ -1,9 +1,4 @@
-/*
- * Polish step: the top bar search, the sidebar name box, the About and Contact dialogs, the branches map, the carousel and the
- * text pages. Colours and sizes come from the old stylesheets (see styles/legacy/).
- */
 
-/* ---- sidebar name box: long text wraps or is cut with an ellipsis, never clipped (the full text is in the title) ---- */
 .sidebar .profile-details .name-job {
   flex: 1;
   min-width: 0;
@@ -17,7 +12,6 @@
   white-space: nowrap;
 }
 
-/* a button that looks like a sidebar link (Log out) */
 .sidebar .nav-links li button.nav-button {
   display: flex;
   align-items: center;
@@ -101,9 +95,9 @@
   }
 }
 
-/* ---- About and Contact dialogs (the old guide modal look: blue-grey header, white body, rounded corners) ---- */
+/* ---- About and Contact dialogs ---- */
 dialog.legacy-dialog {
-  margin: auto; /* sidebar.css resets every margin, which would pin the dialog to the corner */
+  margin: auto;
   width: min(90vw, 640px);
   max-height: 85vh;
   padding: 0;
@@ -260,7 +254,7 @@ dialog.legacy-dialog::backdrop {
   outline: none;
 }
 
-/* ---- carousel (our own slides on the old carousel look) ---- */
+/* ---- carousel  ---- */
 .legacy-carousel {
   margin: 40px auto 20px;
   padding-bottom: 8px;
@@ -326,7 +320,6 @@ dialog.legacy-dialog::backdrop {
   flex: none;
 }
 
-/* the dots stay 12 px as in the old design; the area you can press is 44 px */
 .legacy-carousel .indicator::after {
   content: '';
   position: absolute;
@@ -372,7 +365,6 @@ dialog.legacy-dialog::backdrop {
   margin: 0 auto 30px;
 }
 
-/* Bootstrap's own .carousel-indicators is absolutely positioned over the slide; the old carousel meant a row below it */
 .legacy-carousel .carousel-indicators {
   position: static;
   margin: 20px 0 0;
@@ -380,15 +372,11 @@ dialog.legacy-dialog::backdrop {
   gap: 10px;
 }
 
-/*
- * The text size buttons scale the page with CSS zoom (like the old zoom buttons). Leaflet measures the map in screen pixels and
- * gets confused by zoom, so the map is zoomed back to 1 inside the scaled page. It keeps its normal size at every text size.
- */
 .branch-map {
   zoom: calc(1 / var(--text-scale, 1));
 }
 
-/* ---- search filters (step: Medicine Search and Details), inside the .global-filter box ---- */
+/* ---- search filters ---- */
 .search-filters {
   display: flex;
   flex-wrap: wrap;
@@ -402,14 +390,11 @@ dialog.legacy-dialog::backdrop {
   margin-bottom: 0;
 }
 
-/* a second action under Reserve on a result card, taking you to the full medicine details page */
 .result-card-details-link {
   margin-top: 6px;
 }
 
 /* ---- medicine details page ---- */
-/* Centred with the same max-width the cart pages use (.cart-wrapper), so a full-width row (the availability preview
-   below) stays clear of the floating accessibility buttons on wide screens instead of running underneath them. */
 .medicine-details {
   max-width: 1120px;
   margin: 0 auto;
@@ -428,7 +413,6 @@ dialog.legacy-dialog::backdrop {
   }
 }
 
-/* the medicine info panel reuses the old search-result card look, without the hover lift or pointer cursor (it is not a link) */
 .medicine-details-card {
   cursor: default;
 }
@@ -471,7 +455,6 @@ dialog.legacy-dialog::backdrop {
   color: var(--pa-text, #42596f);
 }
 
-/* a plain card built only from the Phase 1 tokens, for new content that has no old-PharmAssist equivalent (counseling) */
 .pa-card {
   background: var(--pa-surface);
   border: 1px solid var(--pa-border);

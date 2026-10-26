@@ -1,12 +1,3 @@
-/*
- * PharmAssist stylesheet load order.
- *
- * The original PharmAssist design remains the visual
- * foundation. Current accessibility/component styles load
- * after it, followed by the final UI refinements.
- */
-
-
 /* =========================================================
    FONTS
 ========================================================= */
@@ -24,7 +15,7 @@
 
 
 /* =========================================================
-   OLD PHARMASSIST FOUNDATION
+   PHARMASSIST FOUNDATION
 ========================================================= */
 
 @import './styles/legacy/sidebar.css';
@@ -57,7 +48,7 @@
 
 
 /* =========================================================
-   OLD INLINE PAGE STYLES
+   INLINE PAGE STYLES
 ========================================================= */
 
 @import './styles/legacy/footer-inline.css';

@@ -1,0 +1,997 @@
+/* =========================================================
+   PHARMASSIST STAFF STOCK MODULE
+   Shared by Inventory + Stock Alerts
+========================================================= */
+
+.staff-stock-page {
+  width:
+    min(
+      1450px,
+      calc(100% - 42px)
+    );
+
+  margin: 0 auto;
+
+  padding-bottom: 52px;
+
+  color: #30475a;
+}
+
+
+/* =========================================================
+   HERO
+========================================================= */
+
+.staff-stock-hero {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 30px;
+
+  margin-bottom: 22px;
+
+  padding: 28px 32px;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #46677c,
+      #314f63
+    );
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 11px 30px
+    rgba(49, 70, 90, 0.12);
+}
+
+.staff-stock-hero__eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color:
+    rgba(255,255,255,0.72);
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.78rem;
+  font-weight: 800;
+
+  letter-spacing: 0.09em;
+
+  text-transform: uppercase;
+}
+
+.staff-stock-hero h1 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size:
+    clamp(
+      1.8rem,
+      3vw,
+      2.4rem
+    );
+
+  font-weight: 800;
+}
+
+.staff-stock-hero p {
+  max-width: 760px;
+
+  margin: 8px 0 0;
+
+  color:
+    rgba(255,255,255,0.82);
+
+  font-size: 0.95rem;
+
+  line-height: 1.55;
+}
+
+.staff-stock-hero__icon {
+  display: grid;
+
+  flex: 0 0 auto;
+
+  width: 76px;
+  height: 76px;
+
+  place-items: center;
+
+  color: #ffffff;
+
+  background:
+    rgba(255,255,255,0.1);
+
+  border:
+    1px solid
+    rgba(255,255,255,0.18);
+
+  border-radius: 20px;
+
+  font-size: 1.9rem;
+}
+
+.staff-stock-hero__icon--alert {
+  color: #fff5d8;
+
+  background:
+    rgba(255, 210, 110, 0.12);
+}
+
+
+/* =========================================================
+   FILTER
+========================================================= */
+
+.staff-stock-filter {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 22px;
+
+  margin-bottom: 18px;
+
+  padding: 18px 20px;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-radius: 16px;
+
+  box-shadow:
+    0 6px 20px
+    rgba(49,70,90,0.06);
+}
+
+.staff-stock-filter__intro {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.staff-stock-filter__intro > span {
+  display: grid;
+
+  width: 42px;
+  height: 42px;
+
+  place-items: center;
+
+  color: #46677c;
+
+  background: #eef4f7;
+
+  border-radius: 10px;
+}
+
+.staff-stock-filter__intro strong {
+  display: block;
+
+  color: #30475a;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.95rem;
+}
+
+.staff-stock-filter__intro small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #697a88;
+
+  font-size: 0.75rem;
+}
+
+.staff-stock-filter__controls {
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 10px;
+}
+
+.staff-stock-filter__field {
+  display: grid;
+
+  gap: 5px;
+}
+
+.staff-stock-filter__field label {
+  color: #566b79;
+
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.staff-stock-filter__field select {
+  min-width: 190px;
+  min-height: 44px;
+
+  padding: 8px 11px;
+
+  color: #30475a;
+
+  background: #ffffff;
+
+  border: 1px solid #cad7df;
+  border-radius: 9px;
+
+  font-size: 0.84rem;
+}
+
+.staff-stock-refresh {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  min-height: 44px;
+
+  padding: 8px 14px;
+
+  color: #46677c;
+
+  background: #eef4f7;
+
+  border: 1px solid #cad7df;
+  border-radius: 9px;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   INVENTORY SUMMARY
+========================================================= */
+
+.staff-stock-summary {
+  display: grid;
+
+  grid-template-columns:
+    230px
+    minmax(0,1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 22px;
+
+  min-height: 88px;
+
+  margin-bottom: 24px;
+
+  padding: 16px 20px;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-radius: 14px;
+}
+
+.staff-stock-summary > div:first-child {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+}
+
+.staff-stock-summary__icon {
+  display: grid;
+
+  width: 44px;
+  height: 44px;
+
+  flex: 0 0 auto;
+
+  place-items: center;
+
+  color: #46677c;
+
+  background: #eef4f7;
+
+  border-radius: 10px;
+}
+
+.staff-stock-summary
+> div:first-child
+> div {
+  display: flex;
+
+  align-items: baseline;
+
+  gap: 8px;
+}
+
+.staff-stock-summary strong {
+  color: #30475a;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 1.3rem;
+}
+
+.staff-stock-summary
+> div:first-child
+span:last-child {
+  color: #697a88;
+
+  font-size: 0.8rem;
+}
+
+.staff-stock-summary > p {
+  margin: 0;
+
+  color: #60727f;
+
+  font-size: 0.84rem;
+}
+
+.staff-stock-summary__view {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  color: #71818c;
+
+  font-size: 0.75rem;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   LIST HEADING
+========================================================= */
+
+.staff-stock-list-heading {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 13px;
+}
+
+.staff-stock-list-heading
+> div > span {
+  display: block;
+
+  color: #46677c;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.75rem;
+  font-weight: 800;
+
+  letter-spacing: 0.08em;
+
+  text-transform: uppercase;
+}
+
+.staff-stock-list-heading h2 {
+  margin: 3px 0 0;
+
+  color: #30475a;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 1.35rem;
+}
+
+.staff-stock-list-heading > small {
+  color: #697a88;
+
+  font-size: 0.75rem;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.staff-stock-table-wrap {
+  overflow-x: auto;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-radius: 16px;
+
+  box-shadow:
+    0 6px 22px
+    rgba(49,70,90,0.07);
+}
+
+.staff-stock-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  color: #435966;
+
+  font-size: 0.81rem;
+}
+
+.staff-stock-table thead {
+  background: #eef4f7;
+}
+
+.staff-stock-table th {
+  padding: 14px 13px;
+
+  color: #506a7a;
+
+  border-bottom:
+    1px solid #cfdae1;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.7rem;
+  font-weight: 800;
+
+  letter-spacing: 0.04em;
+
+  text-align: left;
+
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.staff-stock-table td {
+  padding: 14px 13px;
+
+  border-bottom:
+    1px solid #e5ebef;
+
+  vertical-align: middle;
+}
+
+.staff-stock-table
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.staff-stock-table tbody tr {
+  transition:
+    background-color
+    0.14s ease;
+}
+
+.staff-stock-table
+tbody tr:hover {
+  background: #f8fafb;
+}
+
+.staff-stock-table__number {
+  text-align: center !important;
+}
+
+
+/* =========================================================
+   MEDICINE CELL
+========================================================= */
+
+.staff-stock-table__medicine {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 210px;
+}
+
+.staff-stock-medicine-icon {
+  display: grid;
+
+  flex: 0 0 auto;
+
+  width: 36px;
+  height: 36px;
+
+  place-items: center;
+
+  color: #46677c;
+
+  background: #edf4f7;
+
+  border-radius: 9px;
+}
+
+.staff-stock-table__medicine
+strong {
+  display: block;
+
+  color: #30475a;
+
+  font-size: 0.82rem;
+}
+
+.staff-stock-table__medicine
+span {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #71818c;
+
+  font-size: 0.68rem;
+}
+
+.staff-stock-available {
+  color: #30475a;
+
+  font-size: 0.86rem;
+}
+
+
+/* =========================================================
+   STOCK ALERT METRICS
+========================================================= */
+
+.staff-alert-metrics {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(160px, 1fr))
+    minmax(230px, 1.4fr);
+
+  gap: 12px;
+
+  margin-bottom: 24px;
+}
+
+.staff-alert-metric,
+.staff-alert-updated {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  min-height: 88px;
+
+  padding: 15px 17px;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-radius: 14px;
+}
+
+.staff-alert-metric > span {
+  display: grid;
+
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 auto;
+
+  place-items: center;
+
+  color: #46677c;
+
+  background: #eef4f7;
+
+  border-radius: 10px;
+}
+
+.staff-alert-metric--out > span {
+  color: #9a4138;
+
+  background: #fff0ee;
+}
+
+.staff-alert-metric--low > span {
+  color: #8a611c;
+
+  background: #fff5df;
+}
+
+.staff-alert-metric strong {
+  display: block;
+
+  color: #30475a;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 1.35rem;
+}
+
+.staff-alert-metric small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #697a88;
+
+  font-size: 0.74rem;
+}
+
+.staff-alert-updated {
+  display: grid;
+
+  align-content: center;
+
+  gap: 2px;
+}
+
+.staff-alert-updated > span {
+  color: #788892;
+
+  font-size: 0.68rem;
+
+  text-transform: uppercase;
+}
+
+.staff-alert-updated strong {
+  color: #30475a;
+
+  font-size: 0.8rem;
+}
+
+.staff-alert-updated small {
+  color: #697a88;
+
+  font-size: 0.72rem;
+}
+
+
+/* =========================================================
+   ALERT ROWS
+========================================================= */
+
+.staff-alert-row--out {
+  box-shadow:
+    inset 4px 0 0
+    #b44b42;
+}
+
+.staff-alert-row--low {
+  box-shadow:
+    inset 4px 0 0
+    #c99435;
+}
+
+.staff-stock-truncated {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 6px;
+
+  margin: 14px auto 0;
+
+  color: #71818c;
+
+  font-size: 0.7rem;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.staff-stock-pager {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  margin-top: 20px;
+}
+
+.staff-stock-pager button {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  min-height: 40px;
+
+  padding: 8px 12px;
+
+  color: #46677c;
+
+  background: #ffffff;
+
+  border: 1px solid #cad7df;
+  border-radius: 8px;
+
+  font-size: 0.76rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.staff-stock-pager
+button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.45;
+}
+
+.staff-stock-pager span {
+  color: #697a88;
+
+  font-size: 0.75rem;
+}
+
+
+/* =========================================================
+   HIGH CONTRAST
+========================================================= */
+
+html[data-contrast='high']
+.staff-stock-hero,
+html[data-contrast='high']
+.staff-stock-filter,
+html[data-contrast='high']
+.staff-stock-summary,
+html[data-contrast='high']
+.staff-stock-table-wrap,
+html[data-contrast='high']
+.staff-alert-metric,
+html[data-contrast='high']
+.staff-alert-updated {
+  color: #ffffff !important;
+
+  background: #000000 !important;
+
+  border-color: #ffffff !important;
+}
+
+html[data-contrast='high']
+.staff-stock-table thead,
+html[data-contrast='high']
+.staff-stock-table tbody,
+html[data-contrast='high']
+.staff-stock-table tr,
+html[data-contrast='high']
+.staff-stock-table th,
+html[data-contrast='high']
+.staff-stock-table td {
+  color: #ffffff !important;
+
+  background: #000000 !important;
+
+  border-color: #ffffff !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1050px) {
+  .staff-alert-metrics {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0,1fr)
+      );
+  }
+}
+
+
+@media (max-width: 900px) {
+
+  .staff-stock-filter {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .staff-stock-filter__controls {
+    flex-wrap: wrap;
+  }
+
+  .staff-stock-summary {
+    grid-template-columns: 1fr;
+  }
+
+
+  /* Tables become cards */
+
+  .staff-stock-table-wrap {
+    overflow: visible;
+
+    background: transparent;
+
+    border: 0;
+
+    box-shadow: none;
+  }
+
+  .staff-stock-table thead {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    overflow: hidden;
+
+    clip: rect(0 0 0 0);
+
+    white-space: nowrap;
+  }
+
+  .staff-stock-table,
+  .staff-stock-table tbody,
+  .staff-stock-table tr,
+  .staff-stock-table td {
+    display: block;
+
+    width: 100%;
+  }
+
+  .staff-stock-table tbody {
+    display: grid;
+
+    gap: 12px;
+  }
+
+  .staff-stock-table tbody tr {
+    padding: 15px;
+
+    background: #ffffff;
+
+    border: 1px solid #d5e0e7;
+    border-radius: 14px;
+
+    box-shadow:
+      0 5px 17px
+      rgba(49,70,90,0.06);
+  }
+
+  .staff-stock-table td {
+    display: grid;
+
+    grid-template-columns:
+      minmax(115px, 38%)
+      minmax(0,1fr);
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 9px 0;
+
+    border-bottom:
+      1px solid #edf1f3;
+
+    text-align: left !important;
+  }
+
+  .staff-stock-table
+  td:last-child {
+    border-bottom: 0;
+  }
+
+  .staff-stock-table
+  td::before {
+    content:
+      attr(data-label);
+
+    color: #74858f;
+
+    font-size: 0.68rem;
+    font-weight: 800;
+
+    letter-spacing: 0.04em;
+
+    text-transform: uppercase;
+  }
+
+  .staff-stock-table__medicine {
+    display: grid;
+  }
+
+  .staff-stock-medicine-icon {
+    display: none;
+  }
+}
+
+
+@media (max-width: 700px) {
+
+  .staff-stock-page {
+    width:
+      calc(100% - 22px);
+  }
+
+  .staff-stock-hero {
+    padding: 22px 18px;
+  }
+
+  .staff-stock-hero__icon {
+    display: none;
+  }
+
+  .staff-stock-filter__controls {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .staff-stock-filter__field
+  select,
+  .staff-stock-refresh {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .staff-alert-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-stock-list-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+}
+
+
+@media (max-width: 430px) {
+
+  .staff-stock-table td {
+    grid-template-columns: 1fr;
+
+    gap: 5px;
+  }
+
+  .staff-stock-pager {
+    justify-content: space-between;
+  }
+}

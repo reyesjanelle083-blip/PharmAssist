@@ -11,6 +11,7 @@ import { isActiveStatus, STATUS_OPTIONS } from '../utils/status.js'
 import { branchLabel, useBranchNames } from '../hooks/useBranchNames.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
 import { formatDateTime, formatPeso } from '../utils/format.js'
+import '../styles/customer-reservations.css'
 
 const PER_PAGE = 10
 
@@ -56,7 +57,7 @@ export default function Reservations() {
   }
 
   return (
-    <div className="legacy-notif legacy-cart">
+    <div className="legacy-notif legacy-cart customer-reservations-page">
       <div className="notif-container">
         <div className="notif-header">
           <h1 ref={heading} tabIndex={-1} style={{ fontFamily: 'Bricolage Grotesque', fontSize: '1.8rem', fontWeight: 700, marginBottom: 8, color: 'inherit' }}>

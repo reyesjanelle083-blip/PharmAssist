@@ -1,0 +1,405 @@
+/* =========================================================
+   PHARMASSIST AUTH PAGES
+   Login / Register / Verify Email
+========================================================= */
+
+.legacy-auth #login-page {
+  min-height: 100vh;
+  background: #eef3f6;
+}
+
+
+/* LEFT FORM PANEL */
+
+.legacy-auth .login {
+  width: 40%;
+  min-width: 480px;
+  height: 100vh;
+
+  padding: 115px 64px 48px;
+
+  background: #ffffff;
+
+  overflow-y: auto;
+}
+
+.legacy-auth .login-title,
+.legacy-auth .register-title {
+  margin: 0 0 7px;
+
+  color: #36576d;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 2rem;
+  font-weight: 800;
+
+  text-align: left;
+}
+
+.legacy-auth .notice {
+  margin: 0 0 28px;
+
+  color: #71818c;
+
+  font-size: 0.9rem;
+
+  line-height: 1.5;
+
+  text-align: left;
+}
+
+
+/* LOGO */
+
+.legacy-auth #login-page #logo {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  z-index: 20;
+
+  display: flex;
+  align-items: center;
+
+  width: 40%;
+  min-width: 430px;
+  height: 96px;
+
+  padding: 14px 28px;
+
+  background: #ffffff;
+
+  border-bottom: 1px solid #edf1f3;
+}
+
+.legacy-auth #login-page #logo img {
+  display: block;
+
+  width: auto;
+  height: 68px;
+}
+
+
+/* FORM */
+
+.legacy-auth .form-login,
+.legacy-auth .form-register {
+  display: block;
+}
+
+.legacy-auth .form-login label,
+.legacy-auth .form-register label {
+  margin: 0 0 6px 4px;
+
+  color: #506572;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  text-align: left;
+}
+
+.legacy-auth .input-fullname,
+.legacy-auth .input-first_name,
+.legacy-auth .input-last_name,
+.legacy-auth .input-email,
+.legacy-auth .input-username,
+.legacy-auth .input-password {
+  min-height: 50px;
+
+  margin: 0 0 15px;
+  padding: 8px 12px;
+
+  background: #f4f7f9;
+
+  border: 1px solid #d3dee5;
+  border-radius: 12px;
+}
+
+.legacy-auth .input-fullname:focus-within,
+.legacy-auth .input-first_name:focus-within,
+.legacy-auth .input-last_name:focus-within,
+.legacy-auth .input-email:focus-within,
+.legacy-auth .input-username:focus-within,
+.legacy-auth .input-password:focus-within {
+  border-color: #7393a7;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(115, 147, 167, 0.12);
+}
+
+.legacy-auth .icon {
+  display: grid;
+
+  min-width: 34px;
+
+  place-items: center;
+
+  color: #7393a7;
+}
+
+.legacy-auth input[type="text"],
+.legacy-auth input[type="email"],
+.legacy-auth input[type="password"] {
+  font-size: 0.9rem;
+
+  color: #30475a;
+}
+
+.legacy-auth input::placeholder {
+  color: #9aa7af;
+}
+
+
+/* PASSWORD TOGGLE */
+
+.legacy-auth .toggle-password-btn {
+  right: 12px;
+
+  color: #71818c;
+}
+
+
+/* PRIMARY BUTTON */
+
+.legacy-auth button[type="submit"] {
+  min-height: 49px;
+
+  margin: 8px 0 4px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #52758b,
+      #36576d
+    );
+
+  border-radius: 11px;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.9rem;
+  font-weight: 800;
+
+  box-shadow:
+    0 7px 17px
+    rgba(54, 87, 109, 0.16);
+}
+
+.legacy-auth button[type="submit"]:hover:not(:disabled) {
+  opacity: 1;
+
+  transform: translateY(-1px);
+}
+
+
+/* LINKS */
+
+.legacy-auth .form-links {
+  margin-top: 18px;
+
+  text-align: center;
+}
+
+.legacy-auth .form-links a,
+.legacy-auth .signup-link a,
+.legacy-auth .login a.button-link {
+  color: #52758b;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  text-decoration: none;
+}
+
+.legacy-auth .signup-link {
+  margin-top: 13px !important;
+}
+
+.legacy-auth .signup-link span,
+.legacy-auth .signup-link span a {
+  font-size: 0.78rem !important;
+}
+
+
+/* NOTICES */
+
+.legacy-auth .app-notice {
+  margin-bottom: 18px;
+
+  padding: 12px 14px;
+
+  border-radius: 10px;
+
+  font-size: 0.8rem;
+
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   RIGHT BRAND PANEL
+========================================================= */
+
+.legacy-auth .background {
+  position: relative;
+
+  width: 60%;
+  height: 100vh;
+
+  padding: 70px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      135deg,
+      #8db0c2 0%,
+      #587c92 45%,
+      #36576d 100%
+    );
+}
+
+.legacy-auth .background::before {
+  content: "";
+
+  position: absolute;
+
+  width: 520px;
+  height: 520px;
+
+  top: -170px;
+  right: -120px;
+
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  border-radius: 50%;
+}
+
+.legacy-auth .background::after {
+  content: "";
+
+  position: absolute;
+
+  width: 380px;
+  height: 380px;
+
+  left: -100px;
+  bottom: -130px;
+
+  background:
+    rgba(255, 255, 255, 0.07);
+
+  border-radius: 50%;
+}
+
+.legacy-auth .background h1 {
+  position: relative;
+
+  z-index: 1;
+
+  max-width: 520px;
+
+  color: #ffffff;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: clamp(2.8rem, 5vw, 5.2rem);
+  font-weight: 800;
+
+  line-height: 1.02;
+
+  letter-spacing: -0.04em;
+
+  text-align: right;
+}
+
+
+/* =========================================================
+   REGISTER-SPECIFIC
+========================================================= */
+
+.legacy-auth .file-input-label {
+  border-radius: 12px;
+}
+
+.legacy-auth .checkbox {
+  margin: 12px 0;
+
+  font-size: 0.76rem;
+}
+
+.legacy-auth .checkbox label,
+.legacy-auth .checkbox a {
+  font-size: 0.76rem;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1050px) {
+
+  .legacy-auth .login {
+    width: 40%;
+    min-width: 430px;
+    height: 100vh;
+
+    padding: 115px 64px 48px;
+  }
+
+  .legacy-auth .background {
+    width: 52%;
+
+    padding: 50px;
+  }
+}
+
+/* ===== HEADER  ===== */
+@media (min-width: 769px) {
+  .legacy-auth #login-page {
+    position: relative;
+    min-height: 100vh;
+  }
+
+  .legacy-auth #login-page #logo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 30%;
+    height: 88px;
+    padding: 10px 40px;
+    margin: 0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    z-index: 100;
+  }
+
+  .legacy-auth #login-page #logo a {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+  }
+
+  .legacy-auth #login-page #logo img {
+    width: auto;
+    height: 64px;
+    display: block;
+  }
+
+  .legacy-auth .login {
+    padding-top: 105px;
+  }
+}

@@ -1,7 +1,4 @@
-import {
-  useEffect,
-  useState,
-} from 'react'
+import { useState } from 'react'
 
 import {
   MAX_QUANTITY,
@@ -22,6 +19,12 @@ export default function CartItem({
   const [reserveBy, setReserveBy] =
     useState('piece')
 
+    const activeReserveBy =
+      reserveBy === 'ten' &&
+      item.quantity % 10 !== 0
+        ? 'piece'
+        : reserveBy
+
   const maxQuantity = Math.min(
     MAX_QUANTITY,
     item.available,
@@ -31,23 +34,12 @@ export default function CartItem({
    * If live stock changes and the cart quantity is no
    * longer an exact group of 10, return to piece mode.
    */
-  useEffect(() => {
-    if (
-      reserveBy === 'ten' &&
-      item.quantity % 10 !== 0
-    ) {
-      setReserveBy('piece')
-    }
-  }, [
-    item.quantity,
-    reserveBy,
-  ])
 
   const canUseTen =
     maxQuantity >= 10
 
   const step =
-    reserveBy === 'ten'
+    activeReserveBy === 'ten'
       ? 10
       : 1
 
@@ -82,7 +74,7 @@ export default function CartItem({
   }
 
   function decrease() {
-    if (reserveBy === 'ten') {
+    if (activeReserveBy === 'ten') {
       onQuantityChange(
         Math.max(
           10,
@@ -106,7 +98,7 @@ export default function CartItem({
 
   const decreaseDisabled =
     busy ||
-    (reserveBy === 'ten'
+    (activeReserveBy === 'ten'
       ? item.quantity <= 10
       : item.quantity <= 1)
 
@@ -121,7 +113,7 @@ export default function CartItem({
     ) * item.quantity
 
   const groupedQuantity =
-    reserveBy === 'ten' &&
+    activeReserveBy === 'ten' &&
     item.quantity % 10 === 0
       ? item.quantity / 10
       : null
@@ -204,12 +196,12 @@ export default function CartItem({
             <button
               type="button"
               className={
-                reserveBy === 'piece'
+                activeReserveBy === 'piece'
                   ? 'final-cart-unit-option final-cart-unit-option--active'
                   : 'final-cart-unit-option'
               }
               aria-pressed={
-                reserveBy === 'piece'
+                activeReserveBy === 'piece'
               }
               onClick={choosePiece}
               disabled={busy}
@@ -233,12 +225,12 @@ export default function CartItem({
             <button
               type="button"
               className={
-                reserveBy === 'ten'
+                activeReserveBy === 'ten'
                   ? 'final-cart-unit-option final-cart-unit-option--active'
                   : 'final-cart-unit-option'
               }
               aria-pressed={
-                reserveBy === 'ten'
+                activeReserveBy === 'ten'
               }
               onClick={chooseTen}
               disabled={

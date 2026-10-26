@@ -1,0 +1,459 @@
+/* =========================================================
+   CUSTOMER RESERVATIONS
+========================================================= */
+
+.customer-reservations-page .notif-container,
+.customer-reservation-detail .cart-wrapper {
+  width: min(1400px, calc(100% - 42px));
+  max-width: none;
+  margin-inline: auto;
+}
+
+
+/* =========================================================
+   MY RESERVATIONS HEADER
+========================================================= */
+
+.customer-reservations-page .notif-header {
+  margin-bottom: 20px;
+  padding: 25px 28px;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-radius: 17px;
+
+  box-shadow:
+    0 6px 22px
+    rgba(49, 70, 90, 0.06);
+
+  text-align: left;
+}
+
+.customer-reservations-page .notif-header h1 {
+  margin: 0 0 5px !important;
+
+  color: #30475a !important;
+
+  font-size: 2rem !important;
+}
+
+.customer-reservations-page .notif-header p {
+  margin: 0;
+
+  color: #697a88;
+
+  font-size: 0.9rem;
+}
+
+
+/* =========================================================
+   FILTER
+========================================================= */
+
+.customer-reservations-page .notif-filter {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+  padding: 15px 18px;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-radius: 13px;
+}
+
+.customer-reservations-page .notif-filter label {
+  margin: 0;
+
+  color: #506572;
+
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.customer-reservations-page .notif-filter select {
+  min-width: 200px;
+  min-height: 43px;
+
+  padding: 8px 11px;
+
+  color: #30475a;
+
+  background: #ffffff;
+
+  border: 1px solid #cbd8df;
+  border-radius: 8px;
+
+  font-size: 0.82rem;
+}
+
+
+/* =========================================================
+   UPDATED / REFRESH
+========================================================= */
+
+.customer-reservations-page > .notif-container > .field-hint,
+.customer-reservations-page .notif-container > .field-hint {
+  display: flex;
+
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 7px;
+
+  margin: 0 0 10px;
+
+  color: #71818c;
+
+  font-size: 0.73rem;
+}
+
+.customer-reservations-page .field-hint .ui-btn {
+  min-height: 36px;
+
+  padding: 5px 10px;
+
+  font-size: 0.72rem;
+}
+
+
+/* =========================================================
+   TABLE
+========================================================= */
+
+.customer-reservations-page .reservation-table {
+  width: 100%;
+
+  overflow: hidden;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 6px 22px
+    rgba(49, 70, 90, 0.065);
+
+  font-size: 0.82rem;
+}
+
+.customer-reservations-page .reservation-table thead {
+  background: #eef4f7;
+}
+
+.customer-reservations-page .reservation-table th {
+  padding: 14px 15px;
+
+  color: #506a7a;
+
+  border-bottom: 1px solid #cfdae1;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.7rem;
+  font-weight: 800;
+
+  letter-spacing: 0.045em;
+
+  text-align: left;
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.customer-reservations-page .reservation-table td {
+  padding: 15px;
+
+  color: #435966;
+
+  border-bottom: 1px solid #e5ebef;
+
+  vertical-align: middle;
+}
+
+.customer-reservations-page .reservation-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.customer-reservations-page .reservation-table tbody tr {
+  transition: background-color 0.14s ease;
+}
+
+.customer-reservations-page .reservation-table tbody tr:hover {
+  background: #f8fafb;
+}
+
+
+/* Claim code */
+
+.customer-reservations-page .code-display {
+  color: #30475a;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+
+  font-size: 0.84rem;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+
+/* View button */
+
+.customer-reservations-page
+.reservation-table
+.btn-outline-blue {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-height: 37px;
+
+  padding: 7px 13px;
+
+  color: #ffffff;
+
+  background: #52758b;
+
+  border: 1px solid #52758b;
+  border-radius: 8px;
+
+  font-size: 0.75rem;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+.customer-reservations-page
+.reservation-table
+.btn-outline-blue:hover {
+  color: #ffffff;
+
+  background: #36576d;
+}
+
+
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.customer-reservations-page .notif-pager {
+  margin-top: 18px;
+}
+
+.customer-reservations-page .notif-pager span {
+  color: #697a88;
+
+  font-size: 0.78rem;
+}
+
+.customer-reservations-page .notif-pager button {
+  min-height: 40px;
+
+  padding: 7px 12px;
+
+  border-radius: 8px;
+
+  font-size: 0.76rem;
+}
+
+
+/* =========================================================
+   CUSTOMER RESERVATION DETAIL
+   Keep original layout, improve readability only.
+========================================================= */
+
+.customer-reservation-detail .ui-page-header {
+  margin-bottom: 20px;
+
+  padding: 22px 25px;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-radius: 15px;
+
+  box-shadow:
+    0 6px 22px
+    rgba(49, 70, 90, 0.06);
+}
+
+.customer-reservation-detail .ui-page-header__title {
+  color: #30475a;
+
+  font-size: 1.8rem;
+}
+
+.customer-reservation-detail .ui-page-header__subtitle {
+  margin-top: 6px;
+
+  color: #697a88;
+
+  font-size: 0.85rem;
+}
+
+.customer-reservation-detail .cart-item {
+  border-radius: 14px;
+}
+
+.customer-reservation-detail .item-name {
+  font-size: 1rem;
+}
+
+.customer-reservation-detail .item-meta {
+  font-size: 0.82rem;
+}
+
+.customer-reservation-detail .summary-head h2 {
+  font-size: 1rem;
+}
+
+.customer-reservation-detail .summary-head p {
+  font-size: 0.75rem;
+}
+
+.customer-reservation-detail .claim-facts div {
+  font-size: 0.82rem;
+}
+
+.customer-reservation-detail .timeline-time,
+.customer-reservation-detail .timeline-reason {
+  font-size: 0.78rem;
+}
+
+.customer-reservation-detail .detail-notes {
+  font-size: 0.82rem;
+
+  line-height: 1.55;
+}
+
+
+/* Claim ticket should remain prominent */
+
+.customer-reservation-detail .claim-code--small {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .customer-reservations-page .reservation-table,
+  .customer-reservations-page .reservation-table tbody,
+  .customer-reservations-page .reservation-table tr,
+  .customer-reservations-page .reservation-table td {
+    display: block;
+
+    width: 100%;
+  }
+
+  .customer-reservations-page .reservation-table thead {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    overflow: hidden;
+
+    clip: rect(0 0 0 0);
+  }
+
+  .customer-reservations-page .reservation-table {
+    background: transparent;
+
+    border: 0;
+
+    box-shadow: none;
+  }
+
+  .customer-reservations-page .reservation-table tbody {
+    display: grid;
+
+    gap: 12px;
+  }
+
+  .customer-reservations-page .reservation-table tr {
+    padding: 14px;
+
+    background: #ffffff;
+
+    border: 1px solid #d5e0e7;
+    border-radius: 13px;
+  }
+
+  .customer-reservations-page .reservation-table td {
+    display: grid;
+
+    grid-template-columns:
+      110px
+      minmax(0, 1fr);
+
+    gap: 10px;
+
+    padding: 8px 0;
+
+    border-bottom: 1px solid #edf1f3;
+  }
+
+  .customer-reservations-page .reservation-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .customer-reservations-page .reservation-table td::before {
+    content: attr(data-label);
+
+    color: #74858f;
+
+    font-size: 0.68rem;
+    font-weight: 800;
+
+    text-transform: uppercase;
+  }
+}
+
+
+@media (max-width: 700px) {
+
+  .customer-reservations-page .notif-container,
+  .customer-reservation-detail .cart-wrapper {
+    width: calc(100% - 22px);
+  }
+
+  .customer-reservations-page .notif-filter {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .customer-reservations-page .notif-filter select {
+    width: 100%;
+
+    min-width: 0;
+  }
+
+  .customer-reservations-page .field-hint {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+}

@@ -19,6 +19,8 @@ import { usePageTitle } from '../../hooks/usePageTitle.js'
 import { formatCents, formatDateTime, formatPeso, toCents } from '../../utils/format.js'
 import { actionsFor, ROLE_LABELS } from '../../utils/staff.js'
 import { isActiveStatus, STATUS_HELP, STATUS_LABELS } from '../../utils/status.js'
+import '../../styles/staff-prescriptions.css'
+
 
 const ACTION_LABELS = { approve: 'Approve', reject: 'Reject', complete: 'Complete (hand over)' }
 const DONE_NOTICES = {
@@ -266,16 +268,35 @@ function Detail({ id }) {
               </div>
             </section>
 
-            <section className="summary-card" aria-labelledby="rx-heading" style={{ position: 'static', marginTop: 20 }}>
-              <div className="summary-head">
-                <h2 id="rx-heading">Prescription review</h2>
-              </div>
-              <div className="summary-body">
-                <PrescriptionReview reservation={r} />
-              </div>
-            </section>
           </aside>
         </div>
+
+        {r.prescription_uploaded ? (
+          <section
+            className="staff-rx-full-section"
+            aria-labelledby="rx-heading"
+          >
+            <div className="staff-rx-full-section__heading">
+              <div>
+                <span>
+                  Prescription verification
+                </span>
+
+                <h2 id="rx-heading">
+                  Review prescription
+                </h2>
+              </div>
+
+              <StatusBadge
+                status={r.status}
+              />
+            </div>
+
+            <PrescriptionReview
+              reservation={r}
+            />
+          </section>
+        ) : null}
       </div>
 
       <ConfirmDialog

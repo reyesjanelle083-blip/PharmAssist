@@ -1,9 +1,3 @@
-/*
- * The accessible theme, loaded by the "High contrast" button (html[data-contrast='high']): black, white and yellow.
- * Text is at least 7:1, borders and controls at least 3:1 (AA and mostly AAA). The default look is the old PharmAssist look
- * and is not touched by anything in this file. Old rules use !important and inline colours, so these rules do too.
- */
-
 html[data-contrast='high'],
 html[data-contrast='high'] body {
   background: #000 !important;
@@ -62,8 +56,6 @@ html[data-contrast='high'] .home-content .text,
 html[data-contrast='high'] .home-content a { color: #fff !important; }
 
 /* ---- home hero ---- */
-/* the hero buttons are the shared Button component now; .ui-btn--primary/--secondary already carry their own
-   high-contrast styling (ui.css), so only the band and the heading need a rule here. */
 html[data-contrast='high'] .parallax { background-color: #000 !important; }
 html[data-contrast='high'] .parallax h1 { color: #ffee00 !important; }
 

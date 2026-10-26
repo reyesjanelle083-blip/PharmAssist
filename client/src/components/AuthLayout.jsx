@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import logo from '../assets/pharmassist-logo.png'
 import AccessibilityToolbar from './AccessibilityToolbar.jsx'
+import '../styles/auth-modern.css'
 
 /**
  * The login and register pages of the old site: no sidebar, the logo top left, the form in a white column on the left and the

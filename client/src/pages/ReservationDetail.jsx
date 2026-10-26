@@ -15,6 +15,7 @@ import { useAutoRefresh } from '../hooks/useAutoRefresh.js'
 import { usePageTitle } from '../hooks/usePageTitle.js'
 import { formatCents, formatDateTime, formatPeso, toCents } from '../utils/format.js'
 import { isActiveStatus, STATUS_HELP, STATUS_LABELS } from '../utils/status.js'
+import '../styles/customer-reservations.css'
 
 const CANCELLABLE = ['pending', 'approved']
 
@@ -115,7 +116,7 @@ function Detail({ id }) {
   const bannerTone = { pending: 'info', approved: 'success', completed: 'success', rejected: 'error', cancelled: 'warning', expired: 'warning' }[r.status] ?? 'info'
 
   return (
-    <div className="legacy-cart legacy-notif">
+    <div className="legacy-cart legacy-notif customer-reservation-detail">
       <div className="cart-wrapper">
         <PageHeader
           headingRef={heading}

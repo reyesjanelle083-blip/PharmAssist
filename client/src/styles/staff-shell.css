@@ -1,0 +1,408 @@
+/* =========================================================
+   PHARMASSIST STAFF SHELL
+   Keep the original staff-page layout.
+   Only customize the staff-specific top-bar context.
+========================================================= */
+
+
+/* =========================================================
+   STAFF TOP BAR
+========================================================= */
+
+.staff-shell .home-content {
+  padding-right: 28px !important;
+}
+
+
+/* Staff Portal indicator on the upper-right */
+
+.staff-topbar-context {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  min-height: 48px;
+
+  padding: 7px 14px;
+
+  color: #ffffff;
+
+  background: rgba(255, 255, 255, 0.12);
+
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 13px;
+
+  box-shadow:
+    0 4px 12px
+    rgba(49, 70, 90, 0.08);
+
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+
+.staff-topbar-context__icon {
+  display: grid;
+
+  flex: 0 0 auto;
+
+  width: 34px;
+  height: 34px;
+
+  place-items: center;
+
+  color: #ffffff;
+
+  background: rgba(255, 255, 255, 0.14);
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+
+  font-size: 0.95rem;
+}
+
+
+.staff-topbar-context > div {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+
+  line-height: 1.15;
+}
+
+
+.staff-topbar-context strong {
+  color: #ffffff;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.76rem;
+  font-weight: 800;
+
+  white-space: nowrap;
+}
+
+
+.staff-topbar-context
+> div
+> span {
+  margin-top: 3px;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: 0.61rem;
+  font-weight: 500;
+
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   IMPORTANT:
+   Keep the original dashboard/page width.
+
+   No added right gutter.
+   No resizing/repositioning of accessibility controls here.
+========================================================= */
+
+.staff-shell .home-section,
+.staff-shell .page-wrapper {
+  min-width: 0;
+}
+
+
+/* =========================================================
+   HIGH CONTRAST
+========================================================= */
+
+html[data-contrast='high']
+.staff-topbar-context {
+  color: #ffffff !important;
+
+  background: #000000 !important;
+
+  border: 2px solid #ffffff !important;
+
+  box-shadow: none;
+}
+
+
+html[data-contrast='high']
+.staff-topbar-context__icon {
+  color: #000000 !important;
+
+  background: #ffee00 !important;
+
+  border-color: #ffffff !important;
+}
+
+
+html[data-contrast='high']
+.staff-topbar-context strong,
+html[data-contrast='high']
+.staff-topbar-context
+> div
+> span {
+  color: #ffffff !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 768px) {
+
+  .staff-shell .home-content {
+    padding-right: 15px !important;
+  }
+
+
+  .staff-topbar-context {
+    min-height: 42px;
+
+    padding: 5px 9px;
+
+    gap: 7px;
+
+    border-radius: 10px;
+  }
+
+
+  .staff-topbar-context__icon {
+    width: 30px;
+    height: 30px;
+
+    font-size: 0.82rem;
+  }
+
+
+  .staff-topbar-context strong {
+    font-size: 0.7rem;
+  }
+
+
+  .staff-topbar-context
+  > div
+  > span {
+    display: none;
+  }
+}
+
+
+@media (max-width: 480px) {
+
+  .staff-topbar-context {
+    padding: 4px 7px;
+
+    background: transparent;
+
+    border: 0;
+
+    box-shadow: none;
+
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+
+  .staff-topbar-context__icon {
+    display: none;
+  }
+
+
+  .staff-topbar-context strong {
+    font-size: 0.68rem;
+  }
+}
+
+/* =========================================================
+   STAFF READABILITY
+   Increase staff-side typography without changing
+   the customer/public site.
+========================================================= */
+
+.staff-shell {
+  font-size: 17px;
+}
+
+
+/* Dashboard */
+
+.staff-shell .staff-dashboard-hero__eyebrow,
+.staff-shell .staff-dashboard-section__heading > div > span,
+.staff-shell .staff-dashboard-panel__heading div > span,
+.staff-shell .staff-role-panel > div:last-child > span {
+  font-size: 0.78rem;
+}
+
+.staff-shell .staff-dashboard-hero__copy > p {
+  font-size: 1rem;
+}
+
+.staff-shell .staff-dashboard-hero__meta > span {
+  font-size: 0.8rem;
+}
+
+.staff-shell .staff-overview-card__title {
+  font-size: 0.95rem;
+}
+
+.staff-shell .staff-overview-card__metric span {
+  font-size: 0.78rem;
+}
+
+.staff-shell .staff-overview-card__description {
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.staff-shell .staff-overview-card__note {
+  font-size: 0.72rem;
+}
+
+.staff-shell .staff-overview-card__link {
+  font-size: 0.82rem;
+}
+
+.staff-shell .staff-attention-item__copy strong {
+  font-size: 0.84rem;
+}
+
+.staff-shell .staff-attention-item__copy small {
+  font-size: 0.74rem;
+}
+
+.staff-shell .staff-recent-item__main strong {
+  font-size: 0.82rem;
+}
+
+.staff-shell .staff-recent-item__main small {
+  font-size: 0.72rem;
+}
+
+.staff-shell .staff-role-panel p {
+  font-size: 0.86rem;
+}
+
+
+/* Prescription Review page */
+
+.staff-shell .staff-rx-header__eyebrow {
+  font-size: 0.78rem;
+}
+
+.staff-shell .staff-rx-header p {
+  font-size: 0.95rem;
+}
+
+.staff-shell .staff-rx-filter__heading strong {
+  font-size: 0.95rem;
+}
+
+.staff-shell .staff-rx-filter__heading small {
+  font-size: 0.74rem;
+}
+
+.staff-shell .staff-rx-filter__controls label {
+  font-size: 0.76rem;
+}
+
+.staff-shell .staff-rx-filter__controls select,
+.staff-shell .staff-rx-refresh {
+  font-size: 0.82rem;
+}
+
+.staff-shell .staff-rx-results-heading > div > span {
+  font-size: 0.75rem;
+}
+
+.staff-shell .staff-rx-results-heading > small {
+  font-size: 0.75rem;
+}
+
+.staff-shell .staff-rx-queue-card__label {
+  font-size: 0.68rem;
+}
+
+.staff-shell .staff-rx-queue-card__code {
+  font-size: 0.94rem;
+}
+
+.staff-shell .staff-rx-queue-card__facts {
+  font-size: 0.76rem;
+}
+
+.staff-shell .staff-rx-queue-card__medicines {
+  font-size: 0.8rem;
+}
+
+.staff-shell .staff-rx-ocr-badge,
+.staff-shell .staff-rx-confidence,
+.staff-shell .staff-rx-text-found,
+.staff-shell .staff-rx-text-missing {
+  font-size: 0.72rem;
+}
+
+.staff-shell .staff-rx-review-button {
+  font-size: 0.8rem;
+}
+
+
+/* Actual prescription review */
+
+.staff-shell .staff-rx-full-section__heading span {
+  font-size: 0.74rem;
+}
+
+.staff-shell .staff-rx-review__notice strong {
+  font-size: 0.86rem;
+}
+
+.staff-shell .staff-rx-review__notice p {
+  font-size: 0.77rem;
+}
+
+.staff-shell .staff-rx-review-panel__heading div > span {
+  font-size: 0.68rem;
+}
+
+.staff-shell .staff-rx-review-panel__heading h3 {
+  font-size: 1.05rem;
+}
+
+.staff-shell .staff-rx-review-state {
+  font-size: 0.7rem;
+}
+
+.staff-shell .staff-rx-review-confidence > div:first-child {
+  font-size: 0.76rem;
+}
+
+.staff-shell .staff-rx-review-help {
+  font-size: 0.76rem;
+}
+
+.staff-shell .staff-rx-review-text-label {
+  font-size: 0.72rem;
+}
+
+.staff-shell .staff-rx-review-text {
+  font-size: 0.88rem;
+  line-height: 1.65;
+}
+
+.staff-shell .staff-rx-review-checklist > span {
+  font-size: 0.78rem;
+}
+
+.staff-shell .staff-rx-review-checklist ul {
+  font-size: 0.75rem;
+}
+
+.staff-shell .staff-rx-review-caption {
+  font-size: 0.73rem;
+}

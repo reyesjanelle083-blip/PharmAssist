@@ -1,8 +1,3 @@
-/*
- * Step 8B: the cart, the claim ticket, My Reservations and the reservation detail. They are built on the old cart.php and
- * user_notif.php styles (styles/legacy/cart.css and notifications.css); this file adds only what those pages did not have.
- */
-
 .legacy-cart .cart-wrapper {
   padding: 0 0 48px; /* the page area already leaves room under the top bar */
 }
@@ -20,7 +15,6 @@
   flex-wrap: wrap;
 }
 
-/* the new controls are at least 44 px (the old stepper and remove button were 30 px) */
 .legacy-cart .btn-outline,
 .legacy-cart .submit-btn,
 .legacy-notif .btn-outline {
@@ -132,7 +126,6 @@
   overflow-wrap: anywhere;
 }
 
-/* confirm dialogs (the old guide modal look, see .legacy-dialog) */
 .confirm-actions {
   display: flex;
   flex-wrap: wrap;
@@ -263,7 +256,7 @@
   color: var(--slate);
 }
 
-/* ---- My Reservations (the old "Reservation Notifications" table) ---- */
+/* ---- My Reservations ---- */
 .legacy-notif .notif-filter {
   display: flex;
   flex-wrap: wrap;

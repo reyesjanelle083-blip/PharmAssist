@@ -1,0 +1,1687 @@
+/* =========================================================
+   PHARMASSIST STAFF PRESCRIPTION REVIEW
+========================================================= */
+
+.staff-prescriptions-page {
+  width:
+    min(
+      1450px,
+      calc(100% - 42px)
+    );
+
+  margin:
+    0 auto;
+
+  padding-bottom: 52px;
+
+  color: #30475a;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.staff-rx-header {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 30px;
+
+  margin-bottom: 22px;
+
+  padding:
+    28px 32px;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #46677c,
+      #314f63
+    );
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 11px 30px
+    rgba(
+      49,
+      70,
+      90,
+      0.12
+    );
+}
+
+.staff-rx-header__eyebrow {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.7
+    );
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.7rem;
+  font-weight: 800;
+
+  letter-spacing:
+    0.09em;
+
+  text-transform:
+    uppercase;
+}
+
+.staff-rx-header h1 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size:
+    clamp(
+      1.65rem,
+      3vw,
+      2.3rem
+    );
+
+  font-weight: 800;
+}
+
+.staff-rx-header p {
+  max-width: 740px;
+
+  margin:
+    7px 0 0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.8
+    );
+
+  font-size: 0.82rem;
+
+  line-height: 1.55;
+}
+
+.staff-rx-header__icon {
+  display: grid;
+
+  flex:
+    0 0 auto;
+
+  width: 76px;
+  height: 76px;
+
+  place-items: center;
+
+  color: #ffffff;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.1
+    );
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.18
+    );
+
+  border-radius: 20px;
+
+  font-size: 2rem;
+}
+
+
+/* =========================================================
+   FILTER BAR
+========================================================= */
+
+.staff-rx-filter {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  margin-bottom: 24px;
+
+  padding: 17px 20px;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #d5e0e7;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 6px 20px
+    rgba(
+      49,
+      70,
+      90,
+      0.06
+    );
+}
+
+.staff-rx-filter__heading {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  min-width: 220px;
+}
+
+.staff-rx-filter__heading
+> span {
+  display: grid;
+
+  width: 40px;
+  height: 40px;
+
+  place-items: center;
+
+  color: #46677c;
+
+  background: #eef4f7;
+
+  border-radius: 10px;
+}
+
+.staff-rx-filter__heading
+strong {
+  display: block;
+
+  color: #30475a;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.82rem;
+}
+
+.staff-rx-filter__heading
+small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #697a88;
+
+  font-size: 0.63rem;
+}
+
+.staff-rx-filter__controls {
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 10px;
+}
+
+.staff-rx-filter__controls
+> div {
+  display: grid;
+
+  gap: 5px;
+}
+
+.staff-rx-filter__controls
+label {
+  color: #566b79;
+
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.staff-rx-filter__controls
+select {
+  min-width: 175px;
+  min-height: 41px;
+
+  padding:
+    7px 10px;
+
+  color: #30475a;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #cad7df;
+
+  border-radius: 9px;
+}
+
+.staff-rx-refresh {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  min-height: 41px;
+
+  padding:
+    7px 13px;
+
+  color: #46677c;
+
+  background: #eef4f7;
+
+  border:
+    1px solid
+    #cfdae2;
+
+  border-radius: 9px;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   RESULTS HEADING
+========================================================= */
+
+.staff-rx-results-heading {
+  display: flex;
+
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 13px;
+}
+
+.staff-rx-results-heading
+> div > span {
+  display: block;
+
+  color: #46677c;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.66rem;
+  font-weight: 800;
+
+  letter-spacing:
+    0.08em;
+
+  text-transform:
+    uppercase;
+}
+
+.staff-rx-results-heading h2 {
+  margin:
+    3px 0 0;
+
+  color: #30475a;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 1.25rem;
+}
+
+.staff-rx-results-heading
+> small {
+  color: #697a88;
+
+  font-size: 0.65rem;
+}
+
+
+/* =========================================================
+   QUEUE
+========================================================= */
+
+.staff-rx-queue {
+  display: grid;
+
+  gap: 11px;
+}
+
+.staff-rx-queue-card {
+  display: grid;
+
+  grid-template-columns:
+    54px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 16px;
+
+  padding: 17px 18px;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #d5e0e7;
+
+  border-radius: 15px;
+
+  box-shadow:
+    0 5px 17px
+    rgba(
+      49,
+      70,
+      90,
+      0.055
+    );
+}
+
+.staff-rx-queue-card__icon {
+  display: grid;
+
+  width: 52px;
+  height: 52px;
+
+  place-items: center;
+
+  color: #665d91;
+
+  background: #f0eef8;
+
+  border-radius: 13px;
+
+  font-size: 1.25rem;
+}
+
+.staff-rx-queue-card__main {
+  min-width: 0;
+}
+
+.staff-rx-queue-card__top {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+}
+
+.staff-rx-queue-card__top
+> div {
+  display: grid;
+}
+
+.staff-rx-queue-card__label {
+  color: #7a8994;
+
+  font-size: 0.59rem;
+  font-weight: 700;
+
+  text-transform:
+    uppercase;
+}
+
+.staff-rx-queue-card__code {
+  margin-top: 1px;
+
+  color: #30475a;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+
+  font-size: 0.83rem;
+}
+
+.staff-rx-queue-card__facts {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap:
+    6px 15px;
+
+  margin-top: 7px;
+
+  color: #697a88;
+
+  font-size: 0.65rem;
+}
+
+.staff-rx-queue-card__facts
+span {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+}
+
+.staff-rx-queue-card__medicines {
+  margin:
+    7px 0 0;
+
+  overflow: hidden;
+
+  color: #526977;
+
+  font-size: 0.69rem;
+
+  line-height: 1.4;
+
+  text-overflow:
+    ellipsis;
+
+  white-space: nowrap;
+}
+
+.staff-rx-queue-card__ocr {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  align-items: center;
+
+  gap: 7px;
+
+  margin-top: 9px;
+}
+
+.staff-rx-ocr-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  padding:
+    5px 8px;
+
+  border-radius: 999px;
+
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.staff-rx-ocr-badge--success {
+  color: #2d6d4e;
+
+  background: #ecf7f0;
+}
+
+.staff-rx-ocr-badge--warning {
+  color: #805917;
+
+  background: #fff5df;
+}
+
+.staff-rx-ocr-badge--neutral {
+  color: #647481;
+
+  background: #eef2f4;
+}
+
+.staff-rx-confidence,
+.staff-rx-text-found,
+.staff-rx-text-missing {
+  color: #687987;
+
+  font-size: 0.62rem;
+}
+
+.staff-rx-text-found {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 4px;
+
+  color: #3d6b57;
+}
+
+.staff-rx-text-missing {
+  color: #8b6440;
+}
+
+.staff-rx-review-button {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  min-height: 41px;
+
+  padding:
+    8px 13px;
+
+  color: #ffffff;
+
+  background: #46677c;
+
+  border-radius: 9px;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.7rem;
+  font-weight: 800;
+
+  text-decoration: none;
+}
+
+.staff-rx-review-button:hover {
+  color: #ffffff;
+
+  background: #314f63;
+
+  text-decoration: none;
+}
+
+
+/* =========================================================
+   PAGER + NOTE
+========================================================= */
+
+.staff-rx-pager {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  margin-top: 18px;
+}
+
+.staff-rx-pager button {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 5px;
+
+  min-height: 38px;
+
+  padding:
+    7px 11px;
+
+  color: #46677c;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #cbd8e0;
+
+  border-radius: 8px;
+
+  font-size: 0.68rem;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.staff-rx-pager button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.45;
+}
+
+.staff-rx-pager span {
+  color: #697a88;
+
+  font-size: 0.67rem;
+}
+
+.staff-rx-queue-note {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 6px;
+
+  margin:
+    16px auto 0;
+
+  color: #7b8993;
+
+  font-size: 0.62rem;
+
+  line-height: 1.4;
+
+  text-align: center;
+}
+
+
+/* =========================================================
+   FULL PRESCRIPTION REVIEW
+========================================================= */
+
+.staff-rx-full-section {
+  margin-top: 22px;
+
+  padding: 22px;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #d5e0e7;
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 7px 24px
+    rgba(
+      49,
+      70,
+      90,
+      0.07
+    );
+}
+
+.staff-rx-full-section__heading {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 17px;
+
+  padding-bottom: 14px;
+
+  border-bottom:
+    1px solid #e1e8ec;
+}
+
+.staff-rx-full-section__heading
+span {
+  display: block;
+
+  color: #46677c;
+
+  font-size: 0.65rem;
+  font-weight: 800;
+
+  letter-spacing:
+    0.08em;
+
+  text-transform:
+    uppercase;
+}
+
+.staff-rx-full-section__heading
+h2 {
+  margin:
+    3px 0 0;
+
+  color: #30475a;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 1.25rem;
+}
+
+.staff-rx-review__notice {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  margin-bottom: 16px;
+
+  padding: 12px 14px;
+
+  color: #5f6f7a;
+
+  background: #eef4f7;
+
+  border-radius: 10px;
+}
+
+.staff-rx-review__notice
+> i {
+  margin-top: 2px;
+
+  color: #46677c;
+}
+
+.staff-rx-review__notice
+strong {
+  display: block;
+
+  color: #30475a;
+
+  font-size: 0.74rem;
+}
+
+.staff-rx-review__notice p {
+  margin:
+    3px 0 0;
+
+  font-size: 0.66rem;
+
+  line-height: 1.45;
+}
+
+.staff-rx-review__grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 17px;
+}
+
+.staff-rx-review-panel {
+  min-width: 0;
+
+  padding: 16px;
+
+  background: #fbfcfd;
+
+  border:
+    1px solid
+    #d8e2e8;
+
+  border-radius: 13px;
+}
+
+.staff-rx-review-panel__heading {
+  display: flex;
+
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 12px;
+}
+
+.staff-rx-review-panel__heading
+div > span {
+  display: block;
+
+  color: #6e7e89;
+
+  font-size: 0.59rem;
+  font-weight: 700;
+
+  text-transform:
+    uppercase;
+}
+
+.staff-rx-review-panel__heading
+h3 {
+  margin:
+    2px 0 0;
+
+  color: #30475a;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.94rem;
+}
+
+.staff-rx-review-state {
+  display: inline-flex;
+
+  flex: 0 0 auto;
+
+  align-items: center;
+
+  gap: 5px;
+
+  padding:
+    5px 7px;
+
+  border-radius: 999px;
+
+  font-size: 0.61rem;
+  font-weight: 700;
+}
+
+.staff-rx-review-state--success {
+  color: #2b6c4c;
+
+  background: #eaf7ef;
+}
+
+.staff-rx-review-state--warning {
+  color: #805917;
+
+  background: #fff4dd;
+}
+
+.staff-rx-review-photo {
+  display: grid;
+
+  min-height: 440px;
+
+  overflow: hidden;
+
+  place-items: center;
+
+  background: #f1f5f7;
+
+  border:
+    1px solid
+    #d7e1e7;
+
+  border-radius: 10px;
+}
+
+.staff-rx-review-photo
+> div {
+  width: 100%;
+}
+
+.staff-rx-review-photo
+.presc-photo {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  max-height: 560px;
+
+  margin: 0 auto;
+
+  object-fit: contain;
+
+  background: #ffffff;
+}
+
+.staff-rx-review-photo
+.waiting-text {
+  padding: 25px;
+
+  text-align: center;
+}
+
+.staff-rx-review-caption {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 6px;
+
+  margin:
+    9px 0 0;
+
+  color: #697a88;
+
+  font-size: 0.63rem;
+
+  line-height: 1.4;
+}
+
+.staff-rx-review-confidence {
+  margin-bottom: 13px;
+}
+
+.staff-rx-review-confidence
+> div:first-child {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 10px;
+
+  color: #697a88;
+
+  font-size: 0.65rem;
+}
+
+.staff-rx-review-confidence
+strong {
+  color: #30475a;
+}
+
+.staff-rx-review-confidence__track {
+  height: 6px;
+
+  margin-top: 6px;
+
+  overflow: hidden;
+
+  background: #e0e8ed;
+
+  border-radius: 999px;
+}
+
+.staff-rx-review-confidence__track
+span {
+  display: block;
+
+  height: 100%;
+
+  background: #46677c;
+
+  border-radius: inherit;
+}
+
+.staff-rx-review-help {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 7px;
+
+  margin:
+    0 0 12px;
+
+  padding: 9px 10px;
+
+  color: #50705e;
+
+  background: #edf7f1;
+
+  border-radius: 8px;
+
+  font-size: 0.65rem;
+
+  line-height: 1.4;
+}
+
+.staff-rx-review-help--warning {
+  color: #805917;
+
+  background: #fff5df;
+}
+
+.staff-rx-review-text-label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #697a88;
+
+  font-size: 0.62rem;
+  font-weight: 800;
+
+  letter-spacing:
+    0.06em;
+
+  text-transform:
+    uppercase;
+}
+
+.staff-rx-review-text {
+  width: 100%;
+
+  min-height: 280px;
+  max-height: 440px;
+
+  margin: 0;
+
+  padding: 15px;
+
+  overflow: auto;
+
+  color: #30475a;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #d7e1e7;
+
+  border-radius: 10px;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+
+  font-size: 0.75rem;
+
+  line-height: 1.55;
+
+  white-space: pre-wrap;
+}
+
+.staff-rx-review-empty {
+  display: flex;
+
+  min-height: 280px;
+
+  align-items: center;
+  justify-content: center;
+
+  flex-direction: column;
+
+  padding: 25px;
+
+  color: #697a88;
+
+  background: #ffffff;
+
+  border:
+    1px dashed
+    #cbd8e0;
+
+  border-radius: 10px;
+
+  text-align: center;
+}
+
+.staff-rx-review-empty
+> i {
+  margin-bottom: 8px;
+
+  color: #7c909d;
+
+  font-size: 1.6rem;
+}
+
+.staff-rx-review-empty
+strong {
+  color: #30475a;
+
+  font-size: 0.76rem;
+}
+
+.staff-rx-review-empty p {
+  max-width: 280px;
+
+  margin:
+    5px 0 0;
+
+  font-size: 0.66rem;
+}
+
+.staff-rx-review-checklist {
+  margin-top: 13px;
+
+  padding: 11px 12px;
+
+  background: #eef4f7;
+
+  border-radius: 9px;
+}
+
+.staff-rx-review-checklist
+> span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #30475a;
+
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+
+.staff-rx-review-checklist ul {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap:
+    5px 15px;
+
+  margin: 0;
+  padding-left: 18px;
+
+  color: #60717d;
+
+  font-size: 0.64rem;
+}
+
+.staff-rx-no-photo {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 17px;
+
+  color: #687987;
+
+  background: #f5f8fa;
+
+  border:
+    1px dashed
+    #cbd8df;
+
+  border-radius: 10px;
+}
+
+.staff-rx-no-photo
+> i {
+  color: #8095a2;
+
+  font-size: 1.4rem;
+}
+
+.staff-rx-no-photo
+strong {
+  display: block;
+
+  color: #30475a;
+}
+
+.staff-rx-no-photo p {
+  margin:
+    2px 0 0;
+
+  font-size: 0.68rem;
+}
+
+
+/* =========================================================
+   HIGH CONTRAST
+========================================================= */
+
+html[data-contrast='high']
+.staff-rx-header,
+html[data-contrast='high']
+.staff-rx-filter,
+html[data-contrast='high']
+.staff-rx-queue-card,
+html[data-contrast='high']
+.staff-rx-full-section,
+html[data-contrast='high']
+.staff-rx-review-panel {
+  color: #ffffff !important;
+
+  background: #000000 !important;
+
+  border-color:
+    #ffffff !important;
+}
+
+html[data-contrast='high']
+.staff-rx-review-button {
+  color: #000000 !important;
+
+  background: #ffee00 !important;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .staff-rx-filter {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .staff-rx-filter__controls {
+    flex-wrap: wrap;
+  }
+
+  .staff-rx-review__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+@media (max-width: 700px) {
+
+  .staff-prescriptions-page {
+    width:
+      calc(100% - 22px);
+  }
+
+  .staff-rx-header {
+    padding:
+      22px 18px;
+  }
+
+  .staff-rx-header__icon {
+    display: none;
+  }
+
+  .staff-rx-queue-card {
+    grid-template-columns:
+      44px
+      minmax(0, 1fr);
+  }
+
+  .staff-rx-queue-card__icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .staff-rx-queue-card__action {
+    grid-column:
+      1 / -1;
+  }
+
+  .staff-rx-review-button {
+    width: 100%;
+  }
+
+  .staff-rx-filter__controls {
+    align-items: stretch;
+
+    flex-direction: column;
+  }
+
+  .staff-rx-filter__controls
+  select,
+  .staff-rx-refresh {
+    width: 100%;
+  }
+
+  .staff-rx-results-heading {
+    align-items: flex-start;
+
+    flex-direction: column;
+  }
+
+  .staff-rx-review-photo {
+    min-height: 280px;
+  }
+
+  .staff-rx-review-checklist
+  ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   PRESCRIPTION QUEUE TABLE
+========================================================= */
+
+.staff-rx-table-wrap {
+  overflow-x: auto;
+
+  background: #ffffff;
+
+  border: 1px solid #d5e0e7;
+  border-radius: 16px;
+
+  box-shadow:
+    0 6px 22px
+    rgba(49, 70, 90, 0.07);
+}
+
+.staff-rx-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  color: #435966;
+
+  font-size: 0.82rem;
+}
+
+.staff-rx-table thead {
+  background: #eef4f7;
+}
+
+.staff-rx-table th {
+  padding: 14px 15px;
+
+  color: #506a7a;
+
+  border-bottom: 1px solid #cfdae1;
+
+  font-family:
+    "Bricolage Grotesque",
+    sans-serif;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+
+  letter-spacing: 0.045em;
+
+  text-align: left;
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.staff-rx-table td {
+  padding: 15px;
+
+  border-bottom: 1px solid #e5ebef;
+
+  vertical-align: middle;
+}
+
+.staff-rx-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.staff-rx-table tbody tr {
+  transition: background-color 0.14s ease;
+}
+
+.staff-rx-table tbody tr:hover {
+  background: #f8fafb;
+}
+
+
+/* CLAIM CODE */
+
+.staff-rx-table__claim {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  min-width: 155px;
+}
+
+.staff-rx-table__claim-icon {
+  display: grid;
+
+  flex: 0 0 auto;
+
+  width: 34px;
+  height: 34px;
+
+  place-items: center;
+
+  color: #665d91;
+
+  background: #f0eef8;
+
+  border-radius: 8px;
+}
+
+.staff-rx-table__claim strong {
+  color: #30475a;
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+
+  font-size: 0.84rem;
+
+  white-space: nowrap;
+}
+
+
+/* MEDICINES */
+
+.staff-rx-table__medicines {
+  min-width: 175px;
+}
+
+.staff-rx-table__medicines strong {
+  display: block;
+
+  color: #30475a;
+
+  font-size: 0.8rem;
+}
+
+.staff-rx-table__medicines span {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #71818c;
+
+  font-size: 0.7rem;
+}
+
+
+/* OCR */
+
+.staff-rx-table__text-available {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #577565;
+
+  font-size: 0.67rem;
+}
+
+.staff-rx-table__center {
+  text-align: center !important;
+}
+
+.staff-rx-table__confidence {
+  display: inline-grid;
+
+  min-width: 50px;
+  min-height: 30px;
+
+  place-items: center;
+
+  padding: 4px 8px;
+
+  border-radius: 999px;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.staff-rx-table__confidence--good {
+  color: #2b6c4c;
+
+  background: #eaf7ef;
+}
+
+.staff-rx-table__confidence--medium {
+  color: #805917;
+
+  background: #fff4dd;
+}
+
+.staff-rx-table__confidence--low {
+  color: #943f36;
+
+  background: #fff0ee;
+}
+
+.staff-rx-table__dash {
+  color: #9aa7af;
+}
+
+
+/* DATE */
+
+.staff-rx-table__date {
+  display: inline-block;
+
+  min-width: 125px;
+
+  color: #60727f;
+
+  line-height: 1.45;
+}
+
+
+/* ACTION */
+
+.staff-rx-table__action-heading,
+.staff-rx-table__action {
+  text-align: right !important;
+}
+
+.staff-rx-table__action .staff-rx-review-button {
+  min-height: 38px;
+
+  padding: 7px 11px;
+
+  font-size: 0.76rem;
+}
+
+
+/* =========================================================
+   TABLE -> MOBILE CARDS
+========================================================= */
+
+@media (max-width: 900px) {
+
+  .staff-rx-table-wrap {
+    overflow: visible;
+
+    background: transparent;
+
+    border: 0;
+
+    box-shadow: none;
+  }
+
+  .staff-rx-table thead {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+
+    overflow: hidden;
+
+    clip: rect(0 0 0 0);
+
+    white-space: nowrap;
+  }
+
+  .staff-rx-table,
+  .staff-rx-table tbody,
+  .staff-rx-table tr,
+  .staff-rx-table td {
+    display: block;
+
+    width: 100%;
+  }
+
+  .staff-rx-table tbody {
+    display: grid;
+
+    gap: 12px;
+  }
+
+  .staff-rx-table tbody tr {
+    padding: 15px;
+
+    background: #ffffff;
+
+    border: 1px solid #d5e0e7;
+    border-radius: 14px;
+
+    box-shadow:
+      0 5px 17px
+      rgba(49,70,90,0.06);
+  }
+
+  .staff-rx-table td {
+    display: grid;
+
+    grid-template-columns:
+      minmax(115px, 38%)
+      minmax(0, 1fr);
+
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 9px 0;
+
+    border-bottom: 1px solid #edf1f3;
+
+    text-align: left !important;
+  }
+
+  .staff-rx-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .staff-rx-table td::before {
+    content: attr(data-label);
+
+    color: #74858f;
+
+    font-size: 0.68rem;
+    font-weight: 800;
+
+    letter-spacing: 0.04em;
+
+    text-transform: uppercase;
+  }
+
+  .staff-rx-table__claim {
+    display: grid;
+  }
+
+  .staff-rx-table__claim-icon {
+    display: none;
+  }
+
+  .staff-rx-table__action .staff-rx-review-button {
+    width: 100%;
+  }
+}
+
+
+@media (max-width: 430px) {
+
+  .staff-rx-table td {
+    grid-template-columns: 1fr;
+
+    gap: 5px;
+  }
+}

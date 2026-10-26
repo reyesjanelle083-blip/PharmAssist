@@ -1,8 +1,3 @@
-/*
- * Shared UI components (src/components/ui/). Built only on the tokens in tokens.css, so they work in normal and High contrast
- * mode without extra rules. They match the look of the old cart and notification pages.
- */
-
 /* ---- Button ---- */
 .ui-btn {
   display: inline-flex;
@@ -79,8 +74,6 @@ html[data-contrast='high'] .ui-btn--primary {
   border-color: #ffffff;
 }
 
-/* secondary stays visibly different from primary (solid yellow) and danger (pink) in high contrast, instead of the
-   usual colour-swap formula, since here the two are a primary/secondary pair shown side by side */
 html[data-contrast='high'] .ui-btn--secondary {
   background: #000000;
   color: #ffffff;
@@ -224,7 +217,7 @@ html[data-contrast='high'] .ui-state--empty {
   border-width: 2px;
 }
 
-/* ---- StatusBadge (the colour is never the only signal: the status is written out) ---- */
+/* ---- StatusBadge ---- */
 .ui-status {
   display: inline-block;
   padding: 6px 16px;
@@ -246,7 +239,7 @@ html[data-contrast='high'] .ui-state--empty {
   gap: 10px;
 }
 
-/* ---- StockBadge (branch stock status: a different domain from the reservation StatusBadge above, never colour alone) ---- */
+/* ---- StockBadge ---- */
 .ui-stock-badge {
   display: inline-flex;
   align-items: center;
@@ -276,7 +269,6 @@ html[data-contrast='high'] .ui-stock-badge {
   border: 2px solid currentColor;
 }
 
-/* ---- a compact list of branch rows (the Medicine Details availability preview) ---- */
 .ui-branch-list {
   display: flex;
   flex-direction: column;

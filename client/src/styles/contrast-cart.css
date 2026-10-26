@@ -1,4 +1,3 @@
-/* High contrast for step 8B: cart, ticket, My Reservations, reservation detail (black, white, yellow). */
 
 html[data-contrast='high'] .legacy-cart,
 html[data-contrast='high'] .legacy-notif {

@@ -1,15 +1,3 @@
-/*
- * COPIED from old/PharmAssist/plugins/medicines.css
- * Taken: lines 1-224 (layout, cards, buttons), 271-388 (search banner, no-results, filter panel and buttons), 476-516 and 555-576 (the search bar, without the microphone button) and the card rules of the responsive media queries (lines 1905-2320).
- * Left out: the text-to-speech, voice search, medicine scanner and branch filter styles (removed features, or not part of this step).
- * Rules are unchanged; only what is listed above was left out.
- */
-/* ═════════════════════════════════════════════════════════════════════════════
-   PHARMASEE - MEDICINES PAGE COMPLETE CSS
-   File: plugins/medicines.css
-   Updated: Layout Fix + OCR Feature + Responsive Design
-═════════════════════════════════════════════════════════════════════════════ */
-
 /* ═════════════════════════════════════════════════════════
    LAYOUT & TYPOGRAPHY
 ═════════════════════════════════════════════════════════ */
@@ -104,23 +92,28 @@ body {
 /* ── Card Image ── */
 .card-image {
     width: 100%;
-    height: 200px;
+    height: 220px;
     background: #f0f5f8;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
 }
 
 .card-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center;
+
+    transform: scale(2.2);
+    display: block;
     transition: transform 0.3s ease;
 }
 
 .card:hover .card-image img {
-    transform: scale(1.05);
+    transform: scale(2.25);
 }
 
 /* ── Card Body ── */

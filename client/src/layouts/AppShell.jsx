@@ -1,70 +1,167 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import {
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
+
+import {
+  Link,
+  Outlet,
+  useLocation,
+} from 'react-router-dom'
+
 import AccessibilityToolbar from '../components/AccessibilityToolbar.jsx'
 import Footer from '../components/Footer.jsx'
 import TopSearch from '../components/TopSearch.jsx'
 import { SearchProvider } from '../context/SearchContext.jsx'
 
-/**
- * The shell of the old pages: sidebar, top bar (home-content) with the search bar, page area (page-wrapper) and footer, with the
- * same class names, so sidebar.css, homepage.css and footer.css apply as designed.
- * The pieces both layouts share live here; each layout supplies its own sidebar through `renderSidebar(closed)`.
- */
-export default function AppShell({ renderSidebar }) {
-  const [closed, setClosed] = useState(true) // the old sidebar starts as the narrow icon bar
-  const location = useLocation()
-  const main = useRef(null)
-  const first = useRef(true)
+export default function AppShell({
+  renderSidebar,
+  staff = false,
+}) {
+  const [closed, setClosed] =
+    useState(true)
 
-  // After a page change, move focus to the main area so keyboard and screen reader users start at the new content.
-  // (A link to a part of the home page, such as #branches, is handled by the page itself.)
+  const location =
+    useLocation()
+
+  const main =
+    useRef(null)
+
+  const first =
+    useRef(true)
+
   useEffect(() => {
     if (first.current) {
       first.current = false
       return
     }
-    if (!location.hash) main.current?.focus()
-  }, [location.pathname, location.hash])
+
+    if (!location.hash) {
+      main.current?.focus()
+    }
+  }, [
+    location.pathname,
+    location.hash,
+  ])
 
   return (
     <SearchProvider>
-      <div className="legacy-shell">
-        <a className="skip-link" href="#main-content">
+      <div
+        className={
+          staff
+            ? 'legacy-shell staff-shell'
+            : 'legacy-shell'
+        }
+      >
+        <a
+          className="skip-link"
+          href="#main-content"
+        >
           Skip to main content
         </a>
 
         {renderSidebar(closed)}
 
         <section className="home-section">
-          <header role="banner" className="home-content d-flex align-items-center justify-content-between px-4">
+          <header
+            role="banner"
+            className="home-content d-flex align-items-center justify-content-between px-4"
+          >
             <div className="d-flex align-items-center gap-2 topbar-brand">
               <button
                 type="button"
                 className="menu-toggle"
-                onClick={() => setClosed((value) => !value)}
-                aria-label={closed ? 'Open the menu' : 'Close the menu'}
-                aria-expanded={!closed}
+                onClick={() =>
+                  setClosed(
+                    (value) =>
+                      !value,
+                  )
+                }
+                aria-label={
+                  closed
+                    ? 'Open the menu'
+                    : 'Close the menu'
+                }
+                aria-expanded={
+                  !closed
+                }
                 aria-controls="site-sidebar"
               >
-                <i className="bx bx-menu" style={{ fontSize: '1.8rem' }} aria-hidden="true"></i>
+                <i
+                  className="bx bx-menu"
+                  style={{
+                    fontSize:
+                      '1.8rem',
+                  }}
+                  aria-hidden="true"
+                ></i>
               </button>
+
               <span>
-                <Link to="/" style={{ textDecoration: 'none', color: 'white', fontSize: '1.5rem' }} className="text fw-semibold">
+                <Link
+                  to={
+                    staff
+                      ? '/staff'
+                      : '/'
+                  }
+                  className="text fw-semibold"
+                  style={{
+                    textDecoration:
+                      'none',
+                    color: 'white',
+                    fontSize:
+                      '1.5rem',
+                  }}
+                >
                   PharmAssist
                 </Link>
               </span>
             </div>
 
-            <TopSearch />
+            {staff ? (
+              <div className="staff-topbar-context">
+                <span className="staff-topbar-context__icon">
+                  <i
+                    className="bi bi-person-workspace"
+                    aria-hidden="true"
+                  ></i>
+                </span>
+
+                <div>
+                  <strong>
+                    Staff Portal
+                  </strong>
+
+                  <span>
+                    Operations workspace
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <TopSearch />
+            )}
           </header>
 
-          <main id="main-content" ref={main} tabIndex={-1} className="page-wrapper">
+          <main
+            id="main-content"
+            ref={main}
+            tabIndex={-1}
+            className="page-wrapper"
+          >
             <Outlet />
           </main>
         </section>
 
         <Footer />
-        <AccessibilityToolbar />
+
+        <AccessibilityToolbar
+          className={
+            staff
+              ? 'floating-buttons--staff'
+              : ''
+          }
+        />
       </div>
     </SearchProvider>
   )
