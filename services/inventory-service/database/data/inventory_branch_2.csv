@@ -1,0 +1,83 @@
+branch_id,generic_name,brand_name,strength,dosage_form,quantity,price,batch_no,expiration_date,min_threshold
+2,Acetylcysteine,Fluimucil,600mg,Effervescent Tablet,80,38.75,405690,2028-03-31,10
+2,Acyclovir,Xycloviraxforte,800mg,Tablet,20,47.50,61682,2028-01-31,10
+2,Aluminum Hydroxide + Magnesium Hydroxide + Simethicone,Kremil-S,Not stated on receipt,Chewable Tablet,100,9.75,U104853,2028-08-31,10
+2,Ambroxol,TGP,"15mg/5mL, 60mL",Syrup,15,47.00,1746012,2029-01-31,10
+2,Amlodipine,Cardiovasc,5mg,Tablet,1000,5.75,PS9975,2027-06-30,10
+2,Amoxicillin,Benedex,"125mg/5mL, 60mL",Powder for Suspension,10,50.75,261BKB,2028-10-31,10
+2,Amoxicillin,Benedex,500mg,Capsule,2000,4.75,002CAB,2029-01-31,10
+2,Ascorbic Acid + Zinc,TGP,500mg/10mg,Capsule,300,6.80,26D015,2028-01-31,10
+2,Aspirin,Aspen,100mg,Tablet,300,2.50,5I283A,2027-10-31,10
+2,Aspirin,TGP-Aspen,80mg,Tablet,300,2.50,5I282A1,2027-10-31,10
+2,Atorvastatin,TGP,10mg,Tablet,90,6.75,PH-3598,2028-10-31,10
+2,Bisacodyl,TGP,5mg,Tablet,400,2.25,5D285,2027-05-31,10
+2,Butamirate Citrate,TGP,50mg,Tablet,120,11.25,210126,2028-01-08,10
+2,Calcium Carbonate,TGP,500mg,Tablet,400,2.25,5L205,2029-01-31,10
+2,Carbocisteine,TGP Myrex,"50mg/mL, 15mL",Oral Drops,6,43.75,026CAN,2028-01-31,10
+2,Carbocisteine + Zinc,Solmux Advance,"500mg/10mg per 5mL, 60mL",Suspension,3,144.00,L033496,2028-11-30,10
+2,Carbocisteine,Solmux,"200mg/5mL, 120mL",Suspension,4,192.00,L031124,2027-03-31,10
+2,Carbocisteine,Cisflem,"250mg/5mL, 60mL",Syrup,10,60.00,012CAN,2029-01-31,10
+2,Carvedilol,Betadol,6.25mg,Tablet,500,5.50,B-63032,2028-08-31,10
+2,Carvedilol,Betadol,25mg,Tablet,300,7.75,B-35009,2028-05-31,10
+2,Cefuroxime Axetil,TGP,"250mg/5ml, 50mL",Granules for Suspension,3,298.00,5L123,2028-01-31,10
+2,Cefuroxime Axetil,Froxytil,500mg,Tablet,100,32.50,NSTC 01,2028-10-31,10
+2,Cetirizine,Cetizin,"1mg/mL, 60mL",Oral Solution,3,149.25,5G012A,2027-08-31,10
+2,Cetirizine,Cetizine,10mg,Tablet,2000,2.50,C-189038,2028-10-31,10
+2,Cetirizine,TGP,"5mg/5ml, 60mL",Syrup,35,60.00,153CAN,2028-01-31,10
+2,Cetirizine,TGP,"2.5mg/mL, 10mL",Oral Drops,10,87.00,26A33,2029-01-31,10
+2,Clindamycin,TGP Kylezine,300mg,Capsule,100,18.00,046BGB,2028-07-31,10
+2,Cloxacillin,Cloxane,500mg,Capsule,200,10.00,USCM26002,2028-12-31,10
+2,Desogestrel + Ethinylestradiol,Marvelon,"150mcg/30mcg, 28-tablet pack",Tablet Pack,6,336.75,B119223,2027-07-31,10
+2,Diclofenac,TGP,100mg,Tablet,1000,3.15,251865017,2028-09-30,10
+2,Diclofenac,Diclofen,50mg,Tablet,1000,1.75,D-04030,2028-01-31,10
+2,Dicycloverine,Dicyrine,10mg,Tablet,200,1.00,5L175,2028-12-31,10
+2,Domperidone,Domperone,10mg,Tablet,200,6.50,5E310A,2027-06-30,10
+2,Ferrous Iron + Folic Acid + Vitamin B Complex,Foralivit,Not stated on receipt,Capsule,200,4.25,25C11109,2028-11-30,10
+2,Finasteride,TGP,5mg,Tablet,200,19.25,6A189,2028-01-31,10
+2,Guaifenesin,Robitussin,200mg,Softgel Capsule,200,11.75,26RLC2,2027-08-31,10
+2,Hexetidine,Bactidol,"0.1%, 120mL",Oral Solution,3,242.75,25BACS38,2028-07-31,10
+2,Ibuprofen,Advil,200mg,Softgel Capsule,100,8.75,25ADV035,2028-03-31,10
+2,Iron + Folic Acid,TGP,60mg/250mcg,Tablet,300,3.25,25T51015,2027-11-30,10
+2,Losartan,Hypertan,50mg,Tablet,1300,4.75,25L32,2028-12-31,10
+2,Mefenamic Acid,Megalin,500mg,Capsule,1000,3.00,018BKN,2028-10-31,10
+2,Mefenamic Acid,Megalin,"50mg/5mL, 60mL",Suspension,10,49.75,165BMN,2028-12-31,10
+2,Metformin,Glucotin,850mg,Tablet,100,4.50,5I543A,2028-10-31,10
+2,Methylprednisolone,Medixon,16mg,Tablet,30,42.25,56G0465,2029-06-30,10
+2,Multivitamins + Buclizine,Multizine,120mL,Syrup,4,183.75,5G269A,2027-08-31,10
+2,Multivitamins + Buclizine,Multizine,60mL,Syrup,4,148.00,5G269A,2027-08-31,10
+2,Multivitamins + Buclizine + Iron,Buclicap,Not stated on receipt,Capsule,100,11.00,5I017A1,2028-09-30,10
+2,Multivitamins + Iron,Multigo,Not stated on receipt,Capsule,200,3.25,5F266,2028-08-31,10
+2,Multivitamins + Zinc,Centrum Kids Apple,Not stated on receipt,Gummy,3,135.00,251025,2027-06-25,10
+2,Multivitamins + Zinc,Centrum Kids Fruit Berries,Not stated on receipt,Gummy,3,135.00,301025,2027-06-30,10
+2,Mupirocin,Mupicore,2%,Ointment,10,167.50,XE5J10,2027-09-30,10
+2,Naproxen Sodium,Flanax Forte,550mg,Tablet,100,23.00,FF5TTD,2028-07-31,10
+2,Paracetamol,Tempra,"100mg/mL, 30mL",Oral Drops,6,153.25,5L9051,2028-05-31,10
+2,Paracetamol,Tempra,"120mg, 60mL",Syrup,10,109.75,5J5581,2028-03-31,10
+2,Paracetamol,Tempra Forte,"250mg, 60mL",Syrup,10,169.00,5J5221,2028-03-31,10
+2,Phenylephrine + Chlorphenamine + Paracetamol,Bioflu,10mg/2mg/500mg,Tablet,200,9.25,U102776,2027-07-31,10
+2,Phenylpropanolamine,Nasalgen,"12.5mg/5mL, 60mL",Syrup,10,52.50,001BJN,2027-09-30,10
+2,Guaifenesin + Chlorpheniramine + Phenylpropanolamine,Deflemin,"100mg/2mg/6.5mg per 5mL, 60mL",Syrup,10,127.00,251201 A,2028-12-31,10
+2,Procaterol,Meptin,"5mcg/mL, 60mL",Syrup,4,238.25,02/28/2571,2027-06-19,10
+2,Ranitidine,Ratidin,300mg,Tablet,200,5.50,R-93004,2027-03-31,10
+2,Ranitidine,Ratidin,150mg,Tablet,200,3.00,R-103003,2028-06-30,10
+2,Sacubitril + Valsartan,Vymada,200mg,Tablet,28,105.00,TRAT7,2028-09-30,10
+2,Salbutamol,TGP,100mcg,Inhaler,10,215.00,IH25210,2028-07-31,10
+2,Salbutamol,Asmagone,1mg,Nebule,450,10.75,A25L003,2027-11-30,10
+2,Salbutamol,Hivent,"1mg, 2.5mL",Nebule,90,11.25,50S680,2028-07-31,10
+2,Salbutamol,Solben,"2mg, 60mL",Syrup,10,47.00,1326085,2029-02-28,10
+2,Salbutamol,TGP,4mg,Tablet,500,1.50,5I142,2028-10-31,10
+2,Salbutamol + Ipratropium,TGP,2.5mg/500mcg,Nebule,105,26.00,A26A037,2027-12-31,10
+2,Sambong (Blumea balsamifera),Uricare,500mg,Tablet,500,6.00,25D572,2027-11-30,10
+2,Silymarin + Vitamins,Liver 4,Not stated on receipt,Capsule,120,11.25,F252216,2027-10-01,10
+2,Sitagliptin + Metformin,TGP,50mg/500mg,Tablet,112,18.00,ST05524,2027-11-30,10
+2,Spironolactone,TGP,25mg,Tablet,200,10.75,E13625008,2028-11-30,10
+2,Sultamicillin,Sultamin,750mg,Tablet,50,110.00,5C188A,2028-05-31,10
+2,Telmisartan,Misartan40,40mg,Tablet,180,9.50,M-186025,2028-08-31,10
+2,Telmisartan,Misartan80,80mg,Tablet,180,15.00,M-187020,2028-08-31,10
+2,Tobramycin + Dexamethasone,Ramtrex,3mg/1mg per mL,Ophthalmic Suspension,4,217.00,5A62G,2027-12-31,10
+2,Trimetazidine Hydrochloride,Cardiotaz,35mg,Tablet,500,11.75,PH-3651,2028-11-30,10
+2,Vitamin E,Nature E,400IU,Capsule,100,9.75,25D544,2027-10-31,10
+2,Vitamin E,Myra E,400iu,Capsule,200,13.00,E008825,2028-10-31,10
+2,Vitamins B1 + B6 + B12,Super B,300mg/100mg/100mcg,Capsule,300,9.00,5I033A,2028-09-30,10
+2,Zinc Oxide + Calamine,Calmoseptine,Not stated on receipt,Ointment,60,48.25,P2991G,2028-08-31,10
+2,Zinc Sulfate,Ezinc,"55mg/5ml, 60mL",Syrup,3,114.50,L033488,2027-11-30,10

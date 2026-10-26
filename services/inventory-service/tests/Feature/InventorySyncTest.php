@@ -6,9 +6,6 @@ use App\Models\Branch;
 use App\Models\BranchInventory;
 use App\Models\Medicine;
 use App\Models\StockMovement;
-use Database\Seeders\BranchInventorySeeder;
-use Database\Seeders\BranchSeeder;
-use Database\Seeders\MedicineSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\InventoryTestHelpers;
 use Tests\TestCase;
@@ -415,18 +412,37 @@ class InventorySyncTest extends TestCase
         $this->assertSame([1, 99], [$own->fresh()->stock_quantity, $elsewhere->fresh()->stock_quantity]);
     }
 
-    // ------------------------------------------------------------ the real samples and the real seeders
+    // ------------------------------------------------------------ the real sample feed
 
-    public function test_the_sample_json_feed_matches_the_seeded_medicines_and_is_idempotent(): void
+    /**
+     * The sample feed (docs/samples/inventory-feed.json) against a catalog built here, one canonical row per feed item. The test does not
+     * use the seeders, so it does not depend on what the seed CSV files contain. Note the feed spells one medicine in capitals
+     * ("IBUPROFEN", "advil", "200MG", "capsule"): the canonical row below is stored normally, so the case-insensitive match is still tested.
+     */
+    public function test_the_sample_json_feed_is_accepted_against_a_matching_catalog_and_is_idempotent(): void
     {
-        $this->branch->delete(); // setUp made a branch with id 1; the real seeder creates the real branch 1
-        $this->seed([BranchSeeder::class, MedicineSeeder::class, BranchInventorySeeder::class]);
+        $this->assertSame(1, $this->branch->id, 'the sample feed is for branch 1 and this test uses the branch made in setUp');
+
+        foreach ([
+            ['Amoxicillin', '', '500mg', 'Capsule'],
+            ['Phenylephrine + Chlorphenamine + Paracetamol', 'Neozep', '10mg/2mg/500mg', 'Tablet'],
+            ['Paracetamol', 'Biogesic', '500mg', 'Tablet'],
+            ['Ibuprofen', 'Advil', '200mg', 'Capsule'],
+            ['Cetirizine', '', '10mg', 'Tablet'],
+            ['Losartan', '', '50mg', 'Tablet'],
+            ['Metformin', '', '500mg', 'Tablet'],
+            ['Ascorbic Acid (Vitamin C)', '', '500mg', 'Tablet'],
+        ] as [$generic, $brand, $strength, $form]) {
+            $this->makeInventory($this->branch, $this->makeMedicine($generic, $brand, 'Test', false, $strength, $form));
+        }
+
         $feed = json_decode((string) file_get_contents(base_path('../../docs/samples/inventory-feed.json')), true);
         $this->assertSame(1, $feed['branch_id']);
+        $this->assertCount(8, $feed['items'], 'the catalog above has one row per sample item');
         $manager = $this->as('branch_manager', 1, 42);
 
         $first = $this->postJson(self::URL, ['branch_id' => 1, 'strict' => true, 'items' => $feed['items']], $manager)->assertOk();
-        $this->assertSame([8, 0], [$first->json('data.accepted'), $first->json('data.rejected')], 'every sample item matches a seeded medicine');
+        $this->assertSame([8, 0], [$first->json('data.accepted'), $first->json('data.rejected')], 'every sample item matches a catalog medicine');
 
         $amoxicillin = BranchInventory::where('branch_id', 1)->whereHas('medicine', fn ($q) => $q->where('generic_name', 'Amoxicillin'))->firstOrFail();
         $this->assertSame([60, '10.50', 'B27-AMOX-01'], [$amoxicillin->stock_quantity, $amoxicillin->price, $amoxicillin->batch_no]);

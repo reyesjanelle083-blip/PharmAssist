@@ -1,0 +1,32 @@
+branch_id,generic_name,brand_name,strength,dosage_form,quantity,price,batch_no,expiration_date,min_threshold
+1,Ascorbic Acid + Zinc,Ceelin Plus,"100mg/10mg per 5mL, 120mL",Syrup,2,151.19,L031368,2027-04-30,10
+1,Bisacodyl,Dulcolax,5mg,Tablet,20,23.74,FVH0869,2028-02-29,10
+1,Carbocisteine,Solmux,"200mg/5mL, 60mL",Suspension,2,115.44,L031144,2027-04-30,10
+1,Clonidine,Catapres,75mcg,Tablet,10,33.96,,2028-05-31,10
+1,Loperamide,Lomotil,2mg,Tablet,10,12.16,25LMTO4,2029-03-31,10
+1,Guaifenesin,Robitussin Expectorant,"100mg/5mL, 120mL",Syrup,2,146.75,24KNS9,2027-10-31,10
+1,Guaifenesin,Robitussin,200mg,Softgel Capsule,10,10.78,25MLG8,2026-10-31,10
+1,Hexetidine,Bactidol,"0.1%, 60mL",Oral Solution,3,117.73,25BACS-9,2028-03-31,10
+1,Hyoscine N-butylbromide,Buscopan,10mg,Tablet,20,30.16,FVM0565,2028-02-29,10
+1,Ibuprofen,Advil,200mg,Softgel Capsule,10,7.89,25ADM910,2027-04-30,10
+1,Ibuprofen,Medicol Advance,200mg,Softgel Capsule,50,6.60,F007361,2027-10-31,10
+1,Ibuprofen,Midol,200mg,Tablet,10,13.99,25053,2029-03-31,10
+1,Levonorgestrel + Ethinylestradiol,Lady,"150mcg/30mcg, 28-tablet pack",Tablet Pack,20,42.30,246603,2027-08-31,10
+1,Ethinylestradiol + Levonorgestrel + Ferrous Fumarate,Trust,"30mcg/125mcg + 75mg, 28-tablet pack",Tablet Pack,20,48.25,246458,2027-06-30,10
+1,Meclizine Hydrochloride,Bonamine,12.5mg,Chewable Tablet,10,9.76,B5B083,2028-02-29,10
+1,Mefenamic Acid,Dolfenal,500mg,Tablet,24,33.96,M115974,2029-10-31,10
+1,Mefenamic Acid,Ponstan SF,500mg,Capsule,10,39.21,25PNSC3,2028-01-31,10
+1,Multivitamins + Minerals,Centrum Advance,100 tablets,Tablet,20,9.75,250EAA3B,2027-02-28,10
+1,Naproxen Sodium,Flanax Forte,550mg,Tablet,20,21.08,FF53FZ,2028-01-31,10
+1,Naproxen Sodium,Skelan,550mg,Tablet,20,19.13,M116371,2029-01-31,10
+1,Metoprolol Tartrate,Neobloc,100mg,Tablet,20,6.92,1-555B,2027-09-30,10
+1,Methyl Salicylate + Camphor + Menthol + Turpentine Oil + Eucalyptus Oil,Omega Pain Killer,30mL,Topical Liniment,3,30.38,EXE75,2029-05-31,10
+1,Oral Electrolyte Solution,Pedialyte Mild Apple,500mL,Oral Solution,3,118.45,7570560,2027-04-30,10
+1,Oral Rehydration Salts,Hydrite Apple,100 sachets,Sachet,10,16.92,M119125,2028-03-31,10
+1,Paracetamol,Biogesic,"250mg/5mL, 60mL",Syrup,10,140.57,L030014,2027-01-31,10
+1,Paracetamol,Tempra Forte,"250mg/5mL, 60mL",Syrup,5,147.53,5A2571,2027-08-31,10
+1,Paracetamol,Tempra,325mg,Tablet,10,3.50,T5A179,2028-01-31,10
+1,Paracetamol,Tempra,"100mg/mL, 15mL",Oral Drops,2,79.84,5A0471,2027-07-31,10
+1,Paracetamol,Tempra,"120mg/5mL, 60mL",Syrup,10,97.67,5A0071,2027-07-31,10
+1,Phenylpropanolamine + Brompheniramine,Nasatapp,"6.25mg/2mg per mL, 15mL",Oral Drops,2,106.29,4H001A,2027-08-31,10
+1,Phenylpropanolamine + Brompheniramine,Nasatapp,"12.5mg/4mg per 5mL, 60mL",Syrup,2,108.05,5A002B,2028-01-31,10
