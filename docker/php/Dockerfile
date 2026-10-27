@@ -37,5 +37,7 @@ WORKDIR /app/${APP_PATH}
 # No .env is copied (see .dockerignore); configuration comes from environment variables.
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
+COPY docker/php/aiven-ca.pem /etc/ssl/certs/aiven-ca.pem
+
 EXPOSE 8000
 CMD ["php","artisan","serve","--host=0.0.0.0","--port=8000"]
