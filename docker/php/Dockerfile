@@ -38,6 +38,8 @@ WORKDIR /app/${APP_PATH}
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 COPY docker/php/aiven-ca.pem /etc/ssl/certs/aiven-ca.pem
+COPY docker/php/start.sh /usr/local/bin/pharmassist-start.sh
+RUN sed -i 's/\r$//' /usr/local/bin/pharmassist-start.sh
 
 EXPOSE 8000
 CMD ["php","artisan","serve","--host=0.0.0.0","--port=8000"]
