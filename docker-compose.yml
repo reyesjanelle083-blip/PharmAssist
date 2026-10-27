@@ -45,6 +45,9 @@ services:
       dockerfile: docker/php/Dockerfile
       args:
         APP_PATH: services/identity-service
+    env_file:
+      - path: ./services/identity-service/.env
+        required: false
     environment:
       <<: *laravel-env
       SERVICE_NAME: identity-service
@@ -240,3 +243,4 @@ services:
 
 volumes:
   mysql_data:
+
